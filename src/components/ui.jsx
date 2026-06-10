@@ -57,7 +57,7 @@ export function slotLabel(m, side) {
   const code = side === "home" ? m.home : m.away;
   if (code) return <TeamLine code={code} showCode={false} size={22} />;
   const fromId = side === "home" ? m.fromA : m.fromB;
-  return <span className="muted" style={{ fontStyle: "italic", fontSize: 13 }}>Vainqueur {fromId}</span>;
+  return <span className="muted" style={{ fontStyle: "italic", fontSize: 13 }}>{fromId ? "Vainqueur " + fromId : "À déterminer"}</span>;
 }
 
 /* score affiché (avec t.a.b. si pens) */

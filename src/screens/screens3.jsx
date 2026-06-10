@@ -7,7 +7,7 @@ import { GroupTable } from "./screens2.jsx";
 /* =================== TABLEAU : GROUPES + BRACKET =================== */
 export function TableauScreen({ go, matches = WC.ALL_MATCHES }) {
   const [tab, setTab] = useState("groupes");
-  const koMatches = matches.filter((m) => m.round === "ko");
+  const koMatches = matches.filter((m) => m.round === "ko" && (m.home || m.away));
   const real = matches !== WC.ALL_MATCHES;
   const letters = real ? Object.keys(WC.GROUPS) : WC.GROUP_LETTERS;
   return (

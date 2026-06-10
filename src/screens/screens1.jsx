@@ -3,6 +3,13 @@ import { useState } from "react";
 import { WC } from "../lib/wc.js";
 import { Btn, StatusPill, slotLabel } from "../components/ui.jsx";
 
+// Lots affichés en podium sur l'écran d'accueil.
+const PODIUM_LOTS = [
+  { place: 1, medal: "🥇", emoji: "🍽️", lot: "Une journée + resto avec Gabriel" },
+  { place: 2, medal: "🥈", emoji: "🍔", lot: "Un McDo offert par Gabriel" },
+  { place: 3, medal: "🥉", emoji: "🔞", lot: "Un sex toy" },
+];
+
 /* ============================= AUTH ============================= */
 /* onAuth(mode, { email, pwd, pseudo, avatar }) -> Promise. Renvoie une
    erreur (string) en cas d'échec, sinon connecte. demoMode affiche un bandeau. */
@@ -44,13 +51,37 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
             <div className="mono" style={{ fontSize: 10, letterSpacing: ".16em", opacity: .7, whiteSpace: "nowrap" }}>ENTRE POTES · USA · CANADA · MEXIQUE</div>
           </div>
         </div>
-        <div style={{ position: "relative" }}>
-          <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", opacity: .7, marginBottom: 12 }}>LA LIGUE PRIVÉE DE GABRIEL & SES POTES</div>
-          <div className="poster" style={{ fontSize: "clamp(38px,5vw,68px)", lineHeight: .9 }}>PRONOSTIQUE<br />LES 104 MATCHS.</div>
-          <div className="poster" style={{ fontSize: "clamp(38px,5vw,68px)", lineHeight: .9, color: "var(--gold-soft)" }}>SI T'AS BON : McDo 🍟</div>
-          <p style={{ maxWidth: 400, marginTop: 18, opacity: .85, lineHeight: 1.55 }}>
-            La Coupe du Monde 2026 version potes. Tu pronostiques les scores, Gabriel compte les points. Le champion gagne une journée + resto avec Gabriel, le 2e un McDo… et le dernier paie le McDo du boss 🍔.
-          </p>
+        <div style={{ position: "relative", width: "100%" }}>
+          <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", opacity: .7, marginBottom: 10 }}>LA LIGUE PRIVÉE DE GABRIEL & SES POTES</div>
+          <div className="poster" style={{ fontSize: "clamp(30px,3.8vw,52px)", lineHeight: .92 }}>PRONOSTIQUE.</div>
+          <div className="poster" style={{ fontSize: "clamp(30px,3.8vw,52px)", lineHeight: .92, color: "var(--gold-soft)" }}>RAFLE LE PODIUM. 🏆</div>
+
+          {/* PODIUM DES LOTS */}
+          <div className="mono" style={{ fontSize: 11, letterSpacing: ".16em", opacity: .6, margin: "26px 0 12px" }}>CE QUE TU PEUX GAGNER</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1.18fr 1fr", gap: 12, alignItems: "end", maxWidth: 460 }}>
+            {[PODIUM_LOTS[1], PODIUM_LOTS[0], PODIUM_LOTS[2]].map((s) => {
+              const first = s.place === 1;
+              return (
+                <div key={s.place} style={{
+                  borderRadius: 18,
+                  padding: first ? "22px 12px 18px" : "16px 10px 14px",
+                  textAlign: "center",
+                  background: first ? "linear-gradient(165deg, var(--gold-soft), var(--gold))" : "rgba(255,255,255,.06)",
+                  color: first ? "#1a1607" : "var(--hero-ink)",
+                  border: first ? "none" : "1px solid rgba(255,255,255,.14)",
+                  boxShadow: first ? "0 18px 44px rgba(212,165,51,.4)" : "none",
+                  transform: first ? "translateY(-6px)" : "none",
+                }}>
+                  <div style={{ fontSize: first ? 38 : 28, lineHeight: 1 }}>{s.emoji}</div>
+                  <div className="poster" style={{ fontSize: first ? 14 : 12, marginTop: 8, opacity: first ? 1 : .75 }}>{s.medal} {s.place === 1 ? "1ER" : s.place + "E"}</div>
+                  <div style={{ fontWeight: 800, fontSize: first ? 13.5 : 12, marginTop: 7, lineHeight: 1.25 }}>{s.lot}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mono" style={{ fontSize: 11, opacity: .65, marginTop: 14, maxWidth: 460 }}>
+            🥄 Et le dernier du classement… paie le McDo de Gabriel.
+          </div>
         </div>
         <div style={{ position: "relative", display: "flex", gap: 26, flexWrap: "wrap" }}>
           {[["48", "équipes"], ["104", "matchs"], ["39", "jours"]].map(([n, l]) => (
