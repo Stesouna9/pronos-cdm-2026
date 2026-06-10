@@ -97,6 +97,8 @@ const JA = {
   "Aucun match dans ce filtre. Les matchs deviennent saisissables une fois le coup d'envoi passé.": "この絞り込みに試合はありません。キックオフ後に入力可能になります。",
   "Le tableau": "トーナメント表", "12 groupes": "12グループ", "Phase finale": "決勝トーナメント",
   "🏆 Phase finale à venir": "🏆 決勝トーナメントは近日",
+  "Groupe": "グループ", "Résultats": "結果", "Score": "スコア", "Date": "日付", "Match": "試合",
+  "Tous les résultats": "全試合の結果", "Résultats des matchs": "試合結果", "à venir": "予定",
   "Voir les matchs →": "試合を見る →", "Qualifié": "突破", "Repêchable": "敗者復活",
 };
 

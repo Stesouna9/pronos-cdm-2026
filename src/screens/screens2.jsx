@@ -123,13 +123,28 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
       </div>
 
       <div className="seg scrollx" style={{ marginBottom: 18, display: "flex" }}>
-        {phases.map(([k, l]) => <button key={k} className={phase === k ? "on" : ""} onClick={() => setPhase(k)}>{l}</button>)}
+        {phases.map(([k, l]) => <button key={k} className={phase === k ? "on" : ""} onClick={() => setPhase(k)}>{t(l)}</button>)}
       </div>
 
-      <div className="grid g-2">
-        {list.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} />)}
-      </div>
-      {list.length === 0 && <div className="card pad-lg" style={{ textAlign: "center" }}><div className="poster" style={{ fontSize: 22 }}>Rien par ici 🎉</div><p className="muted">Tu as pronostiqué tous les matchs de ce filtre.</p></div>}
+      {phase === "group" ? (
+        Object.keys(WC.GROUPS).map((g) => {
+          const gm = list.filter((m) => m.group === g);
+          if (!gm.length) return null;
+          return (
+            <div key={g} style={{ marginBottom: 28 }}>
+              <h3 className="poster" style={{ fontSize: 22, margin: "0 0 12px" }}>{t("Groupe")} {g}</h3>
+              <div className="grid g-2">
+                {gm.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} />)}
+              </div>
+            </div>
+          );
+        })
+      ) : (
+        <div className="grid g-2">
+          {list.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} />)}
+        </div>
+      )}
+      {list.length === 0 && <div className="card pad-lg" style={{ textAlign: "center" }}><div className="poster" style={{ fontSize: 22 }}>Rien par ici 🎉</div><p className="muted">{t("Aucun match dans ce filtre. Les matchs deviennent saisissables une fois le coup d'envoi passé.")}</p></div>}
     </div>
   );
 }
