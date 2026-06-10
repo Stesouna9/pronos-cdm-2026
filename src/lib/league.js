@@ -127,6 +127,17 @@ export async function clearScore(matchId) {
   return { error: error ? error.message : null };
 }
 
+/* Sauvegarde les infos de profil (pseudo, avatar, équipe de cœur). */
+export async function updateProfile({ pseudo, avatar, fav }) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "non connecté" };
+  const { error } = await supabase
+    .from("profiles")
+    .update({ pseudo, avatar, fav })
+    .eq("id", user.id);
+  return { error: error ? error.message : null };
+}
+
 /* ADMIN : liste complète des joueurs (y compris bannis). */
 export async function fetchAllUsers() {
   const { data, error } = await supabase

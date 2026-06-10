@@ -24,6 +24,7 @@ const JA = {
   "Classement": "ランキング", "Profil": "プロフィール", "Règles": "ルール", "Admin": "管理",
   "Coupe du Monde 2026": "2026 ワールドカップ", "CDM DE GABRIEL": "ガブリエルのW杯",
   "LA CDM DE GABRIEL": "ガブリエルのW杯", "ENTRE POTES": "仲間内リーグ", "GABRIEL": "ガブリエル",
+  "Allez les Bleus !": "アレ・レ・ブルー！",
   "Cet email a déjà un compte. Connecte-toi.": "このメールは登録済みです。ログインしてください。",
   "Email ou mot de passe incorrect.": "メールアドレスまたはパスワードが違います。",
   "Confirme d'abord ton email (regarde tes mails).": "先にメールを確認してください。",

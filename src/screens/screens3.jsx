@@ -3,6 +3,7 @@ import { useState } from "react";
 import { WC } from "../lib/wc.js";
 import { Btn, Roundel, SectionTitle, teamName } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
+import { updateProfile } from "../lib/league.js";
 import { GroupTable } from "./screens2.jsx";
 
 /* Tableau des résultats des matchs, rangé PAR GROUPE (+ phase finale). */
@@ -235,7 +236,13 @@ export function Profile({ profile, setProfile, predictions, me: meStats, matches
   const finis = matches.filter((m) => m.status === "fini" && predictions[m.id]);
   const exacts = finis.filter((m) => WC.points(predictions[m.id], m.score) === WC.BAREME.exact).length;
 
-  function save() { setProfile((p) => ({ ...p, ...draft })); setSaved(true); setTimeout(() => setSaved(false), 1800); }
+  function save() {
+    setProfile((p) => ({ ...p, ...draft }));
+    // persiste en base (pseudo/avatar/équipe de cœur) pour survivre à la reconnexion
+    updateProfile({ pseudo: draft.pseudo, avatar: draft.avatar, fav: draft.fav })
+      .then((r) => { if (r && r.error) console.error("save profil:", r.error); });
+    setSaved(true); setTimeout(() => setSaved(false), 1800);
+  }
 
   const badges = [
     ["🎯", t("Sniper"), exacts + " " + t("scores exacts")],

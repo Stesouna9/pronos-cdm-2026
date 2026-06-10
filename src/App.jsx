@@ -52,6 +52,12 @@ export default function App() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // Mode supporter : thème spécial France / Japon selon l'équipe de cœur.
+  useEffect(() => {
+    document.documentElement.dataset.fan =
+      profile.fav === "FRA" ? "fra" : profile.fav === "JPN" ? "jpn" : "";
+  }, [profile.fav]);
+
   // persistance locale (démo + préférences)
   useEffect(() => {
     localStorage.setItem(LS, JSON.stringify({ authed: hasSupabase ? false : authed, screen, params, profile }));
@@ -149,6 +155,8 @@ export default function App() {
               {k === "matches" && aPredire > 0 && <span className="badge">{aPredire}</span>}
             </button>
           ))}
+          {profile.fav === "FRA" && <div className="fanpill fra">🇫🇷 {t("Allez les Bleus !")}</div>}
+          {profile.fav === "JPN" && <div className="fanpill jpn">🇯🇵 頑張れ日本！</div>}
           <div style={{ marginTop: "auto", padding: "8px 4px 4px" }}><LangToggle /></div>
           <div className="userchip">
             <div className="av">{profile.avatar}</div>

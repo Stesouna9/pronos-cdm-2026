@@ -27,3 +27,10 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
           APIFY_MAX_ITEMS: "50"
+      # Classement de la ligue dans le résumé du run (visible sur GitHub → Actions)
+      - name: Classement dans le résumé
+        if: always()
+        run: node scripts/leaderboard-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
