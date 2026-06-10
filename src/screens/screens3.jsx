@@ -358,8 +358,8 @@ export function Rules() {
             <div className="eyebrow" style={{ marginBottom: 12 }}>Format du tournoi</div>
             <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7, fontSize: 14.5 }}>
               <li><b>48 équipes</b>, 12 groupes de 4 (A→L).</li>
-              <li>Les <b>2 premiers</b> de chaque groupe + les <b>8 meilleurs 3es</b> filent en 32es.</li>
-              <li>Puis élimination directe : 32es → 8es → quarts → demies → finale.</li>
+              <li>Les <b>2 premiers</b> de chaque groupe + les <b>8 meilleurs 3es</b> se qualifient.</li>
+              <li>Puis élimination directe : 16es → 8es → quarts → demies → finale (+ petite finale).</li>
               <li>Le <b>bracket se remplit automatiquement</b> à chaque résultat.</li>
               <li>Du 11 juin au 19 juillet 2026 · 104 matchs · USA · Canada · Mexique.</li>
             </ul>
