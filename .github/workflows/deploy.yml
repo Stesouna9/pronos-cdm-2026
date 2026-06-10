@@ -27,10 +27,10 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      # Les clés PUBLIQUES Supabase viennent de .env.production (commité).
+      # Pas de secrets ici : des secrets vides écraseraient .env.production
+      # (les vars d'environnement ont priorité sur les fichiers .env dans Vite).
       - run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
