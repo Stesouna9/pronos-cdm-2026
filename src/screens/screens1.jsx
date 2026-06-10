@@ -40,7 +40,7 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
   }
 
   return (
-    <div className="app-root" style={{ display: "grid", gridTemplateColumns: "1.05fr 1fr", minHeight: "100vh" }}>
+    <div className="app-root auth-grid">
       {/* Panneau visuel */}
       <div className="auth-visual" style={{ background: "var(--hero)", color: "var(--hero-ink)", position: "relative", overflow: "hidden", padding: "48px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
         <div className="stripes" style={{ position: "absolute", inset: 0, opacity: .1, background: "repeating-linear-gradient(115deg, transparent 0 26px, var(--gold) 26px 28px)" }} />

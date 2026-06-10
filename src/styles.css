@@ -290,6 +290,20 @@ a { color: inherit; }
 .divider { height: 1px; background: var(--line); margin: 18px 0; border: 0; }
 .scrollx { overflow-x: auto; }
 
+/* ====================== AUTH (responsive) ====================== */
+.auth-grid { display: grid; grid-template-columns: 1.05fr 1fr; min-height: 100vh; }
+@media (max-width: 900px) {
+  .auth-grid { grid-template-columns: 1fr !important; }
+  .auth-grid .auth-visual { padding: 26px 20px 28px !important; min-height: auto !important; gap: 22px; }
+  .auth-grid .auth-visual .poster { font-size: clamp(26px, 8vw, 40px) !important; }
+  .auth-grid form { padding: 0 !important; }
+}
+/* Saisie admin lisible sur mobile */
+@media (max-width: 760px) {
+  .admin-row { flex-direction: column; align-items: stretch !important; gap: 10px !important; }
+  .admin-row .admin-teams { justify-content: space-between !important; }
+}
+
 /* feedback / erreurs */
 .alert { padding: 11px 14px; border-radius: var(--r-md); font-size: 13.5px; font-weight: 600; }
 .alert--err { background: color-mix(in oklab, var(--lose) 14%, transparent); color: var(--lose); }

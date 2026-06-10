@@ -33,11 +33,11 @@ function AdminRow({ m, onSaved }) {
 
   const num = { width: 56, textAlign: "center", padding: "8px 6px" };
   return (
-    <div className="card pad" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+    <div className="card pad admin-row" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
       <div style={{ minWidth: 150, fontSize: 12 }} className="mono muted">
         <b style={{ color: "var(--ink)" }}>{m.phase}</b><br />{WC.fmtDate(m.date)} · {WC.fmtHeure(m.date)}
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 220, justifyContent: "center" }}>
+      <div className="admin-teams" style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 220, justifyContent: "center" }}>
         <Roundel code={m.home} size={20} /><span style={{ fontWeight: 700, minWidth: 90, textAlign: "right" }}>{nameOf(m, "home")}</span>
         <input className="input" type="number" min="0" max="30" style={num} value={a} onChange={(e) => setA(e.target.value)} />
         <span className="poster">:</span>
