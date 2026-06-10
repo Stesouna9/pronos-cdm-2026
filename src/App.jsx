@@ -118,7 +118,7 @@ export default function App() {
       case "match": return <MatchDetail id={params.id} go={go} predictions={predictions} setPred={setPred} matches={matches} />;
       case "tableau": return <TableauScreen go={go} matches={matches} />;
       case "leaderboard": return <Leaderboard go={go} profile={profile} users={users} me={me} />;
-      case "profile": return <Profile profile={profile} setProfile={setProfile} predictions={predictions} matches={matches} me={me} />;
+      case "profile": return <Profile profile={profile} setProfile={setProfile} predictions={predictions} matches={matches} me={me} onLogout={logout} />;
       case "rules": return <Rules />;
       case "admin": return <AdminScreen matches={matches} reload={loadData} />;
       default: return <Dashboard go={go} predictions={predictions} profile={profile} matches={matches} users={users} me={me} />;
@@ -163,6 +163,7 @@ export default function App() {
               <LangToggle compact />
               <span className="pill pill--accent" style={{ fontSize: 11 }}>{me.pts} pts · #{me.position}</span>
               <div style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--bg-2)", display: "grid", placeItems: "center" }}>{profile.avatar}</div>
+              <button onClick={logout} title={t("Déconnexion")} style={{ border: "1px solid var(--line)", background: "var(--surface-2)", color: "var(--ink)", borderRadius: 8, width: 30, height: 30, fontSize: 14, cursor: "pointer" }}>⎋</button>
             </div>
           </header>
           {render()}

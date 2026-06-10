@@ -127,9 +127,9 @@ export function tPhase(phase) {
   const g = phase.match(/^Groupe (.+)$/);
   if (g) return "グループ " + g[1];
   const map = {
-    "32èmes de finale": "ラウンド32", "16èmes de finale": "ラウンド16",
+    "16es de finale": "ラウンド32", "8es de finale": "ラウンド16",
     "Quarts de finale": "準々決勝", "Demi-finales": "準決勝",
-    "Match pour la 3e place": "3位決定戦", "Finale": "決勝",
+    "Petite finale": "3位決定戦", "Finale": "決勝",
   };
   return map[phase] || phase;
 }

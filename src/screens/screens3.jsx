@@ -165,7 +165,7 @@ export function Leaderboard({ go, profile, users: realUsers, me }) {
 }
 
 /* =================== PROFIL =================== */
-export function Profile({ profile, setProfile, predictions, me: meStats, matches = WC.ALL_MATCHES }) {
+export function Profile({ profile, setProfile, predictions, me: meStats, matches = WC.ALL_MATCHES, onLogout }) {
   const me = { ...(meStats || WC.ME), ...profile };
   const AV = ["⚽", "🦁", "🔥", "🚀", "👑", "🎯", "🐺", "🦅", "🧤", "🐉", "⭐", "🥅", "🏆", "💪", "🤩", "🐯", "🎩", "👻"];
   const [draft, setDraft] = useState({ pseudo: profile.pseudo, avatar: profile.avatar, email: profile.email || "toi@email.com", fav: profile.fav || "FRA" });
@@ -238,6 +238,8 @@ export function Profile({ profile, setProfile, predictions, me: meStats, matches
               <input type="checkbox" defaultChecked={i < 2} style={{ width: 18, height: 18, accentColor: "var(--accent)" }} />{p}
             </label>
           ))}
+          <hr className="divider" />
+          <Btn variant="ghost block" onClick={onLogout}>⎋ {t("Déconnexion")}</Btn>
         </div>
       </div>
     </div>

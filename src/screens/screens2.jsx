@@ -94,7 +94,7 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
   const [filtre, setFiltre] = useState("tous"); // tous | apredire | termines
 
   const phases = [
-    ["tous", "Tous"], ["group", "Groupes"], ["32èmes de finale", "32es"], ["16èmes de finale", "16es"],
+    ["tous", "Tous"], ["group", "Groupes"], ["16es de finale", "16es"], ["8es de finale", "8es"],
     ["Quarts de finale", "Quarts"], ["Demi-finales", "Demies"], ["Finale", "Finale"],
   ];
 
