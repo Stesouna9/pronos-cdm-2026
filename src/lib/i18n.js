@@ -79,6 +79,10 @@ const JA = {
   // Admin
   "Réservé à toi (admin)": "管理者専用", "Saisie des scores": "スコア入力",
   "À saisir": "入力待ち", "Valider": "確定", "Corriger": "修正", "Rouvrir": "再開",
+  "Scores": "スコア", "Joueurs": "プレイヤー", "Bannir": "BAN する", "Débannir": "BAN 解除",
+  "banni": "BAN 中", "Statut": "登録日",
+  "Il disparaîtra du classement et ne pourra plus pronostiquer.": "ランキングから消え、予想もできなくなります。",
+  "Un joueur banni disparaît du classement et ne peut plus saisir de pronos. Tu peux le débannir à tout moment.": "BAN されたプレイヤーはランキングから消え、予想もできなくなります。いつでも解除できます。",
   // Divers
   "Déconnexion": "ログアウト", "VS": "対", "Vainqueur": "勝者",
   // Lots (tableau de bord / règles)

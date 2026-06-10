@@ -124,3 +124,22 @@ export async function clearScore(matchId) {
     .eq("id", matchId);
   return { error: error ? error.message : null };
 }
+
+/* ADMIN : liste complète des joueurs (y compris bannis). */
+export async function fetchAllUsers() {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, pseudo, avatar, is_admin, banned, created_at")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+/* ADMIN : bannit / débannit un joueur. */
+export async function setBanned(userId, banned) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ banned })
+    .eq("id", userId);
+  return { error: error ? error.message : null };
+}
