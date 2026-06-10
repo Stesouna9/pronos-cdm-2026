@@ -1,0 +1,22 @@
+{
+  "name": "pronos-cdm-2026",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Jeu de pronostics entre potes — Coupe du Monde 2026",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "fetch-results": "node scripts/fetch-results.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.0"
+  }
+}

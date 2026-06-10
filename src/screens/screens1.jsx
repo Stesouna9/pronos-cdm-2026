@@ -1,0 +1,231 @@
+/* screens1.jsx — Auth + Dashboard */
+import { useState } from "react";
+import { WC } from "../lib/wc.js";
+import { Btn, StatusPill, slotLabel } from "../components/ui.jsx";
+
+/* ============================= AUTH ============================= */
+/* onAuth(mode, { email, pwd, pseudo, avatar }) -> Promise. Renvoie une
+   erreur (string) en cas d'échec, sinon connecte. demoMode affiche un bandeau. */
+export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
+  const [mode, setMode] = useState("signup"); // signup | login
+  const AV = ["⚽", "🦁", "🔥", "🚀", "👑", "🎯", "🐺", "🦅", "🧤", "🐉", "⭐", "🥅"];
+  const [email, setEmail] = useState("");
+  const [pseudo, setPseudo] = useState(profile.pseudo === "Toi" ? "" : profile.pseudo);
+  const [pwd, setPwd] = useState("");
+  const [av, setAv] = useState(profile.avatar || "🎯");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [info, setInfo] = useState("");
+
+  const valid = mode === "login"
+    ? email.includes("@") && pwd.length >= 4
+    : email.includes("@") && pwd.length >= 6 && pseudo.trim().length >= 2;
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!valid || busy) return;
+    setBusy(true); setErr(""); setInfo("");
+    setProfile((p) => ({ ...p, pseudo: pseudo.trim() || "Toi", avatar: av, email }));
+    const res = await onAuth(mode, { email, pwd, pseudo: pseudo.trim(), avatar: av });
+    setBusy(false);
+    if (res && res.error) setErr(res.error);
+    else if (res && res.info) setInfo(res.info);
+  }
+
+  return (
+    <div className="app-root" style={{ display: "grid", gridTemplateColumns: "1.05fr 1fr", minHeight: "100vh" }}>
+      {/* Panneau visuel */}
+      <div className="auth-visual" style={{ background: "var(--hero)", color: "var(--hero-ink)", position: "relative", overflow: "hidden", padding: "48px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+        <div className="stripes" style={{ position: "absolute", inset: 0, opacity: .1, background: "repeating-linear-gradient(115deg, transparent 0 26px, var(--gold) 26px 28px)" }} />
+        <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(150deg, var(--gold-soft), var(--gold))", color: "#14120a", display: "grid", placeItems: "center", fontFamily: "var(--f-poster)", fontSize: 20 }}>26</div>
+          <div>
+            <div className="poster" style={{ fontSize: 20, lineHeight: .9, whiteSpace: "nowrap" }}>PRONOS CDM 2026</div>
+            <div className="mono" style={{ fontSize: 10, letterSpacing: ".16em", opacity: .7, whiteSpace: "nowrap" }}>USA · CANADA · MEXIQUE</div>
+          </div>
+        </div>
+        <div style={{ position: "relative" }}>
+          <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", opacity: .7, marginBottom: 12 }}>LIGUE PRIVÉE ENTRE POTES</div>
+          <div className="poster" style={{ fontSize: "clamp(38px,5vw,68px)", lineHeight: .9 }}>PRONOSTIQUE<br />LES 104 MATCHS.</div>
+          <div className="poster" style={{ fontSize: "clamp(38px,5vw,68px)", lineHeight: .9, color: "var(--gold-soft)" }}>GAGNE LE TITRE.</div>
+          <p style={{ maxWidth: 380, marginTop: 18, opacity: .85, lineHeight: 1.55 }}>
+            Score exact, bon résultat, phases finales à enjeu… Le bracket se remplit tout seul à chaque résultat. Le meilleur pronostiqueur soulève le trophée (et empoche les lots).
+          </p>
+        </div>
+        <div style={{ position: "relative", display: "flex", gap: 26, flexWrap: "wrap" }}>
+          {[["48", "équipes"], ["104", "matchs"], ["39", "jours"]].map(([n, l]) => (
+            <div key={l}><div className="poster" style={{ fontSize: 34, color: "var(--gold-soft)" }}>{n}</div><div className="mono" style={{ fontSize: 11, opacity: .7 }}>{l}</div></div>
+          ))}
+        </div>
+      </div>
+
+      {/* Formulaire */}
+      <div style={{ display: "grid", placeItems: "center", padding: "32px", background: "var(--bg)" }}>
+        <form onSubmit={submit} style={{ width: "100%", maxWidth: 380 }} className="rise">
+          {demoMode && (
+            <div className="alert" style={{ background: "var(--chip)", color: "var(--ink-soft)", marginBottom: 16, fontSize: 12.5 }}>
+              🧪 Mode démo — Supabase pas encore branché. Tu peux explorer, mais les comptes ne sont pas (encore) partagés.
+            </div>
+          )}
+          <div className="seg" style={{ marginBottom: 22 }}>
+            <button type="button" className={mode === "signup" ? "on" : ""} onClick={() => { setMode("signup"); setErr(""); setInfo(""); }}>Créer un compte</button>
+            <button type="button" className={mode === "login" ? "on" : ""} onClick={() => { setMode("login"); setErr(""); setInfo(""); }}>Se connecter</button>
+          </div>
+
+          <h2 className="disp" style={{ fontSize: 26, margin: "0 0 4px" }}>{mode === "signup" ? "Rejoins la ligue" : "Content de te revoir"}</h2>
+          <p className="muted" style={{ marginTop: 0, fontSize: 14 }}>{mode === "signup" ? "Inscription par email — 30 secondes." : "Reprends tes pronos là où tu les as laissés."}</p>
+
+          <div className="field" style={{ marginTop: 18 }}>
+            <label>Adresse email</label>
+            <input className="input" type="email" placeholder="toi@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+
+          {mode === "signup" && (
+            <div className="field">
+              <label>Pseudo (visible au classement)</label>
+              <input className="input" placeholder="ex. GégéLaFrappe" value={pseudo} maxLength={16} onChange={(e) => setPseudo(e.target.value)} />
+            </div>
+          )}
+
+          <div className="field">
+            <label>Mot de passe {mode === "signup" && <span className="muted" style={{ fontWeight: 400 }}>(6 caractères min.)</span>}</label>
+            <input className="input" type="password" placeholder="••••••••" value={pwd} onChange={(e) => setPwd(e.target.value)} />
+          </div>
+
+          {mode === "signup" && (
+            <div className="field">
+              <label>Choisis ton avatar</label>
+              <div className="av-grid">
+                {AV.map((a) => (
+                  <button type="button" key={a} className={av === a ? "on" : ""} onClick={() => setAv(a)}>{a}</button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {err && <div className="alert alert--err" style={{ marginBottom: 12 }}>{err}</div>}
+          {info && <div className="alert alert--ok" style={{ marginBottom: 12 }}>{info}</div>}
+
+          <Btn variant="accent block lg" type="submit" disabled={!valid || busy} style={{ marginTop: 8 }}>
+            {busy ? "…" : mode === "signup" ? "Créer mon compte →" : "Se connecter →"}
+          </Btn>
+          <p className="muted" style={{ fontSize: 12, textAlign: "center", marginTop: 14 }}>
+            {mode === "signup" ? "En t'inscrivant tu acceptes de chambrer dans le respect." : "Mot de passe oublié ? Demande à l'admin de la ligue."}
+          </p>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ============================= DASHBOARD ============================= */
+export function Dashboard({ go, predictions, profile }) {
+  const me = { ...WC.ME, pseudo: profile.pseudo, avatar: profile.avatar };
+  const top3 = WC.USERS.slice(0, 3);
+
+  const aPredire = WC.ALL_MATCHES
+    .filter((m) => m.status !== "fini" && m.home && m.away && !predictions[m.id])
+    .sort((a, b) => a.date - b.date).slice(0, 4);
+  const totalAvenir = WC.ALL_MATCHES.filter((m) => m.status !== "fini" && m.home && m.away).length;
+  const faits = WC.ALL_MATCHES.filter((m) => m.status !== "fini" && m.home && m.away && predictions[m.id]).length;
+
+  const prochain = WC.ALL_MATCHES.filter((m) => m.status !== "fini" && m.home && m.away).sort((a, b) => a.date - b.date)[0];
+
+  return (
+    <div className="content">
+      <div className="hero rise" style={{ marginBottom: 22 }}>
+        <div className="stripes" />
+        <div style={{ position: "relative", display: "flex", justifyContent: "space-between", gap: 24, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div>
+            <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", opacity: .7 }}>SALUT {me.pseudo.toUpperCase()} 👋 · TA POSITION</div>
+            <div className="big">#{me.position}</div>
+            <div style={{ display: "flex", gap: 22, marginTop: 6, flexWrap: "wrap" }}>
+              <div><b className="poster" style={{ fontSize: 26 }}>{me.pts}</b> <span className="mono" style={{ fontSize: 11, opacity: .7 }}>PTS</span></div>
+              <div><b className="poster" style={{ fontSize: 26 }}>{me.exacts}</b> <span className="mono" style={{ fontSize: 11, opacity: .7 }}>SCORES EXACTS</span></div>
+              <div><b className="poster" style={{ fontSize: 26 }}>🔥 {me.serie}</b> <span className="mono" style={{ fontSize: 11, opacity: .7 }}>SÉRIE EN COURS</span></div>
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div className="mono" style={{ fontSize: 11, opacity: .7, marginBottom: 4 }}>{faits}/{totalAvenir} PRONOS À VENIR SAISIS</div>
+            <Btn variant="gold lg" onClick={() => go("matches")} style={{ whiteSpace: "nowrap" }}>⚡ Faire mes pronos</Btn>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid g-2" style={{ marginBottom: 22, gridTemplateColumns: "1.4fr 1fr" }}>
+        <div className="card pad rise">
+          <div className="eyebrow" style={{ marginBottom: 12 }}>Prochain coup d'envoi</div>
+          {prochain && (
+            <div className="match">
+              <div className="row">
+                {slotLabel(prochain, "home")}
+                <div style={{ textAlign: "center" }}>
+                  <div className="poster" style={{ fontSize: 16 }}>{WC.fmtHeure(prochain.date)}</div>
+                  <div className="mono muted" style={{ fontSize: 11 }}>{WC.fmtDate(prochain.date)}</div>
+                </div>
+                {slotLabel(prochain, "away")}
+              </div>
+              <div className="meta" style={{ justifyContent: "space-between" }}>
+                <span>{prochain.phase} · {prochain.venue.stade}, {prochain.venue.city}</span>
+                <Btn variant="ghost" onClick={() => go("match", { id: prochain.id })} style={{ padding: "8px 14px", fontSize: 13 }}>Pronostiquer →</Btn>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="grid g-2 keep" style={{ gap: 12 }}>
+          {[["#" + me.position, "Classement"], [me.pts + " pts", "Total"], [me.exacts, "Scores exacts"], [me.bons, "Bons résultats"]].map(([n, l], i) => (
+            <div className="stat rise" key={i}><div className="n">{n}</div><div className="l">{l}</div></div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card pad-lg rise" style={{ marginBottom: 22 }}>
+        <div className="page-head" style={{ marginBottom: 18 }}>
+          <div><div className="eyebrow" style={{ marginBottom: 6 }}>À la fin du tournoi</div><h2 className="poster" style={{ fontSize: 28, margin: 0 }}>Le podium & les lots</h2></div>
+          <Btn variant="ghost" onClick={() => go("leaderboard")}>Voir le classement →</Btn>
+        </div>
+        <div className="podium">
+          {[top3[1], top3[0], top3[2]].map((u, i) => {
+            const place = i === 1 ? 1 : i === 0 ? 2 : 3;
+            const prize = WC.PRIZES.find((p) => p.rang === place);
+            return (
+              <div className={"pcol p" + place} key={u.id}>
+                <div className="medal">{place === 1 ? "🏆 1ER" : place === 2 ? "🥈 2E" : "🥉 3E"}</div>
+                <div className="av">{u.avatar}</div>
+                <div className="ps">{u.pseudo}</div>
+                <div className="mono" style={{ fontSize: 12, opacity: .8, marginTop: 2 }}>{u.pts} pts</div>
+                <div style={{ marginTop: 10, fontSize: 13, fontWeight: 700 }}>{prize.lot}</div>
+                <div style={{ fontSize: 11.5, opacity: .8 }}>{prize.titre}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="mono muted" style={{ fontSize: 11.5, marginTop: 14, textAlign: "center" }}>
+          🥄 Cuillère de bois : le dernier du classement paie la première tournée.
+        </div>
+      </div>
+
+      <div className="page-head" style={{ marginBottom: 14 }}>
+        <h2 className="poster" style={{ fontSize: 24, margin: 0 }}>À pronostiquer maintenant</h2>
+        <Btn variant="ghost" onClick={() => go("matches")}>Tout voir →</Btn>
+      </div>
+      <div className="grid g-2">
+        {aPredire.map((m) => (
+          <button key={m.id} className="card pad rise" style={{ textAlign: "left", cursor: "pointer", border: "1px solid var(--line)" }} onClick={() => go("match", { id: m.id })}>
+            <div className="match">
+              <div className="meta" style={{ justifyContent: "space-between" }}>
+                <span>{m.phase}</span><StatusPill m={m} />
+              </div>
+              <div className="row">
+                {slotLabel(m, "home")}
+                <span className="vs">VS</span>
+                {slotLabel(m, "away")}
+              </div>
+              <div className="mono muted" style={{ fontSize: 11.5 }}>{WC.fmtDate(m.date)} · {WC.fmtHeure(m.date)} · {m.venue.city}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
