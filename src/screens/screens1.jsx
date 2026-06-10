@@ -43,7 +43,7 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
   return (
     <div className="app-root auth-grid">
       {/* Panneau visuel */}
-      <div className="auth-visual" style={{ background: "var(--hero)", color: "var(--hero-ink)", position: "relative", overflow: "hidden", padding: "48px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      <div className="auth-visual" style={{ background: "var(--hero)", color: "var(--hero-ink)", position: "relative", overflow: "hidden", padding: "48px", display: "flex", flexDirection: "column", justifyContent: "flex-start", gap: 28 }}>
         <div className="stripes" style={{ position: "absolute", inset: 0, opacity: .1, background: "repeating-linear-gradient(115deg, transparent 0 26px, var(--gold) 26px 28px)" }} />
         <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(150deg, var(--gold-soft), var(--gold))", color: "#14120a", display: "grid", placeItems: "center", fontFamily: "var(--f-poster)", fontSize: 20 }}>26</div>
@@ -84,7 +84,7 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
             {t("🥄 Et le dernier du classement… paie le McDo de Gabriel.")}
           </div>
         </div>
-        <div style={{ position: "relative", display: "flex", gap: 26, flexWrap: "wrap" }}>
+        <div style={{ position: "relative", display: "flex", gap: 26, flexWrap: "wrap", marginTop: "auto", paddingTop: 24 }}>
           {[["48", "équipes"], ["104", "matchs"], ["39", "jours"]].map(([n, l]) => (
             <div key={l}><div className="poster" style={{ fontSize: 34, color: "var(--gold-soft)" }}>{n}</div><div className="mono" style={{ fontSize: 11, opacity: .7 }}>{t(l)}</div></div>
           ))}

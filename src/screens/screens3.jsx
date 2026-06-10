@@ -5,45 +5,60 @@ import { Btn, Roundel, SectionTitle, teamName } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
 import { GroupTable } from "./screens2.jsx";
 
-/* Tableau des résultats de tous les matchs (scoreboard). */
+/* Tableau des résultats des matchs, rangé PAR GROUPE (+ phase finale). */
 function ResultsBoard({ matches, go }) {
-  const list = [...matches].sort((a, b) => a.date - b.date);
   const nm = (m, side) => {
     const c = side === "home" ? m.home : m.away;
     return c ? teamName(c, WC.T[c] ? WC.T[c].name : c) : t("À déterminer");
   };
+  const Row = ({ m, withPhase }) => {
+    const fini = m.status === "fini" && m.score;
+    return (
+      <tr style={{ cursor: "pointer" }} onClick={() => go("match", { id: m.id })}>
+        <td className="mono" style={{ whiteSpace: "nowrap", fontSize: 11.5, color: "var(--ink-soft)" }}>
+          {WC.fmtDate(m.date)} · {WC.fmtHeure(m.date)}{withPhase && <><br /><span style={{ fontSize: 10 }}>{tPhase(m.phase)}</span></>}
+        </td>
+        <td>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap", fontWeight: 600 }}>
+            <Roundel code={m.home} size={16} /><span>{nm(m, "home")}</span>
+            <span className="muted" style={{ fontWeight: 400 }}>—</span>
+            <span>{nm(m, "away")}</span><Roundel code={m.away} size={16} />
+          </div>
+        </td>
+        <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+          {fini
+            ? <b className="poster" style={{ fontSize: 18 }}>{m.score[0]}–{m.score[1]}{m.pens ? <span className="mono muted" style={{ fontSize: 9, display: "block" }}>t.a.b. {m.pens[0]}–{m.pens[1]}</span> : null}</b>
+            : <span className="muted" style={{ fontSize: 12 }}>{t("à venir")}</span>}
+        </td>
+      </tr>
+    );
+  };
+  const Table = ({ list, withPhase }) => (
+    <table className="tbl">
+      <thead><tr><th>{t("Date")}</th><th>{t("Match")}</th><th style={{ textAlign: "center" }}>{t("Score")}</th></tr></thead>
+      <tbody>{list.map((m) => <Row key={m.id} m={m} withPhase={withPhase} />)}</tbody>
+    </table>
+  );
+  const groups = Object.keys(WC.GROUPS);
+  const ko = matches.filter((m) => m.round === "ko").sort((a, b) => a.date - b.date);
   return (
-    <div className="card pad" style={{ overflowX: "auto" }}>
-      <table className="tbl">
-        <thead><tr>
-          <th>{t("Date")}</th><th>{t("Match")}</th><th style={{ textAlign: "center" }}>{t("Score")}</th>
-        </tr></thead>
-        <tbody>
-          {list.map((m) => {
-            const fini = m.status === "fini" && m.score;
-            return (
-              <tr key={m.id} style={{ cursor: "pointer" }} onClick={() => go("match", { id: m.id })}>
-                <td className="mono" style={{ whiteSpace: "nowrap", fontSize: 11.5, color: "var(--ink-soft)" }}>
-                  {WC.fmtDate(m.date)} · {WC.fmtHeure(m.date)}<br />
-                  <span style={{ fontSize: 10 }}>{tPhase(m.phase)}</span>
-                </td>
-                <td>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap", fontWeight: 600 }}>
-                    <Roundel code={m.home} size={16} /><span>{nm(m, "home")}</span>
-                    <span className="muted" style={{ fontWeight: 400 }}>—</span>
-                    <span>{nm(m, "away")}</span><Roundel code={m.away} size={16} />
-                  </div>
-                </td>
-                <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
-                  {fini
-                    ? <b className="poster" style={{ fontSize: 18 }}>{m.score[0]}–{m.score[1]}{m.pens ? <span className="mono muted" style={{ fontSize: 9, display: "block" }}>t.a.b. {m.pens[0]}–{m.pens[1]}</span> : null}</b>
-                    : <span className="muted" style={{ fontSize: 12 }}>{t("à venir")}</span>}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="grid g-2" style={{ alignItems: "start" }}>
+      {groups.map((g) => {
+        const gm = matches.filter((m) => m.group === g).sort((a, b) => a.date - b.date);
+        if (!gm.length) return null;
+        return (
+          <div className="card pad" key={g}>
+            <div className="eyebrow" style={{ marginBottom: 8 }}>{t("Groupe")} {g}</div>
+            <Table list={gm} />
+          </div>
+        );
+      })}
+      {ko.length > 0 && (
+        <div className="card pad" style={{ gridColumn: "1 / -1" }}>
+          <div className="eyebrow" style={{ marginBottom: 8 }}>{t("Phase finale")}</div>
+          <Table list={ko} withPhase />
+        </div>
+      )}
     </div>
   );
 }
