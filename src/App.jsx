@@ -6,6 +6,7 @@ import { fetchMatches, fetchMyPredictions, savePrediction, fetchLeaderboard, fet
 import { AuthScreen, Dashboard } from "./screens/screens1.jsx";
 import { MatchesScreen, MatchDetail } from "./screens/screens2.jsx";
 import { TableauScreen, Leaderboard, Profile, Rules } from "./screens/screens3.jsx";
+import { AdminScreen } from "./screens/admin.jsx";
 
 const LS = "pronos2026:v1";
 function loadState() {
@@ -50,24 +51,20 @@ export default function App() {
     localStorage.setItem(LS, JSON.stringify({ authed: hasSupabase ? false : authed, screen, params, profile }));
   }, [authed, screen, params, profile]);
 
-  // Charger les vraies données quand connecté (mode Supabase)
-  useEffect(() => {
-    if (!hasSupabase || !authed) return;
-    let alive = true;
-    (async () => {
-      try {
-        const [ms, preds, lb, meRow] = await Promise.all([
-          fetchMatches(), fetchMyPredictions(), fetchLeaderboard(), fetchMe(),
-        ]);
-        if (!alive) return;
-        if (ms.length) setMatches(ms);
-        setPredictions(preds || {});
-        if (lb.length) setUsers(lb);
-        if (meRow) setProfile((p) => ({ ...p, id: meRow.id, pseudo: meRow.pseudo || p.pseudo, avatar: meRow.avatar || p.avatar, email: meRow.email || p.email, fav: meRow.fav || p.fav }));
-      } catch (e) { console.error("Chargement données:", e); }
-    })();
-    return () => { alive = false; };
-  }, [authed]);
+  // Charger les vraies données (mode Supabase). Rappelable après une saisie admin.
+  async function loadData() {
+    if (!hasSupabase) return;
+    try {
+      const [ms, preds, lb, meRow] = await Promise.all([
+        fetchMatches(), fetchMyPredictions(), fetchLeaderboard(), fetchMe(),
+      ]);
+      if (ms.length) setMatches(ms);
+      setPredictions(preds || {});
+      if (lb.length) setUsers(lb);
+      if (meRow) setProfile((p) => ({ ...p, id: meRow.id, pseudo: meRow.pseudo || p.pseudo, avatar: meRow.avatar || p.avatar, email: meRow.email || p.email, fav: meRow.fav || p.fav, is_admin: meRow.is_admin }));
+    } catch (e) { console.error("Chargement données:", e); }
+  }
+  useEffect(() => { if (hasSupabase && authed) loadData(); }, [authed]);
 
   function go(s, p = {}) { setScreen(s); setParams(p); window.scrollTo({ top: 0 }); }
   function setPred(id, val) {
@@ -117,10 +114,12 @@ export default function App() {
       case "leaderboard": return <Leaderboard go={go} profile={profile} users={users} me={me} />;
       case "profile": return <Profile profile={profile} setProfile={setProfile} predictions={predictions} matches={matches} me={me} />;
       case "rules": return <Rules />;
+      case "admin": return <AdminScreen matches={matches} reload={loadData} />;
       default: return <Dashboard go={go} predictions={predictions} profile={profile} matches={matches} users={users} me={me} />;
     }
   }
 
+  const nav = profile.is_admin ? [...NAV, ["admin", "Admin", "🛠️"]] : NAV;
   const activeNav = screen === "match" ? "matches" : screen;
 
   return (
@@ -131,7 +130,7 @@ export default function App() {
             <div className="mark">26</div>
             <div><div className="nm">GABRIEL</div><div className="sub">Coupe du Monde 2026</div></div>
           </div>
-          {NAV.map(([k, l, ic]) => (
+          {nav.map(([k, l, ic]) => (
             <button key={k} className={"navitem" + (activeNav === k ? " active" : "")} onClick={() => go(k)}>
               <span className="ic">{ic}</span>{l}
               {k === "matches" && aPredire > 0 && <span className="badge">{aPredire}</span>}
@@ -163,7 +162,7 @@ export default function App() {
       </div>
 
       <nav className="tabbar">
-        {NAV.map(([k, l, ic]) => (
+        {nav.map(([k, l, ic]) => (
           <button key={k} className={"tab" + (activeNav === k ? " active" : "")} onClick={() => go(k)}>
             <span className="ic">{ic}</span>{l}
           </button>

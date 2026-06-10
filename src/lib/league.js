@@ -95,8 +95,32 @@ export async function fetchMe() {
   if (!user) return null;
   const { data } = await supabase
     .from("profiles")
-    .select("id, pseudo, avatar, fav")
+    .select("id, pseudo, avatar, fav, is_admin")
     .eq("id", user.id)
     .single();
   return data ? { ...data, email: user.email } : { id: user.id, email: user.email };
+}
+
+/* ADMIN : enregistre le score final d'un match (déclenche le calcul des points). */
+export async function saveScore(matchId, sh, sa, winnerCode) {
+  const { error } = await supabase
+    .from("matches")
+    .update({
+      score_home: sh,
+      score_away: sa,
+      status: "fini",
+      winner: winnerCode || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", matchId);
+  return { error: error ? error.message : null };
+}
+
+/* ADMIN : rouvre un match (annule le score). */
+export async function clearScore(matchId) {
+  const { error } = await supabase
+    .from("matches")
+    .update({ score_home: null, score_away: null, status: "a_venir", winner: null })
+    .eq("id", matchId);
+  return { error: error ? error.message : null };
 }
