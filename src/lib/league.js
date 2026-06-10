@@ -68,13 +68,15 @@ export async function savePrediction(matchId, pred) {
   return { error: error ? error.message : null };
 }
 
-/* Classement commun (vue agrégée), trié, avec position. */
+/* Classement commun (vue agrégée), trié, avec position.
+   Départage d'égalité : points > scores exacts > inscrit le plus tôt. */
 export async function fetchLeaderboard() {
   const { data, error } = await supabase
     .from("leaderboard")
     .select("*")
     .order("pts", { ascending: false })
-    .order("exacts", { ascending: false });
+    .order("exacts", { ascending: false })
+    .order("created_at", { ascending: true });
   if (error) throw error;
   return (data || []).map((u, i) => ({
     id: u.user_id,

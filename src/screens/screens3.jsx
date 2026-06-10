@@ -337,6 +337,10 @@ export function Rules() {
             <div style={{ fontWeight: 700, marginBottom: 4 }}>🎁 Bonus</div>
             <div className="muted" style={{ fontSize: 13.5 }}>+{B.bonusSerie} pts par série de 3 bons pronos d'affilée · les matchs de phase finale rapportent davantage (l'enjeu monte à chaque tour).</div>
           </div>
+          <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>⚖️ {t("En cas d'égalité")}</div>
+            <div className="muted" style={{ fontSize: 13.5 }}>{t("À points égaux, c'est le nombre de scores exacts qui départage. Si l'égalité persiste, avantage à celui qui s'est inscrit le plus tôt dans la ligue — les premiers arrivés sont récompensés.")}</div>
+          </div>
         </div>
 
         <div>

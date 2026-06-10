@@ -45,3 +45,18 @@ create policy predictions_update_own on public.predictions for update
     and (select kickoff from public.matches where id = match_id) > now()
     and not exists (select 1 from public.profiles b where b.id = auth.uid() and b.banned)
   );
+
+-- 5. Départage d'égalité : la vue expose la date d'inscription
+--    (à points égaux puis exacts égaux, le plus ancien inscrit passe devant).
+create or replace view public.leaderboard as
+  select
+    pr.id as user_id, pr.pseudo, pr.avatar, pr.created_at,
+    coalesce(sum(p.points), 0) as pts,
+    count(*) filter (where p.points = 5) as exacts,
+    count(*) filter (where p.points in (3,4)) as bons,
+    count(*) filter (where p.points is not null) as joues
+  from public.profiles pr
+  left join public.predictions p on p.user_id = pr.id
+  where not pr.banned
+  group by pr.id, pr.pseudo, pr.avatar, pr.created_at;
+grant select on public.leaderboard to anon, authenticated;

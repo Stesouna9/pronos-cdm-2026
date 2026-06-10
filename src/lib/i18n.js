@@ -69,6 +69,8 @@ const JA = {
   "Le barème": "配点", "Score exact": "完全的中", "Bon résultat": "結果的中",
   "Mauvais résultat": "不的中", "Exemples concrets": "具体例", "Format du tournoi": "大会方式",
   "Les lots": "賞品", "🎁 Bonus": "🎁 ボーナス",
+  "En cas d'égalité": "同点の場合",
+  "À points égaux, c'est le nombre de scores exacts qui départage. Si l'égalité persiste, avantage à celui qui s'est inscrit le plus tôt dans la ligue — les premiers arrivés sont récompensés.": "同点の場合は完全的中数で順位を決めます。それでも同じなら、先にリーグに登録した人が上位になります — 早い者勝ち！",
   // Classement
   "Joueur": "プレイヤー", "Exacts": "完全", "Bons": "結果", "Série": "連続", "Points": "得点",
   "Général": "総合", "Cette semaine": "今週", "🏆 CHAMPION": "🏆 優勝", "Champion": "優勝",
