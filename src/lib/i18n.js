@@ -81,9 +81,23 @@ const JA = {
   "À saisir": "入力待ち", "Valider": "確定", "Corriger": "修正", "Rouvrir": "再開",
   // Divers
   "Déconnexion": "ログアウト", "VS": "対", "Vainqueur": "勝者",
+  // Lots (tableau de bord / règles)
+  "🏆 Une journée en tête-à-tête avec Gabriel + resto": "🏆 ガブリエルと1日デート＋食事",
+  "🍔 Un McDo offert par Gabriel": "🍔 ガブリエルおごりのマック",
+  "🔞 Un sex toy": "🔞 大人のおもちゃ",
+  "🍟 Tu paies le McDo de Gabriel": "🍟 ガブリエルのマック代を払う",
+  "🥄 Cuillère de bois : le dernier du classement paie la première tournée.": "🥄 最下位賞：最下位はガブリエルにおごる。",
+  // Hero / stats
+  "PTS": "点", "SCORES EXACTS": "完全的中", "SÉRIE EN COURS": "連続的中", "pts": "点",
+  // Classement / profil / règles / admin (titres + libellés)
+  "Classement": "ランキング", "Profil": "プロフィール", "Le tableau": "トーナメント表",
+  "Comment on marque des points": "得点の仕組み", "Règles & barème": "ルールと配点",
+  "Ton compte": "アカウント", "Réservé à toi (admin)": "管理者専用", "Saisie des scores": "スコア入力",
+  "Tape le score final d'un match et clique": "試合の最終スコアを入力して押す",
+  "Aucun match dans ce filtre. Les matchs deviennent saisissables une fois le coup d'envoi passé.": "この絞り込みに試合はありません。キックオフ後に入力可能になります。",
   "Le tableau": "トーナメント表", "12 groupes": "12グループ", "Phase finale": "決勝トーナメント",
   "🏆 Phase finale à venir": "🏆 決勝トーナメントは近日",
-  "Voir les matchs →": "試合を見る →", "Qualifié": "ル", "Repêchable": "敗者復活",
+  "Voir les matchs →": "試合を見る →", "Qualifié": "突破", "Repêchable": "敗者復活",
 };
 
 // Noms d'équipes en japonais (code FIFA -> JA).

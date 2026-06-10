@@ -10,6 +10,7 @@
      - fmtDate / fmtHeure / team()    : helpers d'affichage
      - un jeu de matchs/joueurs SIMULÉ : pour la démo locale
    ============================================================ */
+import { getLang } from "./i18n.js";
 
 // --- RNG déterministe (mulberry32) pour des scores stables ---
 function rng(seed) {
@@ -298,6 +299,10 @@ function seededPredictions() {
 }
 
 function fmtDate(d) {
+  if (getLang() === "ja") {
+    const jj = ["日", "月", "火", "水", "木", "金", "土"][d.getDay()];
+    return `${d.getMonth() + 1}月${d.getDate()}日(${jj})`;
+  }
   const j = ["dim", "lun", "mar", "mer", "jeu", "ven", "sam"][d.getDay()];
   const mo = ["jan", "fév", "mar", "avr", "mai", "juin", "juil", "août", "sep", "oct", "nov", "déc"][d.getMonth()];
   return `${j} ${d.getDate()} ${mo}`;

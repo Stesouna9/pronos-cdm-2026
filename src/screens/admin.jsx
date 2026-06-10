@@ -3,6 +3,7 @@ import { useState } from "react";
 import { WC } from "../lib/wc.js";
 import { saveScore, clearScore } from "../lib/league.js";
 import { Roundel, Btn, SectionTitle } from "../components/ui.jsx";
+import { t, tPhase } from "../lib/i18n.js";
 
 function nameOf(m, side) {
   const code = side === "home" ? m.home : m.away;
@@ -35,7 +36,7 @@ function AdminRow({ m, onSaved }) {
   return (
     <div className="card pad admin-row" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
       <div style={{ minWidth: 150, fontSize: 12 }} className="mono muted">
-        <b style={{ color: "var(--ink)" }}>{m.phase}</b><br />{WC.fmtDate(m.date)} · {WC.fmtHeure(m.date)}
+        <b style={{ color: "var(--ink)" }}>{tPhase(m.phase)}</b><br />{WC.fmtDate(m.date)} · {WC.fmtHeure(m.date)}
       </div>
       <div className="admin-teams" style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 220, justifyContent: "center" }}>
         <Roundel code={m.home} size={20} /><span style={{ fontWeight: 700, minWidth: 90, textAlign: "right" }}>{nameOf(m, "home")}</span>
@@ -45,8 +46,8 @@ function AdminRow({ m, onSaved }) {
         <span style={{ fontWeight: 700, minWidth: 90 }}>{nameOf(m, "away")}</span><Roundel code={m.away} size={20} />
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 180, justifyContent: "flex-end" }}>
-        <Btn variant="accent" onClick={save} disabled={busy} style={{ padding: "8px 14px", fontSize: 13 }}>{fini ? "Corriger" : "Valider"}</Btn>
-        {fini && <Btn variant="ghost" onClick={reopen} disabled={busy} style={{ padding: "8px 12px", fontSize: 12 }}>Rouvrir</Btn>}
+        <Btn variant="accent" onClick={save} disabled={busy} style={{ padding: "8px 14px", fontSize: 13 }}>{fini ? t("Corriger") : t("Valider")}</Btn>
+        {fini && <Btn variant="ghost" onClick={reopen} disabled={busy} style={{ padding: "8px 12px", fontSize: 12 }}>{t("Rouvrir")}</Btn>}
       </div>
       {msg && <div className="mono" style={{ fontSize: 11, width: "100%", textAlign: "right", color: msg.startsWith("Erreur") ? "var(--lose)" : "var(--win)" }}>{msg}</div>}
     </div>
@@ -62,10 +63,10 @@ export function AdminScreen({ matches = [], reload }) {
 
   return (
     <div className="content">
-      <SectionTitle kicker="Réservé à toi (admin)" title="Saisie des scores"
+      <SectionTitle kicker={t("Réservé à toi (admin)")} title={t("Saisie des scores")}
         right={<div className="seg">
           {[["jouables", "À saisir"], ["finis", "Terminés"], ["tous", "Tous"]].map(([k, l]) => (
-            <button key={k} className={filtre === k ? "on" : ""} onClick={() => setFiltre(k)}>{l}</button>
+            <button key={k} className={filtre === k ? "on" : ""} onClick={() => setFiltre(k)}>{t(l)}</button>
           ))}
         </div>} />
       <div className="card pad rise" style={{ marginBottom: 16 }}>
@@ -76,7 +77,7 @@ export function AdminScreen({ matches = [], reload }) {
       <div className="grid" style={{ gap: 12 }}>
         {list.map((m) => <AdminRow key={m.id} m={m} onSaved={reload} />)}
       </div>
-      {list.length === 0 && <div className="card pad-lg" style={{ textAlign: "center" }}><p className="muted">Aucun match dans ce filtre. Les matchs deviennent saisissables une fois le coup d'envoi passé.</p></div>}
+      {list.length === 0 && <div className="card pad-lg" style={{ textAlign: "center" }}><p className="muted">{t("Aucun match dans ce filtre. Les matchs deviennent saisissables une fois le coup d'envoi passé.")}</p></div>}
     </div>
   );
 }

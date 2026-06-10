@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { WC } from "../lib/wc.js";
 import { Btn, Roundel, SectionTitle } from "../components/ui.jsx";
+import { t } from "../lib/i18n.js";
 import { GroupTable } from "./screens2.jsx";
 
 /* =================== TABLEAU : GROUPES + BRACKET =================== */
@@ -12,10 +13,10 @@ export function TableauScreen({ go, matches = WC.ALL_MATCHES }) {
   const letters = real ? Object.keys(WC.GROUPS) : WC.GROUP_LETTERS;
   return (
     <div className="content">
-      <SectionTitle kicker="Phase de groupes → finale" title="Le tableau"
+      <SectionTitle kicker="" title={t("Le tableau")}
         right={<div className="seg">
-          <button className={tab === "groupes" ? "on" : ""} onClick={() => setTab("groupes")}>12 groupes</button>
-          <button className={tab === "bracket" ? "on" : ""} onClick={() => setTab("bracket")}>Phase finale</button>
+          <button className={tab === "groupes" ? "on" : ""} onClick={() => setTab("groupes")}>{t("12 groupes")}</button>
+          <button className={tab === "bracket" ? "on" : ""} onClick={() => setTab("bracket")}>{t("Phase finale")}</button>
         </div>} />
 
       {tab === "bracket" && (
@@ -113,10 +114,10 @@ export function Leaderboard({ go, profile, users: realUsers, me }) {
 
   return (
     <div className="content">
-      <SectionTitle kicker={`${users.length} joueurs dans la ligue`} title="Classement"
+      <SectionTitle kicker="" title={t("Classement")}
         right={<div className="seg">
-          <button className={scope === "general" ? "on" : ""} onClick={() => setScope("general")}>Général</button>
-          <button className={scope === "semaine" ? "on" : ""} onClick={() => setScope("semaine")}>Cette semaine</button>
+          <button className={scope === "general" ? "on" : ""} onClick={() => setScope("general")}>{t("Général")}</button>
+          <button className={scope === "semaine" ? "on" : ""} onClick={() => setScope("semaine")}>{t("Cette semaine")}</button>
         </div>} />
 
       <div className="podium rise" style={{ marginBottom: 22 }}>
@@ -137,7 +138,7 @@ export function Leaderboard({ go, profile, users: realUsers, me }) {
 
       <div className="card pad">
         <table className="tbl">
-          <thead><tr><th>#</th><th>Joueur</th><th>Exacts</th><th>Bons</th><th>Série</th><th style={{ textAlign: "right" }}>Points</th></tr></thead>
+          <thead><tr><th>#</th><th>{t("Joueur")}</th><th>{t("Exacts")}</th><th>{t("Bons")}</th><th>{t("Série")}</th><th style={{ textAlign: "right" }}>{t("Points")}</th></tr></thead>
           <tbody>
             {users.map((u) => (
               <tr key={u.id} className={u.isMe ? "me" : ""}>
@@ -184,7 +185,7 @@ export function Profile({ profile, setProfile, predictions, me: meStats, matches
 
   return (
     <div className="content">
-      <SectionTitle kicker="Ton compte" title="Profil" />
+      <SectionTitle kicker={t("Ton compte")} title={t("Profil")} />
       <div className="grid g-2" style={{ gridTemplateColumns: "1fr 1.2fr", alignItems: "start" }}>
         <div className="card pad-lg rise" style={{ textAlign: "center" }}>
           <div style={{ width: 92, height: 92, borderRadius: "50%", background: "var(--bg-2)", display: "grid", placeItems: "center", fontSize: 46, margin: "0 auto 12px", border: "2px solid var(--line)" }}>{draft.avatar}</div>
@@ -255,7 +256,7 @@ export function Rules() {
   ];
   return (
     <div className="content">
-      <SectionTitle kicker="Comment on marque des points" title="Règles & barème" />
+      <SectionTitle kicker={t("Comment on marque des points")} title={t("Règles & barème")} />
 
       <div className="grid g-2" style={{ alignItems: "start" }}>
         <div className="card pad-lg rise">

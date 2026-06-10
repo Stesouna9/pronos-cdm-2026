@@ -174,9 +174,9 @@ export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, 
             <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", opacity: .7 }}>SALUT {me.pseudo.toUpperCase()} 👋 · TA POSITION</div>
             <div className="big">#{me.position}</div>
             <div style={{ display: "flex", gap: 22, marginTop: 6, flexWrap: "wrap" }}>
-              <div><b className="poster" style={{ fontSize: 26 }}>{me.pts}</b> <span className="mono" style={{ fontSize: 11, opacity: .7 }}>PTS</span></div>
-              <div><b className="poster" style={{ fontSize: 26 }}>{me.exacts}</b> <span className="mono" style={{ fontSize: 11, opacity: .7 }}>SCORES EXACTS</span></div>
-              <div><b className="poster" style={{ fontSize: 26 }}>🔥 {me.serie}</b> <span className="mono" style={{ fontSize: 11, opacity: .7 }}>SÉRIE EN COURS</span></div>
+              <div><b className="poster" style={{ fontSize: 26 }}>{me.pts}</b> <span className="mono" style={{ fontSize: 11, opacity: .7 }}>{t("PTS")}</span></div>
+              <div><b className="poster" style={{ fontSize: 26 }}>{me.exacts}</b> <span className="mono" style={{ fontSize: 11, opacity: .7 }}>{t("SCORES EXACTS")}</span></div>
+              <div><b className="poster" style={{ fontSize: 26 }}>🔥 {me.serie}</b> <span className="mono" style={{ fontSize: 11, opacity: .7 }}>{t("SÉRIE EN COURS")}</span></div>
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
