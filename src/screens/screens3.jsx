@@ -93,11 +93,11 @@ export function TableauScreen({ go, matches = WC.ALL_MATCHES }) {
           </>
         ) : (
           <div className="card pad-lg" style={{ textAlign: "center" }}>
-            <div className="poster" style={{ fontSize: 24 }}>🏆 Phase finale à venir</div>
+            <div className="poster" style={{ fontSize: 24 }}>{t("🏆 Phase finale à venir")}</div>
             <p className="muted" style={{ maxWidth: 460, margin: "8px auto 0" }}>
               {t("Le tableau à élimination directe se remplira automatiquement après la phase de groupes (à partir du 28 juin). En attendant, fais tes pronos !")}
             </p>
-            <Btn variant="accent" onClick={() => go("matches")} style={{ marginTop: 14 }}>Voir les matchs →</Btn>
+            <Btn variant="accent" onClick={() => go("matches")} style={{ marginTop: 14 }}>{t("Voir les matchs →")}</Btn>
           </div>
         )
       )}

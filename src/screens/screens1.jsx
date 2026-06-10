@@ -48,8 +48,8 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
         <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(150deg, var(--gold-soft), var(--gold))", color: "#14120a", display: "grid", placeItems: "center", fontFamily: "var(--f-poster)", fontSize: 20 }}>26</div>
           <div>
-            <div className="poster" style={{ fontSize: 20, lineHeight: .9, whiteSpace: "nowrap" }}>LA CDM DE GABRIEL</div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: ".16em", opacity: .7, whiteSpace: "nowrap" }}>ENTRE POTES · USA · CANADA · MEXIQUE</div>
+            <div className="poster" style={{ fontSize: 20, lineHeight: .9, whiteSpace: "nowrap" }}>{t("LA CDM DE GABRIEL")}</div>
+            <div className="mono" style={{ fontSize: 10, letterSpacing: ".16em", opacity: .7, whiteSpace: "nowrap" }}>{t("ENTRE POTES")} · USA · CANADA · MEXIQUE</div>
           </div>
         </div>
         <div style={{ position: "relative", width: "100%" }}>

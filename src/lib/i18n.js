@@ -23,6 +23,13 @@ const JA = {
   "Accueil": "ホーム", "Matchs": "試合", "Tableau": "トーナメント表",
   "Classement": "ランキング", "Profil": "プロフィール", "Règles": "ルール", "Admin": "管理",
   "Coupe du Monde 2026": "2026 ワールドカップ", "CDM DE GABRIEL": "ガブリエルのW杯",
+  "LA CDM DE GABRIEL": "ガブリエルのW杯", "ENTRE POTES": "仲間内リーグ", "GABRIEL": "ガブリエル",
+  "Cet email a déjà un compte. Connecte-toi.": "このメールは登録済みです。ログインしてください。",
+  "Email ou mot de passe incorrect.": "メールアドレスまたはパスワードが違います。",
+  "Confirme d'abord ton email (regarde tes mails).": "先にメールを確認してください。",
+  "Mot de passe trop court (6 caractères minimum).": "パスワードが短すぎます（6文字以上）。",
+  "Compte créé ! Vérifie ta boîte mail pour confirmer, puis connecte-toi.": "アカウント作成完了！メールを確認してからログインしてください。",
+  "Problème de connexion au serveur. Réessaie.": "サーバーに接続できません。もう一度お試しください。",
   // Auth
   "Créer un compte": "アカウント作成", "Se connecter": "ログイン",
   "Rejoins la ligue": "リーグに参加", "Content de te revoir": "おかえりなさい",

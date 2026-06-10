@@ -95,7 +95,7 @@ export default function App() {
           options: { data: { pseudo, avatar } },
         });
         if (error) return { error: traduire(error.message) };
-        if (!data.session) return { info: "Compte créé ! Vérifie ta boîte mail pour confirmer, puis connecte-toi." };
+        if (!data.session) return { info: t("Compte créé ! Vérifie ta boîte mail pour confirmer, puis connecte-toi.") };
         go("home"); return {};
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password: pwd });
@@ -103,7 +103,7 @@ export default function App() {
         go("home"); return {};
       }
     } catch (e) {
-      return { error: "Problème de connexion au serveur. Réessaie." };
+      return { error: t("Problème de connexion au serveur. Réessaie.") };
     }
   }
 
@@ -141,7 +141,7 @@ export default function App() {
         <aside className="sidebar">
           <div className="brand">
             <div className="mark">26</div>
-            <div><div className="nm">GABRIEL</div><div className="sub">{t("Coupe du Monde 2026")}</div></div>
+            <div><div className="nm">{t("GABRIEL")}</div><div className="sub">{t("Coupe du Monde 2026")}</div></div>
           </div>
           {nav.map(([k, l, ic]) => (
             <button key={k} className={"navitem" + (activeNav === k ? " active" : "")} onClick={() => go(k)}>
@@ -164,7 +164,7 @@ export default function App() {
           <header className="topbar">
             <div className="brand" style={{ padding: 0 }}>
               <div className="mark" style={{ width: 32, height: 32, fontSize: 15 }}>26</div>
-              <div className="nm" style={{ fontSize: 15 }}>CDM DE GABRIEL</div>
+              <div className="nm" style={{ fontSize: 15 }}>{t("CDM DE GABRIEL")}</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <LangToggle compact />
@@ -188,12 +188,12 @@ export default function App() {
   );
 }
 
-// petites traductions des erreurs Supabase courantes
+// petites traductions des erreurs Supabase courantes (FR, puis t() vers JA)
 function traduire(msg) {
   const m = (msg || "").toLowerCase();
-  if (m.includes("already registered") || m.includes("already been registered")) return "Cet email a déjà un compte. Connecte-toi.";
-  if (m.includes("invalid login")) return "Email ou mot de passe incorrect.";
-  if (m.includes("email not confirmed")) return "Confirme d'abord ton email (regarde tes mails).";
-  if (m.includes("password")) return "Mot de passe trop court (6 caractères minimum).";
+  if (m.includes("already registered") || m.includes("already been registered")) return t("Cet email a déjà un compte. Connecte-toi.");
+  if (m.includes("invalid login")) return t("Email ou mot de passe incorrect.");
+  if (m.includes("email not confirmed")) return t("Confirme d'abord ton email (regarde tes mails).");
+  if (m.includes("password")) return t("Mot de passe trop court (6 caractères minimum).");
   return msg;
 }
