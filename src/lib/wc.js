@@ -74,16 +74,21 @@ const T = {
   DEN: { name: "Danemark", conf: "UEFA", rank: 20, colors: ["#c8102e", "#ffffff", "#c8102e"] },
   HON: { name: "Honduras", conf: "CONCACAF", rank: 78, colors: ["#0073cf", "#ffffff", "#0073cf"] },
   POL: { name: "Pologne", conf: "UEFA", rank: 28, colors: ["#ffffff", "#dc143c", "#ffffff"] },
+
+  CZE: { name: "Tchéquie", conf: "UEFA", rank: 43, colors: ["#11457e", "#ffffff", "#d7141a"] },
+  SWE: { name: "Suède", conf: "UEFA", rank: 34, colors: ["#006aa7", "#fecc00", "#006aa7"] },
+  IRQ: { name: "Irak", conf: "AFC", rank: 58, colors: ["#007a3d", "#ffffff", "#ce1126"] },
+  COD: { name: "RD Congo", conf: "CAF", rank: 60, colors: ["#007fff", "#f7d618", "#ce1021"] },
 };
 
-// --- 12 groupes A..L ---
+// --- 12 groupes A..L (vrai tirage CDM 2026) ---
 const GROUPS = {
-  A: ["MEX", "RSA", "KOR", "NOR"], B: ["CAN", "BIH", "QAT", "SUI"],
-  C: ["ESP", "EGY", "CUW", "SCO"], D: ["USA", "PAR", "AUS", "TUR"],
-  E: ["ARG", "IRN", "CPV", "AUT"], F: ["FRA", "SEN", "UZB", "PAN"],
-  G: ["BRA", "MAR", "JPN", "CIV"], H: ["ENG", "CRO", "GHA", "NZL"],
-  I: ["POR", "URU", "JOR", "HAI"], J: ["NED", "COL", "TUN", "KSA"],
-  K: ["GER", "ECU", "ALG", "CRC"], L: ["BEL", "DEN", "HON", "POL"],
+  A: ["MEX", "RSA", "KOR", "CZE"], B: ["CAN", "BIH", "QAT", "SUI"],
+  C: ["BRA", "MAR", "HAI", "SCO"], D: ["USA", "PAR", "AUS", "TUR"],
+  E: ["GER", "CUW", "CIV", "ECU"], F: ["NED", "JPN", "SWE", "TUN"],
+  G: ["BEL", "EGY", "IRN", "NZL"], H: ["ESP", "CPV", "KSA", "URU"],
+  I: ["FRA", "SEN", "IRQ", "NOR"], J: ["ARG", "ALG", "AUT", "JOR"],
+  K: ["POR", "COD", "UZB", "COL"], L: ["ENG", "CRO", "GHA", "PAN"],
 };
 
 const VENUES = [
@@ -299,12 +304,30 @@ function fmtDate(d) {
 }
 function fmtHeure(d) { return pad(d.getHours()) + "h" + pad(d.getMinutes()); }
 
+// Classement d'un groupe calculé à partir d'une liste de matchs (mode réel).
+function computeGroupStandings(matchList, codes) {
+  const rows = {};
+  codes.forEach((c) => (rows[c] = { code: c, pts: 0, j: 0, g: 0, p: 0, n: 0, bp: 0, bc: 0, diff: 0 }));
+  matchList
+    .filter((m) => m.status === "fini" && m.score && rows[m.home] && rows[m.away])
+    .forEach((m) => {
+      const [a, b] = m.score, H = rows[m.home], A = rows[m.away];
+      H.j++; A.j++; H.bp += a; H.bc += b; A.bp += b; A.bc += a;
+      if (a > b) { H.pts += 3; H.g++; A.p++; }
+      else if (a < b) { A.pts += 3; A.g++; H.p++; }
+      else { H.pts++; A.pts++; H.n++; A.n++; }
+    });
+  return Object.values(rows)
+    .map((x) => ({ ...x, diff: x.bp - x.bc }))
+    .sort((x, y) => y.pts - x.pts || y.diff - x.diff || y.bp - x.bp || ((T[x.code]?.rank || 99) - (T[y.code]?.rank || 99)));
+}
+
 export const WC = {
   NOW, T, GROUPS, GROUP_LETTERS: groupLetters, VENUES,
   MATCHES: matches, STANDINGS, KO, ALL_KO, ALL_MATCHES,
   firsts, seconds, thirds, PRIZES, USERS, ME, BAREME, points,
   PREDICTIONS: seededPredictions(),
-  fmtDate, fmtHeure,
+  fmtDate, fmtHeure, computeGroupStandings,
   team(code) { return code ? { code, ...T[code] } : null; },
 };
 

@@ -88,17 +88,17 @@ function MatchRow({ m, pred, setPred, go }) {
 }
 
 /* ---------- Écran liste des matchs ---------- */
-export function MatchesScreen({ go, predictions, setPred }) {
+export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCHES }) {
   const [phase, setPhase] = useState("tous");
   const [filtre, setFiltre] = useState("tous"); // tous | apredire | termines
 
   const phases = [
-    ["tous", "Tous"], ["group", "Groupes"], ["32es de finale", "32es"], ["8es de finale", "8es"],
+    ["tous", "Tous"], ["group", "Groupes"], ["8es de finale", "8es"],
     ["Quarts de finale", "Quarts"], ["Demi-finales", "Demies"], ["Finale", "Finale"],
   ];
 
   const list = useMemo(() => {
-    let L = WC.ALL_MATCHES.filter((m) => {
+    let L = matches.filter((m) => {
       if (phase === "tous") return true;
       if (phase === "group") return m.round === "group";
       return m.phase === phase;
@@ -106,9 +106,9 @@ export function MatchesScreen({ go, predictions, setPred }) {
     if (filtre === "apredire") L = L.filter((m) => m.status !== "fini" && m.home && m.away && !predictions[m.id]);
     if (filtre === "termines") L = L.filter((m) => m.status === "fini");
     return [...L].sort((a, b) => a.date - b.date);
-  }, [phase, filtre, predictions]);
+  }, [phase, filtre, predictions, matches]);
 
-  const aFaire = WC.ALL_MATCHES.filter((m) => m.status !== "fini" && m.home && m.away && !predictions[m.id]).length;
+  const aFaire = matches.filter((m) => m.status !== "fini" && m.home && m.away && !predictions[m.id]).length;
 
   return (
     <div className="content">
@@ -168,8 +168,8 @@ function Pitch({ code }) {
   );
 }
 
-export function MatchDetail({ id, go, predictions, setPred }) {
-  const m = WC.ALL_MATCHES.find((x) => x.id === id);
+export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MATCHES }) {
+  const m = matches.find((x) => x.id === id);
   const [tab, setTab] = useState("apercu");
   if (!m) return <div className="content"><p>Match introuvable.</p></div>;
   const fini = m.status === "fini";
@@ -303,7 +303,7 @@ export function MatchDetail({ id, go, predictions, setPred }) {
       )}
 
       {tab === "classement" && (
-        m.round === "group" ? <GroupTable g={m.group} /> :
+        m.round === "group" ? <GroupTable g={m.group} matches={matches} /> :
           <div className="card pad-lg" style={{ textAlign: "center" }}><div className="poster" style={{ fontSize: 22 }}>Phase à élimination directe</div><p className="muted">Pas de classement de groupe — direction le bracket.</p><Btn variant="ghost" onClick={() => go("tableau")}>Voir le bracket →</Btn></div>
       )}
     </div>
@@ -311,8 +311,10 @@ export function MatchDetail({ id, go, predictions, setPred }) {
 }
 
 /* tableau d'un groupe (réutilisé) */
-export function GroupTable({ g }) {
-  const s = WC.STANDINGS[g];
+export function GroupTable({ g, matches }) {
+  const s = matches
+    ? WC.computeGroupStandings(matches.filter((m) => m.group === g), WC.GROUPS[g])
+    : WC.STANDINGS[g];
   return (
     <div className="card pad">
       <div className="eyebrow" style={{ marginBottom: 10 }}>Groupe {g} — classement</div>

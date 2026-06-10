@@ -5,8 +5,11 @@ import { Btn, Roundel, SectionTitle } from "../components/ui.jsx";
 import { GroupTable } from "./screens2.jsx";
 
 /* =================== TABLEAU : GROUPES + BRACKET =================== */
-export function TableauScreen({ go }) {
-  const [tab, setTab] = useState("bracket");
+export function TableauScreen({ go, matches = WC.ALL_MATCHES }) {
+  const [tab, setTab] = useState("groupes");
+  const koMatches = matches.filter((m) => m.round === "ko");
+  const real = matches !== WC.ALL_MATCHES;
+  const letters = real ? Object.keys(WC.GROUPS) : WC.GROUP_LETTERS;
   return (
     <div className="content">
       <SectionTitle kicker="Phase de groupes → finale" title="Le tableau"
@@ -16,20 +19,30 @@ export function TableauScreen({ go }) {
         </div>} />
 
       {tab === "bracket" && (
-        <>
-          <div className="card pad rise" style={{ marginBottom: 18, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-            <span className="pill pill--accent"><span className="dot dot--pulse" /> Mise à jour auto</span>
-            <span className="muted" style={{ fontSize: 13.5 }}>
-              Dès qu'un résultat tombe, les classements de groupe se recalculent et le bracket place automatiquement les qualifiés (1ers, 2es et 8 meilleurs 3es). Les cases « Vainqueur Kxx » se remplissent toutes seules.
-            </span>
+        koMatches.length ? (
+          <>
+            <div className="card pad rise" style={{ marginBottom: 18, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+              <span className="pill pill--accent"><span className="dot dot--pulse" /> Mise à jour auto</span>
+              <span className="muted" style={{ fontSize: 13.5 }}>
+                Dès qu'un résultat tombe, les classements de groupe se recalculent et le bracket place automatiquement les qualifiés.
+              </span>
+            </div>
+            <Bracket go={go} />
+          </>
+        ) : (
+          <div className="card pad-lg" style={{ textAlign: "center" }}>
+            <div className="poster" style={{ fontSize: 24 }}>🏆 Phase finale à venir</div>
+            <p className="muted" style={{ maxWidth: 460, margin: "8px auto 0" }}>
+              Le tableau à élimination directe se remplira automatiquement une fois la phase de groupes terminée (à partir du 28 juin). En attendant, fais tes pronos sur les matchs de groupes !
+            </p>
+            <Btn variant="accent" onClick={() => go("matches")} style={{ marginTop: 14 }}>Voir les matchs →</Btn>
           </div>
-          <Bracket go={go} />
-        </>
+        )
       )}
 
       {tab === "groupes" && (
         <div className="grid g-3">
-          {WC.GROUP_LETTERS.map((g) => <GroupTable key={g} g={g} />)}
+          {letters.map((g) => <GroupTable key={g} g={g} matches={real ? matches : undefined} />)}
         </div>
       )}
     </div>
@@ -88,10 +101,15 @@ export function Bracket({ go }) {
 }
 
 /* =================== CLASSEMENT =================== */
-export function Leaderboard({ go, profile }) {
-  const users = WC.USERS.map((u) => u.isMe ? { ...u, pseudo: profile.pseudo, avatar: profile.avatar } : u);
+export function Leaderboard({ go, profile, users: realUsers, me }) {
+  const src = realUsers || WC.USERS;
+  const meId = me && me.id;
+  const users = src.map((u) => (u.isMe || (meId && u.id === meId))
+    ? { ...u, isMe: true, pseudo: profile.pseudo, avatar: profile.avatar } : u);
   const [scope, setScope] = useState("general");
-  const last = users[users.length - 1];
+  const last = users[users.length - 1] || { pseudo: "—" };
+  const podium = users.slice(0, 3);
+  while (podium.length < 3) podium.push({ id: "ph" + podium.length, pseudo: "—", avatar: "·", pts: 0, exacts: 0 });
 
   return (
     <div className="content">
@@ -102,7 +120,7 @@ export function Leaderboard({ go, profile }) {
         </div>} />
 
       <div className="podium rise" style={{ marginBottom: 22 }}>
-        {[users[1], users[0], users[2]].map((u, i) => {
+        {[podium[1], podium[0], podium[2]].map((u, i) => {
           const place = i === 1 ? 1 : i === 0 ? 2 : 3;
           const prize = WC.PRIZES.find((p) => p.rang === place);
           return (
@@ -146,13 +164,13 @@ export function Leaderboard({ go, profile }) {
 }
 
 /* =================== PROFIL =================== */
-export function Profile({ profile, setProfile, predictions }) {
-  const me = { ...WC.ME, ...profile };
+export function Profile({ profile, setProfile, predictions, me: meStats, matches = WC.ALL_MATCHES }) {
+  const me = { ...(meStats || WC.ME), ...profile };
   const AV = ["⚽", "🦁", "🔥", "🚀", "👑", "🎯", "🐺", "🦅", "🧤", "🐉", "⭐", "🥅", "🏆", "💪", "🤩", "🐯", "🎩", "👻"];
   const [draft, setDraft] = useState({ pseudo: profile.pseudo, avatar: profile.avatar, email: profile.email || "toi@email.com", fav: profile.fav || "FRA" });
   const [saved, setSaved] = useState(false);
 
-  const finis = WC.ALL_MATCHES.filter((m) => m.status === "fini" && predictions[m.id]);
+  const finis = matches.filter((m) => m.status === "fini" && predictions[m.id]);
   const exacts = finis.filter((m) => WC.points(predictions[m.id], m.score) === WC.BAREME.exact).length;
 
   function save() { setProfile((p) => ({ ...p, ...draft })); setSaved(true); setTimeout(() => setSaved(false), 1800); }

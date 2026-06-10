@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { WC } from "./lib/wc.js";
 import { supabase, hasSupabase } from "./lib/supabase.js";
+import { fetchMatches, fetchMyPredictions, savePrediction, fetchLeaderboard, fetchMe } from "./lib/league.js";
 import { AuthScreen, Dashboard } from "./screens/screens1.jsx";
 import { MatchesScreen, MatchDetail } from "./screens/screens2.jsx";
 import { TableauScreen, Leaderboard, Profile, Rules } from "./screens/screens3.jsx";
@@ -25,8 +26,12 @@ export default function App() {
   const [authed, setAuthed] = useState(persisted.authed || false);
   const [screen, setScreen] = useState(persisted.screen || "home");
   const [params, setParams] = useState(persisted.params || {});
-  const [predictions, setPredictions] = useState(persisted.predictions || WC.PREDICTIONS);
+  const [predictions, setPredictions] = useState(hasSupabase ? {} : (persisted.predictions || WC.PREDICTIONS));
   const [profile, setProfile] = useState(persisted.profile || { pseudo: "Toi", avatar: "🎯", email: "", fav: "FRA" });
+
+  // Données réelles (mode Supabase). En démo, on garde les données simulées.
+  const [matches, setMatches] = useState(WC.ALL_MATCHES);
+  const [users, setUsers] = useState(WC.USERS);
 
   // Si Supabase est branché, on suit la session réelle
   useEffect(() => {
@@ -42,11 +47,33 @@ export default function App() {
 
   // persistance locale (démo + préférences)
   useEffect(() => {
-    localStorage.setItem(LS, JSON.stringify({ authed: hasSupabase ? false : authed, screen, params, predictions, profile }));
-  }, [authed, screen, params, predictions, profile]);
+    localStorage.setItem(LS, JSON.stringify({ authed: hasSupabase ? false : authed, screen, params, profile }));
+  }, [authed, screen, params, profile]);
+
+  // Charger les vraies données quand connecté (mode Supabase)
+  useEffect(() => {
+    if (!hasSupabase || !authed) return;
+    let alive = true;
+    (async () => {
+      try {
+        const [ms, preds, lb, meRow] = await Promise.all([
+          fetchMatches(), fetchMyPredictions(), fetchLeaderboard(), fetchMe(),
+        ]);
+        if (!alive) return;
+        if (ms.length) setMatches(ms);
+        setPredictions(preds || {});
+        if (lb.length) setUsers(lb);
+        if (meRow) setProfile((p) => ({ ...p, id: meRow.id, pseudo: meRow.pseudo || p.pseudo, avatar: meRow.avatar || p.avatar, email: meRow.email || p.email, fav: meRow.fav || p.fav }));
+      } catch (e) { console.error("Chargement données:", e); }
+    })();
+    return () => { alive = false; };
+  }, [authed]);
 
   function go(s, p = {}) { setScreen(s); setParams(p); window.scrollTo({ top: 0 }); }
-  function setPred(id, val) { setPredictions((P) => ({ ...P, [id]: val })); }
+  function setPred(id, val) {
+    setPredictions((P) => ({ ...P, [id]: val }));
+    if (hasSupabase) savePrediction(id, val).then((r) => { if (r && r.error) console.error("save prono:", r.error); });
+  }
 
   // Connexion : Supabase si dispo, sinon démo locale
   async function handleAuth(mode, { email, pwd, pseudo, avatar }) {
@@ -75,20 +102,22 @@ export default function App() {
     setAuthed(false);
   }
 
-  const aPredire = WC.ALL_MATCHES.filter((m) => m.status !== "fini" && m.home && m.away && !predictions[m.id]).length;
+  const me = (hasSupabase ? users.find((u) => u.id === profile.id) : users.find((u) => u.isMe))
+    || { position: users.length || 1, pts: 0, exacts: 0, bons: 0, serie: 0 };
+  const aPredire = matches.filter((m) => m.status !== "fini" && m.home && m.away && !predictions[m.id]).length;
 
   if (!authed) return <AuthScreen onAuth={handleAuth} profile={profile} setProfile={setProfile} demoMode={!hasSupabase} />;
 
   function render() {
     switch (screen) {
-      case "home": return <Dashboard go={go} predictions={predictions} profile={profile} />;
-      case "matches": return <MatchesScreen go={go} predictions={predictions} setPred={setPred} />;
-      case "match": return <MatchDetail id={params.id} go={go} predictions={predictions} setPred={setPred} />;
-      case "tableau": return <TableauScreen go={go} />;
-      case "leaderboard": return <Leaderboard go={go} profile={profile} />;
-      case "profile": return <Profile profile={profile} setProfile={setProfile} predictions={predictions} />;
+      case "home": return <Dashboard go={go} predictions={predictions} profile={profile} matches={matches} users={users} me={me} />;
+      case "matches": return <MatchesScreen go={go} predictions={predictions} setPred={setPred} matches={matches} />;
+      case "match": return <MatchDetail id={params.id} go={go} predictions={predictions} setPred={setPred} matches={matches} />;
+      case "tableau": return <TableauScreen go={go} matches={matches} />;
+      case "leaderboard": return <Leaderboard go={go} profile={profile} users={users} me={me} />;
+      case "profile": return <Profile profile={profile} setProfile={setProfile} predictions={predictions} matches={matches} me={me} />;
       case "rules": return <Rules />;
-      default: return <Dashboard go={go} predictions={predictions} profile={profile} />;
+      default: return <Dashboard go={go} predictions={predictions} profile={profile} matches={matches} users={users} me={me} />;
     }
   }
 
@@ -112,7 +141,7 @@ export default function App() {
             <div className="av">{profile.avatar}</div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{profile.pseudo}</div>
-              <div className="mono muted" style={{ fontSize: 10 }}>#{WC.ME.position} · {WC.ME.pts} pts</div>
+              <div className="mono muted" style={{ fontSize: 10 }}>#{me.position} · {me.pts} pts</div>
             </div>
             <button className="navitem" style={{ width: "auto", padding: 6, marginLeft: "auto" }} title="Déconnexion" onClick={logout}>⎋</button>
           </div>
@@ -125,7 +154,7 @@ export default function App() {
               <div className="nm" style={{ fontSize: 15 }}>CDM DE GABRIEL</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span className="pill pill--accent" style={{ fontSize: 11 }}>{WC.ME.pts} pts · #{WC.ME.position}</span>
+              <span className="pill pill--accent" style={{ fontSize: 11 }}>{me.pts} pts · #{me.position}</span>
               <div style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--bg-2)", display: "grid", placeItems: "center" }}>{profile.avatar}</div>
             </div>
           </header>

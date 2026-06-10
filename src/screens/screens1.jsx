@@ -119,17 +119,18 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
 }
 
 /* ============================= DASHBOARD ============================= */
-export function Dashboard({ go, predictions, profile }) {
-  const me = { ...WC.ME, pseudo: profile.pseudo, avatar: profile.avatar };
-  const top3 = WC.USERS.slice(0, 3);
+export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, users = WC.USERS, me: meStats }) {
+  const me = { ...(meStats || WC.ME), pseudo: profile.pseudo, avatar: profile.avatar };
+  const top3 = users.slice(0, 3);
+  while (top3.length < 3) top3.push({ id: "ph" + top3.length, pseudo: "—", avatar: "·", pts: 0 });
 
-  const aPredire = WC.ALL_MATCHES
+  const aPredire = matches
     .filter((m) => m.status !== "fini" && m.home && m.away && !predictions[m.id])
     .sort((a, b) => a.date - b.date).slice(0, 4);
-  const totalAvenir = WC.ALL_MATCHES.filter((m) => m.status !== "fini" && m.home && m.away).length;
-  const faits = WC.ALL_MATCHES.filter((m) => m.status !== "fini" && m.home && m.away && predictions[m.id]).length;
+  const totalAvenir = matches.filter((m) => m.status !== "fini" && m.home && m.away).length;
+  const faits = matches.filter((m) => m.status !== "fini" && m.home && m.away && predictions[m.id]).length;
 
-  const prochain = WC.ALL_MATCHES.filter((m) => m.status !== "fini" && m.home && m.away).sort((a, b) => a.date - b.date)[0];
+  const prochain = matches.filter((m) => m.status !== "fini" && m.home && m.away).sort((a, b) => a.date - b.date)[0];
 
   return (
     <div className="content">

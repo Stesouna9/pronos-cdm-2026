@@ -45,7 +45,9 @@ export function PointsBadge({ pred, real }) {
 /* statut d'un match en pastille */
 export function StatusPill({ m }) {
   if (m.status === "fini") return <Pill>Terminé</Pill>;
-  const soon = m.date - WC.NOW < 36e5 * 6 && m.date > WC.NOW;
+  const now = new Date();
+  if (m.date <= now) return <Pill kind="live"><span className="dot dot--pulse" /> En cours</Pill>;
+  const soon = m.date - now < 36e5 * 6;
   if (soon) return <Pill kind="accent">Bientôt</Pill>;
   return <Pill>À venir</Pill>;
 }
