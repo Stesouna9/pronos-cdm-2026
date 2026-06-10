@@ -235,10 +235,10 @@ const ALL_KO = [...r32, ...r16, ...qf, ...sf, third, final[0]];
 const ALL_MATCHES = [...matches, ...ALL_KO];
 
 const PRIZES = [
-  { rang: 1, titre: "Le Trophée", lot: "Maillot officiel CDM 2026 + 150 €", desc: "Floqué à ton pseudo." },
-  { rang: 2, titre: "Le Dauphin", lot: "Ballon officiel + 60 €", desc: "Le match de l'année à domicile." },
-  { rang: 3, titre: "Le Podium", lot: "Écharpe collector + 30 €", desc: "L'honneur est sauf." },
-  { rang: "Lanterne", titre: "La Cuillère de bois", lot: "Paie la 1re tournée 🍻", desc: "Le dernier régale tout le monde." },
+  { rang: 1, titre: "Le Champion", lot: "🏆 Une journée en tête-à-tête avec Gabriel + resto", desc: "Le grand gagnant passe une journée avec le boss." },
+  { rang: 2, titre: "Le Dauphin", lot: "🍔 Un McDo offert par Gabriel", desc: "Si t'as bon, Gabriel te paie le McDo." },
+  { rang: 3, titre: "Le Podium", lot: "🔞 Un sex toy", desc: "Pour bien finir le tournoi." },
+  { rang: "Lanterne", titre: "La Cuillère de bois", lot: "🍟 Tu paies le McDo de Gabriel", desc: "Le dernier de la ligue régale le boss." },
 ];
 
 const AVATARS = ["⚽", "🦁", "🐉", "🔥", "🚀", "👑", "🎯", "🐺", "🦅", "🧤", "🥅", "⭐"];

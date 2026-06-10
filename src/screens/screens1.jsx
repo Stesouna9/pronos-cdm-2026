@@ -40,16 +40,16 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
         <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(150deg, var(--gold-soft), var(--gold))", color: "#14120a", display: "grid", placeItems: "center", fontFamily: "var(--f-poster)", fontSize: 20 }}>26</div>
           <div>
-            <div className="poster" style={{ fontSize: 20, lineHeight: .9, whiteSpace: "nowrap" }}>PRONOS CDM 2026</div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: ".16em", opacity: .7, whiteSpace: "nowrap" }}>USA · CANADA · MEXIQUE</div>
+            <div className="poster" style={{ fontSize: 20, lineHeight: .9, whiteSpace: "nowrap" }}>LA CDM DE GABRIEL</div>
+            <div className="mono" style={{ fontSize: 10, letterSpacing: ".16em", opacity: .7, whiteSpace: "nowrap" }}>ENTRE POTES · USA · CANADA · MEXIQUE</div>
           </div>
         </div>
         <div style={{ position: "relative" }}>
-          <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", opacity: .7, marginBottom: 12 }}>LIGUE PRIVÉE ENTRE POTES</div>
+          <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", opacity: .7, marginBottom: 12 }}>LA LIGUE PRIVÉE DE GABRIEL & SES POTES</div>
           <div className="poster" style={{ fontSize: "clamp(38px,5vw,68px)", lineHeight: .9 }}>PRONOSTIQUE<br />LES 104 MATCHS.</div>
-          <div className="poster" style={{ fontSize: "clamp(38px,5vw,68px)", lineHeight: .9, color: "var(--gold-soft)" }}>GAGNE LE TITRE.</div>
-          <p style={{ maxWidth: 380, marginTop: 18, opacity: .85, lineHeight: 1.55 }}>
-            Score exact, bon résultat, phases finales à enjeu… Le bracket se remplit tout seul à chaque résultat. Le meilleur pronostiqueur soulève le trophée (et empoche les lots).
+          <div className="poster" style={{ fontSize: "clamp(38px,5vw,68px)", lineHeight: .9, color: "var(--gold-soft)" }}>SI T'AS BON : McDo 🍟</div>
+          <p style={{ maxWidth: 400, marginTop: 18, opacity: .85, lineHeight: 1.55 }}>
+            La Coupe du Monde 2026 version potes. Tu pronostiques les scores, Gabriel compte les points. Le champion gagne une journée + resto avec Gabriel, le 2e un McDo… et le dernier paie le McDo du boss 🍔.
           </p>
         </div>
         <div style={{ position: "relative", display: "flex", gap: 26, flexWrap: "wrap" }}>

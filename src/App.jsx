@@ -100,7 +100,7 @@ export default function App() {
         <aside className="sidebar">
           <div className="brand">
             <div className="mark">26</div>
-            <div><div className="nm">PRONOS</div><div className="sub">CDM 2026</div></div>
+            <div><div className="nm">GABRIEL</div><div className="sub">Coupe du Monde 2026</div></div>
           </div>
           {NAV.map(([k, l, ic]) => (
             <button key={k} className={"navitem" + (activeNav === k ? " active" : "")} onClick={() => go(k)}>
@@ -122,7 +122,7 @@ export default function App() {
           <header className="topbar">
             <div className="brand" style={{ padding: 0 }}>
               <div className="mark" style={{ width: 32, height: 32, fontSize: 15 }}>26</div>
-              <div className="nm" style={{ fontSize: 15 }}>PRONOS 2026</div>
+              <div className="nm" style={{ fontSize: 15 }}>CDM DE GABRIEL</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span className="pill pill--accent" style={{ fontSize: 11 }}>{WC.ME.pts} pts · #{WC.ME.position}</span>
