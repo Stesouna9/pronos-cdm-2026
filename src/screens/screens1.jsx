@@ -1,7 +1,8 @@
 /* screens1.jsx — Auth + Dashboard */
 import { useState } from "react";
 import { WC } from "../lib/wc.js";
-import { Btn, StatusPill, slotLabel } from "../components/ui.jsx";
+import { Btn, StatusPill, slotLabel, LangToggle } from "../components/ui.jsx";
+import { t, tPhase } from "../lib/i18n.js";
 
 // Lots affichés en podium sur l'écran d'accueil.
 const PODIUM_LOTS = [
@@ -52,12 +53,12 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
           </div>
         </div>
         <div style={{ position: "relative", width: "100%" }}>
-          <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", opacity: .7, marginBottom: 10 }}>LA LIGUE PRIVÉE DE GABRIEL & SES POTES</div>
-          <div className="poster" style={{ fontSize: "clamp(30px,3.8vw,52px)", lineHeight: .92 }}>PRONOSTIQUE.</div>
-          <div className="poster" style={{ fontSize: "clamp(30px,3.8vw,52px)", lineHeight: .92, color: "var(--gold-soft)" }}>RAFLE LE PODIUM. 🏆</div>
+          <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", opacity: .7, marginBottom: 10 }}>{t("LA LIGUE PRIVÉE DE GABRIEL & SES POTES")}</div>
+          <div className="poster" style={{ fontSize: "clamp(30px,3.8vw,52px)", lineHeight: .92 }}>{t("PRONOSTIQUE.")}</div>
+          <div className="poster" style={{ fontSize: "clamp(30px,3.8vw,52px)", lineHeight: .92, color: "var(--gold-soft)" }}>{t("RAFLE LE PODIUM. 🏆")}</div>
 
           {/* PODIUM DES LOTS */}
-          <div className="mono" style={{ fontSize: 11, letterSpacing: ".16em", opacity: .6, margin: "26px 0 12px" }}>CE QUE TU PEUX GAGNER</div>
+          <div className="mono" style={{ fontSize: 11, letterSpacing: ".16em", opacity: .6, margin: "26px 0 12px" }}>{t("CE QUE TU PEUX GAGNER")}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1.18fr 1fr", gap: 12, alignItems: "end", maxWidth: 460 }}>
             {[PODIUM_LOTS[1], PODIUM_LOTS[0], PODIUM_LOTS[2]].map((s) => {
               const first = s.place === 1;
@@ -74,18 +75,18 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
                 }}>
                   <div style={{ fontSize: first ? 38 : 28, lineHeight: 1 }}>{s.emoji}</div>
                   <div className="poster" style={{ fontSize: first ? 14 : 12, marginTop: 8, opacity: first ? 1 : .75 }}>{s.medal} {s.place === 1 ? "1ER" : s.place + "E"}</div>
-                  <div style={{ fontWeight: 800, fontSize: first ? 13.5 : 12, marginTop: 7, lineHeight: 1.25 }}>{s.lot}</div>
+                  <div style={{ fontWeight: 800, fontSize: first ? 13.5 : 12, marginTop: 7, lineHeight: 1.25 }}>{t(s.lot)}</div>
                 </div>
               );
             })}
           </div>
           <div className="mono" style={{ fontSize: 11, opacity: .65, marginTop: 14, maxWidth: 460 }}>
-            🥄 Et le dernier du classement… paie le McDo de Gabriel.
+            {t("🥄 Et le dernier du classement… paie le McDo de Gabriel.")}
           </div>
         </div>
         <div style={{ position: "relative", display: "flex", gap: 26, flexWrap: "wrap" }}>
           {[["48", "équipes"], ["104", "matchs"], ["39", "jours"]].map(([n, l]) => (
-            <div key={l}><div className="poster" style={{ fontSize: 34, color: "var(--gold-soft)" }}>{n}</div><div className="mono" style={{ fontSize: 11, opacity: .7 }}>{l}</div></div>
+            <div key={l}><div className="poster" style={{ fontSize: 34, color: "var(--gold-soft)" }}>{n}</div><div className="mono" style={{ fontSize: 11, opacity: .7 }}>{t(l)}</div></div>
           ))}
         </div>
       </div>
@@ -98,34 +99,35 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
               🧪 Mode démo — Supabase pas encore branché. Tu peux explorer, mais les comptes ne sont pas (encore) partagés.
             </div>
           )}
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}><LangToggle /></div>
           <div className="seg" style={{ marginBottom: 22 }}>
-            <button type="button" className={mode === "signup" ? "on" : ""} onClick={() => { setMode("signup"); setErr(""); setInfo(""); }}>Créer un compte</button>
-            <button type="button" className={mode === "login" ? "on" : ""} onClick={() => { setMode("login"); setErr(""); setInfo(""); }}>Se connecter</button>
+            <button type="button" className={mode === "signup" ? "on" : ""} onClick={() => { setMode("signup"); setErr(""); setInfo(""); }}>{t("Créer un compte")}</button>
+            <button type="button" className={mode === "login" ? "on" : ""} onClick={() => { setMode("login"); setErr(""); setInfo(""); }}>{t("Se connecter")}</button>
           </div>
 
-          <h2 className="disp" style={{ fontSize: 26, margin: "0 0 4px" }}>{mode === "signup" ? "Rejoins la ligue" : "Content de te revoir"}</h2>
-          <p className="muted" style={{ marginTop: 0, fontSize: 14 }}>{mode === "signup" ? "Inscription par email — 30 secondes." : "Reprends tes pronos là où tu les as laissés."}</p>
+          <h2 className="disp" style={{ fontSize: 26, margin: "0 0 4px" }}>{mode === "signup" ? t("Rejoins la ligue") : t("Content de te revoir")}</h2>
+          <p className="muted" style={{ marginTop: 0, fontSize: 14 }}>{mode === "signup" ? t("Inscription par email — 30 secondes.") : t("Reprends tes pronos là où tu les as laissés.")}</p>
 
           <div className="field" style={{ marginTop: 18 }}>
-            <label>Adresse email</label>
+            <label>{t("Adresse email")}</label>
             <input className="input" type="email" placeholder="toi@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
 
           {mode === "signup" && (
             <div className="field">
-              <label>Pseudo (visible au classement)</label>
+              <label>{t("Pseudo (visible au classement)")}</label>
               <input className="input" placeholder="ex. GégéLaFrappe" value={pseudo} maxLength={16} onChange={(e) => setPseudo(e.target.value)} />
             </div>
           )}
 
           <div className="field">
-            <label>Mot de passe {mode === "signup" && <span className="muted" style={{ fontWeight: 400 }}>(6 caractères min.)</span>}</label>
+            <label>{t("Mot de passe")} {mode === "signup" && <span className="muted" style={{ fontWeight: 400 }}>(6+)</span>}</label>
             <input className="input" type="password" placeholder="••••••••" value={pwd} onChange={(e) => setPwd(e.target.value)} />
           </div>
 
           {mode === "signup" && (
             <div className="field">
-              <label>Choisis ton avatar</label>
+              <label>{t("Choisis ton avatar")}</label>
               <div className="av-grid">
                 {AV.map((a) => (
                   <button type="button" key={a} className={av === a ? "on" : ""} onClick={() => setAv(a)}>{a}</button>
@@ -138,10 +140,10 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
           {info && <div className="alert alert--ok" style={{ marginBottom: 12 }}>{info}</div>}
 
           <Btn variant="accent block lg" type="submit" disabled={!valid || busy} style={{ marginTop: 8 }}>
-            {busy ? "…" : mode === "signup" ? "Créer mon compte →" : "Se connecter →"}
+            {busy ? "…" : mode === "signup" ? t("Créer mon compte →") : t("Se connecter →")}
           </Btn>
           <p className="muted" style={{ fontSize: 12, textAlign: "center", marginTop: 14 }}>
-            {mode === "signup" ? "En t'inscrivant tu acceptes de chambrer dans le respect." : "Mot de passe oublié ? Demande à l'admin de la ligue."}
+            {mode === "signup" ? t("En t'inscrivant tu acceptes de chambrer dans le respect.") : t("Mot de passe oublié ? Demande à l'admin de la ligue.")}
           </p>
         </form>
       </div>
@@ -178,15 +180,15 @@ export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, 
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div className="mono" style={{ fontSize: 11, opacity: .7, marginBottom: 4 }}>{faits}/{totalAvenir} PRONOS À VENIR SAISIS</div>
-            <Btn variant="gold lg" onClick={() => go("matches")} style={{ whiteSpace: "nowrap" }}>⚡ Faire mes pronos</Btn>
+            <div className="mono" style={{ fontSize: 11, opacity: .7, marginBottom: 4 }}>{faits}/{totalAvenir} {t("PRONOS À VENIR SAISIS")}</div>
+            <Btn variant="gold lg" onClick={() => go("matches")} style={{ whiteSpace: "nowrap" }}>{t("⚡ Faire mes pronos")}</Btn>
           </div>
         </div>
       </div>
 
       <div className="grid g-2" style={{ marginBottom: 22, gridTemplateColumns: "1.4fr 1fr" }}>
         <div className="card pad rise">
-          <div className="eyebrow" style={{ marginBottom: 12 }}>Prochain coup d'envoi</div>
+          <div className="eyebrow" style={{ marginBottom: 12 }}>{t("Prochain coup d'envoi")}</div>
           {prochain && (
             <div className="match">
               <div className="row">
@@ -198,23 +200,23 @@ export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, 
                 {slotLabel(prochain, "away")}
               </div>
               <div className="meta" style={{ justifyContent: "space-between" }}>
-                <span>{prochain.phase} · {prochain.venue.stade}, {prochain.venue.city}</span>
-                <Btn variant="ghost" onClick={() => go("match", { id: prochain.id })} style={{ padding: "8px 14px", fontSize: 13 }}>Pronostiquer →</Btn>
+                <span>{tPhase(prochain.phase)} · {prochain.venue.stade}, {prochain.venue.city}</span>
+                <Btn variant="ghost" onClick={() => go("match", { id: prochain.id })} style={{ padding: "8px 14px", fontSize: 13 }}>{t("Pronostiquer →")}</Btn>
               </div>
             </div>
           )}
         </div>
         <div className="grid g-2 keep" style={{ gap: 12 }}>
           {[["#" + me.position, "Classement"], [me.pts + " pts", "Total"], [me.exacts, "Scores exacts"], [me.bons, "Bons résultats"]].map(([n, l], i) => (
-            <div className="stat rise" key={i}><div className="n">{n}</div><div className="l">{l}</div></div>
+            <div className="stat rise" key={i}><div className="n">{n}</div><div className="l">{t(l)}</div></div>
           ))}
         </div>
       </div>
 
       <div className="card pad-lg rise" style={{ marginBottom: 22 }}>
         <div className="page-head" style={{ marginBottom: 18 }}>
-          <div><div className="eyebrow" style={{ marginBottom: 6 }}>À la fin du tournoi</div><h2 className="poster" style={{ fontSize: 28, margin: 0 }}>Le podium & les lots</h2></div>
-          <Btn variant="ghost" onClick={() => go("leaderboard")}>Voir le classement →</Btn>
+          <div><div className="eyebrow" style={{ marginBottom: 6 }}>{t("À la fin du tournoi")}</div><h2 className="poster" style={{ fontSize: 28, margin: 0 }}>{t("Le podium & les lots")}</h2></div>
+          <Btn variant="ghost" onClick={() => go("leaderboard")}>{t("Voir le classement →")}</Btn>
         </div>
         <div className="podium">
           {[top3[1], top3[0], top3[2]].map((u, i) => {
@@ -226,8 +228,8 @@ export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, 
                 <div className="av">{u.avatar}</div>
                 <div className="ps">{u.pseudo}</div>
                 <div className="mono" style={{ fontSize: 12, opacity: .8, marginTop: 2 }}>{u.pts} pts</div>
-                <div style={{ marginTop: 10, fontSize: 13, fontWeight: 700 }}>{prize.lot}</div>
-                <div style={{ fontSize: 11.5, opacity: .8 }}>{prize.titre}</div>
+                <div style={{ marginTop: 10, fontSize: 13, fontWeight: 700 }}>{t(prize.lot)}</div>
+                <div style={{ fontSize: 11.5, opacity: .8 }}>{t(prize.titre)}</div>
               </div>
             );
           })}
@@ -238,19 +240,19 @@ export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, 
       </div>
 
       <div className="page-head" style={{ marginBottom: 14 }}>
-        <h2 className="poster" style={{ fontSize: 24, margin: 0 }}>À pronostiquer maintenant</h2>
-        <Btn variant="ghost" onClick={() => go("matches")}>Tout voir →</Btn>
+        <h2 className="poster" style={{ fontSize: 24, margin: 0 }}>{t("À pronostiquer maintenant")}</h2>
+        <Btn variant="ghost" onClick={() => go("matches")}>{t("Tout voir →")}</Btn>
       </div>
       <div className="grid g-2">
         {aPredire.map((m) => (
           <button key={m.id} className="card pad rise" style={{ textAlign: "left", cursor: "pointer", border: "1px solid var(--line)" }} onClick={() => go("match", { id: m.id })}>
             <div className="match">
               <div className="meta" style={{ justifyContent: "space-between" }}>
-                <span>{m.phase}</span><StatusPill m={m} />
+                <span>{tPhase(m.phase)}</span><StatusPill m={m} />
               </div>
               <div className="row">
                 {slotLabel(m, "home")}
-                <span className="vs">VS</span>
+                <span className="vs">{t("VS")}</span>
                 {slotLabel(m, "away")}
               </div>
               <div className="mono muted" style={{ fontSize: 11.5 }}>{WC.fmtDate(m.date)} · {WC.fmtHeure(m.date)} · {m.venue.city}</div>

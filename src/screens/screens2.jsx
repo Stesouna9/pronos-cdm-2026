@@ -2,6 +2,7 @@
 import { useState, useMemo } from "react";
 import { WC } from "../lib/wc.js";
 import { Btn, Roundel, TeamLine, StatusPill, PointsBadge, slotLabel } from "../components/ui.jsx";
+import { t, tPhase } from "../lib/i18n.js";
 
 /* ---------- Stepper de score ---------- */
 export function Stepper({ value, onChange }) {
@@ -41,7 +42,7 @@ function MatchRow({ m, pred, setPred, go }) {
   return (
     <div className="card pad rise match">
       <div className="meta" style={{ justifyContent: "space-between" }}>
-        <span><b style={{ color: "var(--ink)" }}>{m.phase}</b> · {WC.fmtDate(m.date)} · {WC.fmtHeure(m.date)}</span>
+        <span><b style={{ color: "var(--ink)" }}>{tPhase(m.phase)}</b> · {WC.fmtDate(m.date)} · {WC.fmtHeure(m.date)}</span>
         <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <span className="muted" style={{ fontSize: 12 }}>{m.venue.city}</span>
           <StatusPill m={m} />
@@ -59,12 +60,12 @@ function MatchRow({ m, pred, setPred, go }) {
 
       {!fini && m.home && m.away && !locked && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-          <div className="mono muted" style={{ fontSize: 12 }}>{pred ? "Ton prono :" : "Ton prono ?"}</div>
+          <div className="mono muted" style={{ fontSize: 12 }}>{pred ? t("Ton prono :") : t("Ton prono ?")}</div>
           <PredEditor pred={pred} home={m.home} away={m.away} onChange={(p) => setPred(m.id, p)} />
           <div style={{ minWidth: 120, textAlign: "right" }}>
             {pred
-              ? <span className="pill pill--accent">✓ Enregistré ({a}–{b})</span>
-              : <span className="muted" style={{ fontSize: 12 }}>Ajuste puis c'est sauvé</span>}
+              ? <span className="pill pill--accent">✓ {a}–{b}</span>
+              : <span className="muted" style={{ fontSize: 12 }}>{t("Ajuste puis c'est sauvé")}</span>}
           </div>
         </div>
       )}
@@ -75,7 +76,7 @@ function MatchRow({ m, pred, setPred, go }) {
         </div>
       )}
       {!fini && (!m.home || !m.away) && (
-        <div className="mono muted" style={{ fontSize: 12, textAlign: "center" }}>Pronostic ouvert dès que les qualifiés sont connus.</div>
+        <div className="mono muted" style={{ fontSize: 12, textAlign: "center" }}>{t("Pronostic ouvert dès que les qualifiés sont connus.")}</div>
       )}
       {fini && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
@@ -115,10 +116,10 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
       <div className="page-head">
         <div>
           <div className="eyebrow" style={{ marginBottom: 6 }}>{`104 matchs · ${aFaire} en attente de ton prono`}</div>
-          <h1 className="page-title poster">Les matchs</h1>
+          <h1 className="page-title poster">{t("Les matchs")}</h1>
         </div>
         <div className="seg">{[["tous", "Tous"], ["apredire", "À pronostiquer"], ["termines", "Terminés"]].map(([k, l]) => (
-          <button key={k} className={filtre === k ? "on" : ""} onClick={() => setFiltre(k)}>{l}</button>))}</div>
+          <button key={k} className={filtre === k ? "on" : ""} onClick={() => setFiltre(k)}>{t(l)}</button>))}</div>
       </div>
 
       <div className="seg scrollx" style={{ marginBottom: 18, display: "flex" }}>

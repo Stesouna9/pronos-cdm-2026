@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { WC } from "./lib/wc.js";
 import { supabase, hasSupabase } from "./lib/supabase.js";
 import { fetchMatches, fetchMyPredictions, savePrediction, fetchLeaderboard, fetchMe } from "./lib/league.js";
+import { t, subscribeLang } from "./lib/i18n.js";
+import { LangToggle } from "./components/ui.jsx";
 import { AuthScreen, Dashboard } from "./screens/screens1.jsx";
 import { MatchesScreen, MatchDetail } from "./screens/screens2.jsx";
 import { TableauScreen, Leaderboard, Profile, Rules } from "./screens/screens3.jsx";
@@ -33,6 +35,10 @@ export default function App() {
   // Données réelles (mode Supabase). En démo, on garde les données simulées.
   const [matches, setMatches] = useState(WC.ALL_MATCHES);
   const [users, setUsers] = useState(WC.USERS);
+
+  // Re-render quand on change de langue (FR/JA).
+  const [, forceLang] = useState(0);
+  useEffect(() => subscribeLang(() => forceLang((x) => x + 1)), []);
 
   // Si Supabase est branché, on suit la session réelle
   useEffect(() => {
@@ -128,14 +134,15 @@ export default function App() {
         <aside className="sidebar">
           <div className="brand">
             <div className="mark">26</div>
-            <div><div className="nm">GABRIEL</div><div className="sub">Coupe du Monde 2026</div></div>
+            <div><div className="nm">GABRIEL</div><div className="sub">{t("Coupe du Monde 2026")}</div></div>
           </div>
           {nav.map(([k, l, ic]) => (
             <button key={k} className={"navitem" + (activeNav === k ? " active" : "")} onClick={() => go(k)}>
-              <span className="ic">{ic}</span>{l}
+              <span className="ic">{ic}</span>{t(l)}
               {k === "matches" && aPredire > 0 && <span className="badge">{aPredire}</span>}
             </button>
           ))}
+          <div style={{ marginTop: "auto", padding: "8px 4px 4px" }}><LangToggle /></div>
           <div className="userchip">
             <div className="av">{profile.avatar}</div>
             <div style={{ minWidth: 0 }}>
@@ -153,6 +160,7 @@ export default function App() {
               <div className="nm" style={{ fontSize: 15 }}>CDM DE GABRIEL</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <LangToggle compact />
               <span className="pill pill--accent" style={{ fontSize: 11 }}>{me.pts} pts · #{me.position}</span>
               <div style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--bg-2)", display: "grid", placeItems: "center" }}>{profile.avatar}</div>
             </div>
@@ -164,7 +172,7 @@ export default function App() {
       <nav className="tabbar">
         {nav.map(([k, l, ic]) => (
           <button key={k} className={"tab" + (activeNav === k ? " active" : "")} onClick={() => go(k)}>
-            <span className="ic">{ic}</span>{l}
+            <span className="ic">{ic}</span>{t(l)}
           </button>
         ))}
       </nav>

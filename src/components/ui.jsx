@@ -1,5 +1,25 @@
 /* ui.jsx — primitives partagées */
 import { WC } from "../lib/wc.js";
+import { getLang, setLang, t, JA_TEAMS } from "../lib/i18n.js";
+
+// Nom d'équipe traduit (japonais si dispo).
+export function teamName(code, fr) {
+  return getLang() === "ja" && JA_TEAMS[code] ? JA_TEAMS[code] : (fr != null ? fr : (WC.T[code] ? WC.T[code].name : "—"));
+}
+
+// Bouton de bascule de langue FR / 日本語.
+export function LangToggle({ compact }) {
+  const ja = getLang() === "ja";
+  return (
+    <button
+      onClick={() => setLang(ja ? "fr" : "ja")}
+      title={ja ? "Français" : "日本語"}
+      style={{ border: "1px solid var(--line)", background: "var(--surface-2)", color: "var(--ink)",
+        borderRadius: 999, padding: compact ? "4px 8px" : "6px 12px", fontWeight: 700, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
+      {ja ? "🇯🇵 日本語" : "🇫🇷 FR"}
+    </button>
+  );
+}
 
 /* Roundel : identité visuelle d'une équipe (bandes CSS, pas un vrai drapeau) */
 export function Roundel({ code, size = 26 }) {
@@ -17,7 +37,7 @@ export function TeamLine({ code, reverse, showCode = true, size = 26, bold }) {
     <div className={"team-line" + (reverse ? " away" : "")} style={reverse ? { flexDirection: "row-reverse" } : null}>
       <Roundel code={code} size={size} />
       <div style={{ minWidth: 0, textAlign: reverse ? "right" : "left" }}>
-        <div className="nm" style={{ fontWeight: bold ? 800 : 700 }}>{t ? t.name : "—"}</div>
+        <div className="nm" style={{ fontWeight: bold ? 800 : 700 }}>{t ? teamName(code, t.name) : "—"}</div>
         {showCode && <div className="code">{code}</div>}
       </div>
     </div>
@@ -44,12 +64,12 @@ export function PointsBadge({ pred, real }) {
 
 /* statut d'un match en pastille */
 export function StatusPill({ m }) {
-  if (m.status === "fini") return <Pill>Terminé</Pill>;
+  if (m.status === "fini") return <Pill>{t("Terminé")}</Pill>;
   const now = new Date();
-  if (m.date <= now) return <Pill kind="live"><span className="dot dot--pulse" /> En cours</Pill>;
+  if (m.date <= now) return <Pill kind="live"><span className="dot dot--pulse" /> {t("En cours")}</Pill>;
   const soon = m.date - now < 36e5 * 6;
-  if (soon) return <Pill kind="accent">Bientôt</Pill>;
-  return <Pill>À venir</Pill>;
+  if (soon) return <Pill kind="accent">{t("Bientôt")}</Pill>;
+  return <Pill>{t("À venir")}</Pill>;
 }
 
 /* résolution d'un slot bracket : code équipe OU placeholder "Vainqueur Mxx" */
@@ -57,7 +77,7 @@ export function slotLabel(m, side) {
   const code = side === "home" ? m.home : m.away;
   if (code) return <TeamLine code={code} showCode={false} size={22} />;
   const fromId = side === "home" ? m.fromA : m.fromB;
-  return <span className="muted" style={{ fontStyle: "italic", fontSize: 13 }}>{fromId ? "Vainqueur " + fromId : "À déterminer"}</span>;
+  return <span className="muted" style={{ fontStyle: "italic", fontSize: 13 }}>{fromId ? t("Vainqueur") + " " + fromId : t("À déterminer")}</span>;
 }
 
 /* score affiché (avec t.a.b. si pens) */
