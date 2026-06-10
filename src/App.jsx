@@ -74,6 +74,13 @@ export default function App() {
 
   function go(s, p = {}) { setScreen(s); setParams(p); window.scrollTo({ top: 0 }); }
   function setPred(id, val) {
+    // Verrou : dès le coup d'envoi, plus aucun pari (le serveur refuse aussi via RLS).
+    const m = matches.find((x) => x.id === id);
+    if (m && m.date <= new Date()) {
+      alert(t("🔒 Pronos fermés (coup d'envoi passé)"));
+      loadData(); // resynchronise l'écran (statuts verrouillés)
+      return;
+    }
     setPredictions((P) => ({ ...P, [id]: val }));
     if (hasSupabase) savePrediction(id, val).then((r) => { if (r && r.error) console.error("save prono:", r.error); });
   }

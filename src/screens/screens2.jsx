@@ -1,7 +1,7 @@
 /* screens2.jsx — Liste des matchs, saisie de prono, détail d'un match */
 import { useState, useMemo } from "react";
 import { WC } from "../lib/wc.js";
-import { Btn, Roundel, TeamLine, StatusPill, PointsBadge, slotLabel } from "../components/ui.jsx";
+import { Btn, Roundel, TeamLine, StatusPill, PointsBadge, slotLabel, teamName } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
 
 /* ---------- Stepper de score ---------- */
@@ -71,8 +71,8 @@ function MatchRow({ m, pred, setPred, go }) {
       )}
       {!fini && m.home && m.away && locked && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div className="mono muted" style={{ fontSize: 12 }}>🔒 Pronos fermés (coup d'envoi passé)</div>
-          <div className="mono" style={{ fontSize: 12 }}>Ton prono : <b>{pred ? `${pred[0]}–${pred[1]}` : "non joué"}</b></div>
+          <div className="mono muted" style={{ fontSize: 12 }}>{t("🔒 Pronos fermés (coup d'envoi passé)")}</div>
+          <div className="mono" style={{ fontSize: 12 }}>{t("Ton prono :")} <b>{pred ? `${pred[0]}–${pred[1]}` : t("non joué")}</b></div>
         </div>
       )}
       {!fini && (!m.home || !m.away) && (
@@ -80,8 +80,8 @@ function MatchRow({ m, pred, setPred, go }) {
       )}
       {fini && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div className="mono muted" style={{ fontSize: 12 }}>Ton prono : <b style={{ color: "var(--ink)" }}>{pred ? `${pred[0]}–${pred[1]}` : "non joué"}</b></div>
-          {pred ? <PointsBadge pred={pred} real={m.score} /> : <span className="pts pts--zero">0 · pas de prono</span>}
+          <div className="mono muted" style={{ fontSize: 12 }}>{t("Ton prono :")} <b style={{ color: "var(--ink)" }}>{pred ? `${pred[0]}–${pred[1]}` : t("non joué")}</b></div>
+          {pred ? <PointsBadge pred={pred} real={m.score} /> : <span className="pts pts--zero">0 · {t("pas de prono")}</span>}
         </div>
       )}
     </div>
@@ -115,7 +115,7 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
     <div className="content">
       <div className="page-head">
         <div>
-          <div className="eyebrow" style={{ marginBottom: 6 }}>{`104 matchs · ${aFaire} en attente de ton prono`}</div>
+          <div className="eyebrow" style={{ marginBottom: 6 }}>{`104 ${t("matchs")} · ${aFaire} ${t("en attente de ton prono")}`}</div>
           <h1 className="page-title poster">{t("Les matchs")}</h1>
         </div>
         <div className="seg">{[["tous", "Tous"], ["apredire", "À pronostiquer"], ["termines", "Terminés"]].map(([k, l]) => (
@@ -144,7 +144,7 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
           {list.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} />)}
         </div>
       )}
-      {list.length === 0 && <div className="card pad-lg" style={{ textAlign: "center" }}><div className="poster" style={{ fontSize: 22 }}>Rien par ici 🎉</div><p className="muted">{t("Aucun match dans ce filtre. Les matchs deviennent saisissables une fois le coup d'envoi passé.")}</p></div>}
+      {list.length === 0 && <div className="card pad-lg" style={{ textAlign: "center" }}><div className="poster" style={{ fontSize: 22 }}>{t("Rien par ici 🎉")}</div><p className="muted">{t("Aucun match dans ce filtre. Les matchs deviennent saisissables une fois le coup d'envoi passé.")}</p></div>}
     </div>
   );
 }
@@ -187,7 +187,7 @@ function Pitch({ code }) {
 export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MATCHES }) {
   const m = matches.find((x) => x.id === id);
   const [tab, setTab] = useState("apercu");
-  if (!m) return <div className="content"><p>Match introuvable.</p></div>;
+  if (!m) return <div className="content"><p>{t("Match introuvable.")}</p></div>;
   const fini = m.status === "fini";
   const open = !fini && m.home && m.away && !m.locked;
   const th = m.home ? WC.T[m.home] : null, ta = m.away ? WC.T[m.away] : null;
@@ -196,18 +196,18 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
 
   return (
     <div className="content">
-      <button className="btn btn--ghost" style={{ marginBottom: 16, padding: "8px 14px", fontSize: 13 }} onClick={() => go("matches")}>← Tous les matchs</button>
+      <button className="btn btn--ghost" style={{ marginBottom: 16, padding: "8px 14px", fontSize: 13 }} onClick={() => go("matches")}>{t("← Tous les matchs")}</button>
 
       <div className="hero rise" style={{ marginBottom: 18, padding: 26 }}>
         <div className="stripes" />
         <div style={{ position: "relative" }}>
           <div className="mono" style={{ fontSize: 11, letterSpacing: ".14em", opacity: .75, marginBottom: 16 }}>
-            {m.phase.toUpperCase()} · {WC.fmtDate(m.date).toUpperCase()} · {WC.fmtHeure(m.date)} · {m.venue.stade.toUpperCase()}, {m.venue.city.toUpperCase()}
+            {tPhase(m.phase).toUpperCase()} · {WC.fmtDate(m.date).toUpperCase()} · {WC.fmtHeure(m.date)} · {m.venue.stade.toUpperCase()}, {m.venue.city.toUpperCase()}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 12 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
               <Roundel code={m.home} size={62} />
-              <div className="poster" style={{ fontSize: 20, textAlign: "center" }}>{th ? th.name : "Vainqueur " + m.fromA}</div>
+              <div className="poster" style={{ fontSize: 20, textAlign: "center" }}>{th ? teamName(m.home, th.name) : t("Vainqueur") + " " + (m.fromA || "?")}</div>
               {th && <div className="mono" style={{ opacity: .6, fontSize: 11 }}>FIFA #{th.rank}</div>}
             </div>
             <div style={{ textAlign: "center" }}>
@@ -217,7 +217,7 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
               <Roundel code={m.away} size={62} />
-              <div className="poster" style={{ fontSize: 20, textAlign: "center" }}>{ta ? ta.name : "Vainqueur " + m.fromB}</div>
+              <div className="poster" style={{ fontSize: 20, textAlign: "center" }}>{ta ? teamName(m.away, ta.name) : t("Vainqueur") + " " + (m.fromB || "?")}</div>
               {ta && <div className="mono" style={{ opacity: .6, fontSize: 11 }}>FIFA #{ta.rank}</div>}
             </div>
           </div>
@@ -228,38 +228,38 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
         <div className="card pad-lg rise" style={{ marginBottom: 18 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
             <div>
-              <div className="eyebrow" style={{ marginBottom: 4 }}>Ton pronostic</div>
-              <div className="muted" style={{ fontSize: 13 }}>Score exact = {WC.BAREME.exact} pts · bon résultat = {WC.BAREME.issue} pts · bon écart = {WC.BAREME.ecart} pts</div>
+              <div className="eyebrow" style={{ marginBottom: 4 }}>{t("Ton pronostic")}</div>
+              <div className="muted" style={{ fontSize: 13 }}>{t("Score exact")} = {WC.BAREME.exact} pts · {t("Bon résultat").toLowerCase()} = {WC.BAREME.issue} pts · {t("bon écart")} = {WC.BAREME.ecart} pts</div>
             </div>
             <PredEditor pred={predictions[m.id]} home={m.home} away={m.away} onChange={(p) => setPred(m.id, p)} />
             <div style={{ minWidth: 130, textAlign: "right" }}>
-              {predictions[m.id] ? <span className="pill pill--accent">✓ {predictions[m.id][0]}–{predictions[m.id][1]} enregistré</span> : <span className="muted">Règle les compteurs</span>}
+              {predictions[m.id] ? <span className="pill pill--accent">✓ {predictions[m.id][0]}–{predictions[m.id][1]}</span> : <span className="muted">{t("Règle les compteurs")}</span>}
             </div>
           </div>
         </div>
       )}
       {!fini && m.home && m.away && m.locked && (
         <div className="card pad rise" style={{ marginBottom: 18 }}>
-          <div className="mono" style={{ fontSize: 13 }}>🔒 Pronos fermés — TON PRONO : <b>{predictions[m.id] ? `${predictions[m.id][0]}–${predictions[m.id][1]}` : "non joué"}</b></div>
+          <div className="mono" style={{ fontSize: 13 }}>{t("🔒 Pronos fermés (coup d'envoi passé)")} — <b>{predictions[m.id] ? `${predictions[m.id][0]}–${predictions[m.id][1]}` : t("non joué")}</b></div>
         </div>
       )}
       {fini && (
         <div className="card pad rise" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-          <div className="mono" style={{ fontSize: 13 }}>TON PRONO : <b>{predictions[m.id] ? `${predictions[m.id][0]}–${predictions[m.id][1]}` : "non joué"}</b> · RÉSULTAT : <b>{m.score[0]}–{m.score[1]}</b></div>
+          <div className="mono" style={{ fontSize: 13 }}>{t("TON PRONO :")} <b>{predictions[m.id] ? `${predictions[m.id][0]}–${predictions[m.id][1]}` : t("non joué")}</b> · {t("RÉSULTAT :")} <b>{m.score[0]}–{m.score[1]}</b></div>
           {predictions[m.id] ? <PointsBadge pred={predictions[m.id]} real={m.score} /> : <span className="pts pts--zero">0 pt</span>}
         </div>
       )}
 
       <div className="seg scrollx" style={{ marginBottom: 16, display: "flex" }}>
-        {tabs.map(([k, l]) => <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>)}
+        {tabs.map(([k, l]) => <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{t(l)}</button>)}
       </div>
 
       {tab === "apercu" && th && ta && (
         <div className="grid g-2">
           <div className="card pad">
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Confrontation</div>
-            {[["Classement FIFA", `#${th.rank}`, `#${ta.rank}`], ["Confédération", th.conf, ta.conf],
-              ["Forme (5 derniers)", "form-h", "form-a"], ["Cote pronostiqueurs", "58%", "42%"]].map((r, i) => (
+            <div className="eyebrow" style={{ marginBottom: 12 }}>{t("Confrontation")}</div>
+            {[[t("Classement FIFA"), `#${th.rank}`, `#${ta.rank}`], [t("Confédération"), th.conf, ta.conf],
+              [t("Forme (5 derniers)"), "form-h", "form-a"], [t("Cote pronostiqueurs"), "58%", "42%"]].map((r, i) => (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 10, padding: "10px 0", borderTop: i ? "1px solid var(--line)" : "none" }}>
                 <div style={{ fontWeight: 700 }}>{r[1] === "form-h" ? <FormDots code={m.home} /> : r[1]}</div>
                 <div className="mono muted" style={{ fontSize: 11, textAlign: "center" }}>{r[0]}</div>
@@ -268,13 +268,13 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
             ))}
           </div>
           <div className="card pad">
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Infos match</div>
+            <div className="eyebrow" style={{ marginBottom: 12 }}>{t("Infos match")}</div>
             <div className="grid g-2 keep" style={{ gap: 10 }}>
-              {[["📍 Stade", m.venue.stade], ["🏙️ Ville", m.venue.city], ["📅 Date", WC.fmtDate(m.date)], ["⏰ Coup d'envoi", WC.fmtHeure(m.date)], ["🏆 Phase", m.phase], ["🎟️ Affluence", "~" + (40 + (th.rank % 30)) + " 000"]].map(([l, v], i) => (
+              {[[t("📍 Stade"), m.venue.stade], [t("🏙️ Ville"), m.venue.city], [t("📅 Date"), WC.fmtDate(m.date)], [t("⏰ Coup d'envoi"), WC.fmtHeure(m.date)], [t("🏆 Phase"), tPhase(m.phase)], [t("🎟️ Affluence"), "~" + (40 + (th.rank % 30)) + " 000"]].map(([l, v], i) => (
                 <div key={i} className="stat" style={{ padding: 12 }}><div className="l" style={{ marginBottom: 2 }}>{l}</div><div style={{ fontWeight: 700, fontSize: 15 }}>{v}</div></div>
               ))}
             </div>
-            <p className="mono muted" style={{ fontSize: 11, marginTop: 12 }}>Données d'illustration — à connecter à l'API officielle lors du dev.</p>
+            <p className="mono muted" style={{ fontSize: 11, marginTop: 12 }}>{t("Données d'illustration.")}</p>
           </div>
         </div>
       )}
@@ -288,7 +288,7 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
                 <span className="pill">4-3-3</span>
               </div>
               <Pitch code={c} />
-              <p className="mono muted" style={{ fontSize: 11, marginTop: 10 }}>Compo probable (placeholder) — noms & numéros à brancher sur l'API.</p>
+              <p className="mono muted" style={{ fontSize: 11, marginTop: 10 }}>{t("Compo probable (illustration).")}</p>
             </div>
           ))}
         </div>
@@ -299,19 +299,19 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
           {[m.home, m.away].map((c) => (
             <div className="card pad" key={c}>
               <TeamLine code={c} bold showCode={false} size={28} />
-              <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "14px 0" }}><span className="muted" style={{ fontSize: 13 }}>5 derniers :</span><FormDots code={c} /></div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "14px 0" }}><span className="muted" style={{ fontSize: 13 }}>{t("5 derniers :")}</span><FormDots code={c} /></div>
               <div className="grid g-3 keep2" style={{ gap: 10 }}>
-                {[["Buts marqués", 7 + (WC.T[c].rank % 5)], ["Clean sheets", 1 + (WC.T[c].rank % 3)], ["Série", "3 V"]].map(([l, v], i) => (
+                {[[t("Buts marqués"), 7 + (WC.T[c].rank % 5)], [t("Clean sheets"), 1 + (WC.T[c].rank % 3)], [t("Série"), "3 V"]].map(([l, v], i) => (
                   <div className="stat" key={i} style={{ padding: 12 }}><div className="n" style={{ fontSize: 24 }}>{v}</div><div className="l">{l}</div></div>
                 ))}
               </div>
             </div>
           ))}
           <div className="card pad" style={{ gridColumn: "1 / -1" }}>
-            <div className="eyebrow" style={{ marginBottom: 10 }}>Face-à-face (historique)</div>
+            <div className="eyebrow" style={{ marginBottom: 10 }}>{t("Face-à-face (historique)")}</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", textAlign: "center", alignItems: "center" }}>
               <div><div className="poster" style={{ fontSize: 30 }}>{2 + (th.rank % 3)}</div><TeamLine code={m.home} showCode={false} size={20} /></div>
-              <div><div className="poster" style={{ fontSize: 30 }}>{1 + (th.rank % 2)}</div><div className="mono muted" style={{ fontSize: 11 }}>NULS</div></div>
+              <div><div className="poster" style={{ fontSize: 30 }}>{1 + (th.rank % 2)}</div><div className="mono muted" style={{ fontSize: 11 }}>{t("NULS")}</div></div>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}><div className="poster" style={{ fontSize: 30 }}>{1 + (ta.rank % 3)}</div><TeamLine code={m.away} reverse showCode={false} size={20} /></div>
             </div>
           </div>
@@ -320,7 +320,7 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
 
       {tab === "classement" && (
         m.round === "group" ? <GroupTable g={m.group} matches={matches} /> :
-          <div className="card pad-lg" style={{ textAlign: "center" }}><div className="poster" style={{ fontSize: 22 }}>Phase à élimination directe</div><p className="muted">Pas de classement de groupe — direction le bracket.</p><Btn variant="ghost" onClick={() => go("tableau")}>Voir le bracket →</Btn></div>
+          <div className="card pad-lg" style={{ textAlign: "center" }}><div className="poster" style={{ fontSize: 22 }}>{t("Phase finale")}</div><p className="muted">{t("Pas de classement de groupe ici.")}</p><Btn variant="ghost" onClick={() => go("tableau")}>{t("Voir le tableau →")}</Btn></div>
       )}
     </div>
   );
@@ -333,14 +333,14 @@ export function GroupTable({ g, matches }) {
     : WC.STANDINGS[g];
   return (
     <div className="card pad">
-      <div className="eyebrow" style={{ marginBottom: 10 }}>Groupe {g} — classement</div>
+      <div className="eyebrow" style={{ marginBottom: 10 }}>{t("Groupe")} {g} — {t("classement")}</div>
       <table className="tbl">
-        <thead><tr><th></th><th>Équipe</th><th>J</th><th>Diff</th><th>Pts</th></tr></thead>
+        <thead><tr><th></th><th>{t("Équipe")}</th><th>{t("J")}</th><th>{t("Diff")}</th><th>Pts</th></tr></thead>
         <tbody>
           {s.map((r, i) => (
             <tr key={r.code} style={i < 2 ? { fontWeight: 700 } : i === 2 ? {} : { opacity: .6 }}>
               <td className="rank-n">{i + 1}</td>
-              <td><div style={{ display: "flex", alignItems: "center", gap: 8 }}><Roundel code={r.code} size={20} />{WC.T[r.code].name}{i < 2 && <span className="pill pill--accent" style={{ fontSize: 10 }}>Qualifié</span>}{i === 2 && <span className="pill" style={{ fontSize: 10 }}>Repêchable</span>}</div></td>
+              <td><div style={{ display: "flex", alignItems: "center", gap: 8 }}><Roundel code={r.code} size={20} />{teamName(r.code, WC.T[r.code].name)}{i < 2 && <span className="pill pill--accent" style={{ fontSize: 10 }}>{t("Qualifié")}</span>}{i === 2 && <span className="pill" style={{ fontSize: 10 }}>{t("Repêchable")}</span>}</div></td>
               <td className="mono">{r.j}</td><td className="mono">{r.diff > 0 ? "+" + r.diff : r.diff}</td>
               <td className="mono" style={{ fontWeight: 800 }}>{r.pts}</td>
             </tr>

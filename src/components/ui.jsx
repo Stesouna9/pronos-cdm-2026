@@ -58,7 +58,7 @@ export function PointsBadge({ pred, real }) {
   const p = WC.points(pred, real);
   if (p === null || p === undefined) return null;
   const cls = p === WC.BAREME.exact ? "pts--exact" : p > 0 ? "pts--good" : "pts--zero";
-  const label = p === WC.BAREME.exact ? "SCORE EXACT" : p > 0 ? "BON RÉSULTAT" : "RATÉ";
+  const label = p === WC.BAREME.exact ? t("SCORE EXACT") : p > 0 ? t("BON RÉSULTAT") : t("RATÉ");
   return <span className={"pts " + cls}>+{p} · {label}</span>;
 }
 

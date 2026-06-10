@@ -84,9 +84,9 @@ export function TableauScreen({ go, matches = WC.ALL_MATCHES }) {
         koMatches.length ? (
           <>
             <div className="card pad rise" style={{ marginBottom: 18, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-              <span className="pill pill--accent"><span className="dot dot--pulse" /> Mise à jour auto</span>
+              <span className="pill pill--accent"><span className="dot dot--pulse" /> {t("Mise à jour auto")}</span>
               <span className="muted" style={{ fontSize: 13.5 }}>
-                Dès qu'un résultat tombe, les classements de groupe se recalculent et le bracket place automatiquement les qualifiés.
+                {t("Dès qu'un résultat tombe, les classements se recalculent automatiquement.")}
               </span>
             </div>
             <Bracket go={go} />
@@ -95,7 +95,7 @@ export function TableauScreen({ go, matches = WC.ALL_MATCHES }) {
           <div className="card pad-lg" style={{ textAlign: "center" }}>
             <div className="poster" style={{ fontSize: 24 }}>🏆 Phase finale à venir</div>
             <p className="muted" style={{ maxWidth: 460, margin: "8px auto 0" }}>
-              Le tableau à élimination directe se remplira automatiquement une fois la phase de groupes terminée (à partir du 28 juin). En attendant, fais tes pronos sur les matchs de groupes !
+              {t("Le tableau à élimination directe se remplira automatiquement après la phase de groupes (à partir du 28 juin). En attendant, fais tes pronos !")}
             </p>
             <Btn variant="accent" onClick={() => go("matches")} style={{ marginTop: 14 }}>Voir les matchs →</Btn>
           </div>
@@ -187,10 +187,10 @@ export function Leaderboard({ go, profile, users: realUsers, me }) {
           const prize = WC.PRIZES.find((p) => p.rang === place);
           return (
             <div className={"pcol p" + place} key={u.id}>
-              <div className="medal">{place === 1 ? "🏆 CHAMPION" : place === 2 ? "🥈 2E" : "🥉 3E"}</div>
+              <div className="medal">{place === 1 ? "🏆 " + t("Champion").toUpperCase() : place === 2 ? "🥈 2E" : "🥉 3E"}</div>
               <div className="av">{u.avatar}</div>
               <div className="ps">{u.pseudo}</div>
-              <div className="mono" style={{ fontSize: 12, opacity: .85 }}>{u.pts} pts · {u.exacts} exacts</div>
+              <div className="mono" style={{ fontSize: 12, opacity: .85 }}>{u.pts} {t("pts")} · {u.exacts} {t("exacts")}</div>
               <div style={{ marginTop: 8, fontSize: 12.5, fontWeight: 700 }}>{prize.lot}</div>
             </div>
           );
@@ -207,7 +207,7 @@ export function Leaderboard({ go, profile, users: realUsers, me }) {
                 <td>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--bg-2)", display: "grid", placeItems: "center", fontSize: 16 }}>{u.avatar}</div>
-                    <b>{u.pseudo}</b>{u.isMe && <span className="pill pill--accent" style={{ fontSize: 10 }}>toi</span>}
+                    <b>{u.pseudo}</b>{u.isMe && <span className="pill pill--accent" style={{ fontSize: 10 }}>{t("toi")}</span>}
                   </div>
                 </td>
                 <td className="mono">{u.exacts}</td>
@@ -219,7 +219,7 @@ export function Leaderboard({ go, profile, users: realUsers, me }) {
           </tbody>
         </table>
         <hr className="divider" />
-        <div className="mono muted" style={{ fontSize: 12, textAlign: "center" }}>🥄 Cuillère de bois pour <b style={{ color: "var(--ink)" }}>{last.pseudo}</b> — c'est lui qui paie la tournée pour l'instant !</div>
+        <div className="mono muted" style={{ fontSize: 12, textAlign: "center" }}>🥄 <b style={{ color: "var(--ink)" }}>{last.pseudo}</b> — {t("c'est lui qui paie le McDo de Gabriel pour l'instant !")}</div>
       </div>
     </div>
   );
@@ -238,10 +238,10 @@ export function Profile({ profile, setProfile, predictions, me: meStats, matches
   function save() { setProfile((p) => ({ ...p, ...draft })); setSaved(true); setTimeout(() => setSaved(false), 1800); }
 
   const badges = [
-    ["🎯", "Sniper", exacts + " scores exacts"],
-    ["🔥", "En feu", "Série de " + me.serie],
-    ["📅", "Assidu", finis.length + " pronos joués"],
-    ["🌍", "Globe-trotter", "Pronos sur 6 confédérations"],
+    ["🎯", t("Sniper"), exacts + " " + t("scores exacts")],
+    ["🔥", t("En feu"), t("Série de") + " " + me.serie],
+    ["📅", t("Assidu"), finis.length + " " + t("pronos joués")],
+    ["🌍", t("Globe-trotter"), t("Pronos sur 6 confédérations")],
   ];
 
   return (
@@ -251,17 +251,17 @@ export function Profile({ profile, setProfile, predictions, me: meStats, matches
         <div className="card pad-lg rise" style={{ textAlign: "center" }}>
           <div style={{ width: 92, height: 92, borderRadius: "50%", background: "var(--bg-2)", display: "grid", placeItems: "center", fontSize: 46, margin: "0 auto 12px", border: "2px solid var(--line)" }}>{draft.avatar}</div>
           <div className="poster" style={{ fontSize: 26 }}>{draft.pseudo || "—"}</div>
-          <div className="mono muted" style={{ fontSize: 12 }}>#{me.position} au classement · {me.pts} pts</div>
+          <div className="mono muted" style={{ fontSize: 12 }}>#{me.position} · {me.pts} {t("pts")}</div>
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginTop: 8, whiteSpace: "nowrap" }}>
-            <span className="muted" style={{ fontSize: 13 }}>Équipe de cœur</span><Roundel code={draft.fav} size={20} /><b style={{ fontSize: 13 }}>{WC.T[draft.fav].name}</b>
+            <span className="muted" style={{ fontSize: 13 }}>{t("Équipe de cœur")}</span><Roundel code={draft.fav} size={20} /><b style={{ fontSize: 13 }}>{teamName(draft.fav, WC.T[draft.fav].name)}</b>
           </div>
           <hr className="divider" />
           <div className="grid g-2 keep" style={{ gap: 10 }}>
-            {[[me.pts, "Points"], ["#" + me.position, "Rang"], [exacts, "Exacts"], [me.serie, "Série 🔥"]].map(([n, l], i) => (
+            {[[me.pts, t("Points")], ["#" + me.position, t("Rang")], [exacts, t("Exacts")], [me.serie, t("Série") + " 🔥"]].map(([n, l], i) => (
               <div className="stat" key={i} style={{ padding: 12 }}><div className="n" style={{ fontSize: 26 }}>{n}</div><div className="l">{l}</div></div>
             ))}
           </div>
-          <div className="eyebrow" style={{ margin: "18px 0 10px", textAlign: "left" }}>Badges</div>
+          <div className="eyebrow" style={{ margin: "18px 0 10px", textAlign: "left" }}>{t("Badges")}</div>
           <div className="grid g-2 keep" style={{ gap: 10 }}>
             {badges.map((b, i) => (
               <div key={i} className="card pad" style={{ display: "flex", gap: 10, alignItems: "center", textAlign: "left" }}>
@@ -273,30 +273,30 @@ export function Profile({ profile, setProfile, predictions, me: meStats, matches
         </div>
 
         <div className="card pad-lg rise">
-          <div className="eyebrow" style={{ marginBottom: 14 }}>Personnaliser</div>
-          <div className="field"><label>Pseudo</label><input className="input" maxLength={16} value={draft.pseudo} onChange={(e) => setDraft({ ...draft, pseudo: e.target.value })} /></div>
-          <div className="field"><label>Email</label><input className="input" type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></div>
+          <div className="eyebrow" style={{ marginBottom: 14 }}>{t("Personnaliser")}</div>
+          <div className="field"><label>{t("Pseudo")}</label><input className="input" maxLength={16} value={draft.pseudo} onChange={(e) => setDraft({ ...draft, pseudo: e.target.value })} /></div>
+          <div className="field"><label>{t("Email")}</label><input className="input" type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></div>
           <div className="field">
-            <label>Avatar</label>
+            <label>{t("Avatar")}</label>
             <div className="av-grid" style={{ gridTemplateColumns: "repeat(9,1fr)" }}>
               {AV.map((a) => <button key={a} className={draft.avatar === a ? "on" : ""} onClick={() => setDraft({ ...draft, avatar: a })}>{a}</button>)}
             </div>
           </div>
           <div className="field">
-            <label>Équipe de cœur</label>
+            <label>{t("Équipe de cœur")}</label>
             <select className="input" value={draft.fav} onChange={(e) => setDraft({ ...draft, fav: e.target.value })}>
-              {Object.keys(WC.T).map((c) => <option key={c} value={c}>{WC.T[c].name}</option>)}
+              {Object.keys(WC.T).map((c) => <option key={c} value={c}>{teamName(c, WC.T[c].name)}</option>)}
             </select>
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <Btn variant="accent" onClick={save} style={{ whiteSpace: "nowrap" }}>Enregistrer</Btn>
-            {saved && <span className="pill pill--accent">✓ Profil mis à jour</span>}
+            <Btn variant="accent" onClick={save} style={{ whiteSpace: "nowrap" }}>{t("Enregistrer")}</Btn>
+            {saved && <span className="pill pill--accent">✓ {t("Profil mis à jour")}</span>}
           </div>
           <hr className="divider" />
-          <div className="eyebrow" style={{ marginBottom: 8 }}>Préférences</div>
+          <div className="eyebrow" style={{ marginBottom: 8 }}>{t("Préférences")}</div>
           {["Rappel email avant chaque coup d'envoi", "Notifs quand quelqu'un me dépasse", "Profil visible par toute la ligue"].map((p, i) => (
             <label key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", fontSize: 14 }}>
-              <input type="checkbox" defaultChecked={i < 2} style={{ width: 18, height: 18, accentColor: "var(--accent)" }} />{p}
+              <input type="checkbox" defaultChecked={i < 2} style={{ width: 18, height: 18, accentColor: "var(--accent)" }} />{t(p)}
             </label>
           ))}
           <hr className="divider" />
@@ -311,11 +311,11 @@ export function Profile({ profile, setProfile, predictions, me: meStats, matches
 export function Rules() {
   const B = WC.BAREME;
   const exemples = [
-    ["Tu pronostiques 2–1, le match finit 2–1", "Score exact", B.exact, "exact"],
-    ["Tu pronostiques 2–1, le match finit 3–2", "Bon vainqueur + bon écart (+1)", B.ecart, "good"],
-    ["Tu pronostiques 2–1, le match finit 4–0", "Bon vainqueur, écart différent", B.issue, "good"],
-    ["Tu pronostiques 1–1, le match finit 2–2", "Match nul bien vu", B.issue, "good"],
-    ["Tu pronostiques 2–1, le match finit 0–2", "Mauvais résultat", B.rate, "zero"],
+    [t("Tu pronostiques 2–1, le match finit 2–1"), t("Score exact"), B.exact, "exact"],
+    [t("Tu pronostiques 2–1, le match finit 3–2"), t("Bon vainqueur + bon écart (+1)"), B.ecart, "good"],
+    [t("Tu pronostiques 2–1, le match finit 4–0"), t("Bon vainqueur, écart différent"), B.issue, "good"],
+    [t("Tu pronostiques 1–1, le match finit 2–2"), t("Match nul bien vu"), B.issue, "good"],
+    [t("Tu pronostiques 2–1, le match finit 0–2"), t("Mauvais résultat"), B.rate, "zero"],
   ];
   return (
     <div className="content">
@@ -323,19 +323,19 @@ export function Rules() {
 
       <div className="grid g-2" style={{ alignItems: "start" }}>
         <div className="card pad-lg rise">
-          <div className="eyebrow" style={{ marginBottom: 14 }}>Le barème</div>
-          {[["Score exact", B.exact, "Le Graal : bon vainqueur ET bon score.", "exact"],
-            ["Bon résultat + bon écart de buts", B.ecart, "Bon vainqueur et la bonne différence (2–1 → 3–2).", "good"],
-            ["Bon résultat", B.issue, "Bon vainqueur (ou nul bien vu) mais pas le bon score.", "good"],
-            ["Mauvais résultat", B.rate, "Pas le bon vainqueur. Zéro pointé.", "zero"]].map((r, i) => (
+          <div className="eyebrow" style={{ marginBottom: 14 }}>{t("Le barème")}</div>
+          {[[t("Score exact"), B.exact, t("Le Graal : bon vainqueur ET bon score."), "exact"],
+            [t("Bon résultat + bon écart de buts"), B.ecart, t("Bon vainqueur et la bonne différence (2–1 → 3–2)."), "good"],
+            [t("Bon résultat"), B.issue, t("Bon vainqueur (ou nul bien vu) mais pas le bon score."), "good"],
+            [t("Mauvais résultat"), B.rate, t("Pas le bon vainqueur. Zéro pointé."), "zero"]].map((r, i) => (
             <div key={i} style={{ display: "flex", gap: 14, alignItems: "center", padding: "14px 0", borderTop: i ? "1px solid var(--line)" : "none" }}>
               <span className={"pts " + (r[3] === "exact" ? "pts--exact" : r[3] === "good" ? "pts--good" : "pts--zero")} style={{ fontSize: 16, minWidth: 54, textAlign: "center" }}>+{r[1]}</span>
               <div><div style={{ fontWeight: 700 }}>{r[0]}</div><div className="muted" style={{ fontSize: 13 }}>{r[2]}</div></div>
             </div>
           ))}
           <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>🎁 Bonus</div>
-            <div className="muted" style={{ fontSize: 13.5 }}>+{B.bonusSerie} pts par série de 3 bons pronos d'affilée · les matchs de phase finale rapportent davantage (l'enjeu monte à chaque tour).</div>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>{t("🎁 Bonus")}</div>
+            <div className="muted" style={{ fontSize: 13.5 }}>+{B.bonusSerie} {t("pts par série de 3 bons pronos d'affilée · les matchs de phase finale rapportent davantage.")}</div>
           </div>
           <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>⚖️ {t("En cas d'égalité")}</div>
@@ -345,7 +345,7 @@ export function Rules() {
 
         <div>
           <div className="card pad-lg rise" style={{ marginBottom: 16 }}>
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Exemples concrets</div>
+            <div className="eyebrow" style={{ marginBottom: 12 }}>{t("Exemples concrets")}</div>
             {exemples.map((e, i) => (
               <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", padding: "11px 0", borderTop: i ? "1px solid var(--line)" : "none" }}>
                 <span className={"pts " + (e[3] === "exact" ? "pts--exact" : e[3] === "good" ? "pts--good" : "pts--zero")} style={{ minWidth: 40, textAlign: "center", flex: "0 0 auto" }}>+{e[2]}</span>
@@ -355,26 +355,26 @@ export function Rules() {
           </div>
 
           <div className="card pad-lg rise">
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Format du tournoi</div>
+            <div className="eyebrow" style={{ marginBottom: 12 }}>{t("Format du tournoi")}</div>
             <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7, fontSize: 14.5 }}>
-              <li><b>48 équipes</b>, 12 groupes de 4 (A→L).</li>
-              <li>Les <b>2 premiers</b> de chaque groupe + les <b>8 meilleurs 3es</b> se qualifient.</li>
-              <li>Puis élimination directe : 16es → 8es → quarts → demies → finale (+ petite finale).</li>
-              <li>Le <b>bracket se remplit automatiquement</b> à chaque résultat.</li>
-              <li>Du 11 juin au 19 juillet 2026 · 104 matchs · USA · Canada · Mexique.</li>
+              <li>{t("48 équipes, 12 groupes de 4 (A→L).")}</li>
+              <li>{t("Les 2 premiers de chaque groupe + les 8 meilleurs 3es se qualifient.")}</li>
+              <li>{t("Puis élimination directe : 16es → 8es → quarts → demies → finale (+ petite finale).")}</li>
+              <li>{t("Le tableau se remplit automatiquement à chaque résultat.")}</li>
+              <li>{t("Du 11 juin au 19 juillet 2026 · 104 matchs · USA · Canada · Mexique.")}</li>
             </ul>
           </div>
         </div>
       </div>
 
       <div className="card pad-lg rise" style={{ marginTop: 16 }}>
-        <div className="eyebrow" style={{ marginBottom: 12 }}>Les lots</div>
+        <div className="eyebrow" style={{ marginBottom: 12 }}>{t("Les lots")}</div>
         <div className="grid g-4">
           {WC.PRIZES.map((p, i) => (
             <div key={i} className="card pad" style={{ background: "var(--surface-2)" }}>
-              <div className="poster" style={{ fontSize: 20 }}>{typeof p.rang === "number" ? p.rang + (p.rang === 1 ? "er" : "e") : p.titre}</div>
-              <div style={{ fontWeight: 700, margin: "6px 0 2px" }}>{p.lot}</div>
-              <div className="muted" style={{ fontSize: 12.5 }}>{p.desc}</div>
+              <div className="poster" style={{ fontSize: 20 }}>{typeof p.rang === "number" ? p.rang + (p.rang === 1 ? "er" : "e") : t(p.titre)}</div>
+              <div style={{ fontWeight: 700, margin: "6px 0 2px" }}>{t(p.lot)}</div>
+              <div className="muted" style={{ fontSize: 12.5 }}>{t(p.desc)}</div>
             </div>
           ))}
         </div>

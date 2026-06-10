@@ -145,7 +145,7 @@ export function AdminScreen({ matches = [], reload }) {
           </div>
           <div className="card pad rise" style={{ marginBottom: 16 }}>
             <span className="muted" style={{ fontSize: 13.5 }}>
-              Tape le score final d'un match et clique <b>Valider</b> : les points de tous les joueurs se calculent automatiquement et le classement se met à jour. Tu peux corriger ou rouvrir un match à tout moment.
+              {t("Tape le score final d'un match et clique Valider : les points se calculent automatiquement. Tu peux corriger ou rouvrir un match à tout moment.")}
             </span>
           </div>
           <div className="grid" style={{ gap: 12 }}>

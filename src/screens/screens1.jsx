@@ -171,7 +171,7 @@ export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, 
         <div className="stripes" />
         <div style={{ position: "relative", display: "flex", justifyContent: "space-between", gap: 24, flexWrap: "wrap", alignItems: "flex-end" }}>
           <div>
-            <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", opacity: .7 }}>SALUT {me.pseudo.toUpperCase()} 👋 · TA POSITION</div>
+            <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", opacity: .7 }}>{t("SALUT")} {me.pseudo.toUpperCase()} 👋 · {t("TA POSITION")}</div>
             <div className="big">#{me.position}</div>
             <div style={{ display: "flex", gap: 22, marginTop: 6, flexWrap: "wrap" }}>
               <div><b className="poster" style={{ fontSize: 26 }}>{me.pts}</b> <span className="mono" style={{ fontSize: 11, opacity: .7 }}>{t("PTS")}</span></div>
@@ -235,7 +235,7 @@ export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, 
           })}
         </div>
         <div className="mono muted" style={{ fontSize: 11.5, marginTop: 14, textAlign: "center" }}>
-          🥄 Cuillère de bois : le dernier du classement paie la première tournée.
+          {t("🥄 Et le dernier du classement… paie le McDo de Gabriel.")}
         </div>
       </div>
 
