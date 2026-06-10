@@ -8,7 +8,7 @@ import { t, tPhase } from "../lib/i18n.js";
 const PODIUM_LOTS = [
   { place: 1, medal: "🥇", emoji: "🍽️", lot: "Une journée + resto avec Gabriel" },
   { place: 2, medal: "🥈", emoji: "🍔", lot: "Un McDo offert par Gabriel" },
-  { place: 3, medal: "🥉", emoji: "🔞", lot: "Un sex toy" },
+  { place: 3, medal: "🥉", emoji: "🎁", lot: "Un cadeau mystère" },
 ];
 
 /* ============================= AUTH ============================= */
@@ -186,7 +186,7 @@ export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, 
         </div>
       </div>
 
-      <div className="grid g-2" style={{ marginBottom: 22, gridTemplateColumns: "1.4fr 1fr" }}>
+      <div className="grid dash-top" style={{ marginBottom: 22 }}>
         <div className="card pad rise">
           <div className="eyebrow" style={{ marginBottom: 12 }}>{t("Prochain coup d'envoi")}</div>
           {prochain && (

@@ -285,6 +285,22 @@ a { color: inherit; }
 .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent); }
 .input::placeholder { color: color-mix(in oklab, var(--ink-soft) 80%, transparent); }
 
+/* grilles 2 colonnes qui s'empilent sur mobile.
+   minmax(0,…) : sans ça, le min-content d'un enfant (ex. grille d'avatars)
+   force la colonne plus large que l'écran. */
+.grid > * { min-width: 0; }
+.dash-top { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+.profile-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
+@media (max-width: 760px) {
+  .dash-top, .profile-grid { grid-template-columns: minmax(0, 1fr); }
+  .av-grid { grid-template-columns: repeat(6, 1fr) !important; }
+  /* tables compactes + défilables si besoin */
+  .tblwrap { overflow-x: auto; }
+  .tbl th { padding: 0 6px 10px; font-size: 9.5px; }
+  .tbl td { padding: 10px 6px; font-size: 13px; }
+  .rank-n { width: 22px; font-size: 15px; }
+}
+
 /* avatar picker */
 .av-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
 .av-grid button { aspect-ratio: 1; border-radius: var(--r-md); border: 1.5px solid var(--line); background: var(--surface-2); font-size: 22px; display: grid; place-items: center; }

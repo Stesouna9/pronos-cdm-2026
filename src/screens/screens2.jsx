@@ -334,7 +334,7 @@ export function GroupTable({ g, matches }) {
   return (
     <div className="card pad">
       <div className="eyebrow" style={{ marginBottom: 10 }}>{t("Groupe")} {g} — {t("classement")}</div>
-      <table className="tbl">
+      <div className="tblwrap"><table className="tbl">
         <thead><tr><th></th><th>{t("Équipe")}</th><th>{t("J")}</th><th>{t("Diff")}</th><th>Pts</th></tr></thead>
         <tbody>
           {s.map((r, i) => (
@@ -346,7 +346,7 @@ export function GroupTable({ g, matches }) {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 }

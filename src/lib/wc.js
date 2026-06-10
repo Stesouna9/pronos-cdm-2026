@@ -243,7 +243,7 @@ const ALL_MATCHES = [...matches, ...ALL_KO];
 const PRIZES = [
   { rang: 1, titre: "Le Champion", lot: "🏆 Une journée en tête-à-tête avec Gabriel + resto", desc: "Le grand gagnant passe une journée avec le boss." },
   { rang: 2, titre: "Le Dauphin", lot: "🍔 Un McDo offert par Gabriel", desc: "Si t'as bon, Gabriel te paie le McDo." },
-  { rang: 3, titre: "Le Podium", lot: "🔞 Un sex toy", desc: "Pour bien finir le tournoi." },
+  { rang: 3, titre: "Le Podium", lot: "🎁 Un cadeau mystère", desc: "Pour bien finir le tournoi." },
   { rang: "Lanterne", titre: "La Cuillère de bois", lot: "🍟 Tu paies le McDo de Gabriel", desc: "Le dernier de la ligue régale le boss." },
 ];
 

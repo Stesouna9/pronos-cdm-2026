@@ -85,7 +85,7 @@ function PlayersAdmin({ reload }) {
       </div>
       {err && <div className="alert alert--err" style={{ marginBottom: 12 }}>{err}</div>}
       <div className="card pad">
-        <table className="tbl">
+        <div className="tblwrap"><table className="tbl">
           <thead><tr><th>{t("Joueur")}</th><th>{t("Statut")}</th><th style={{ textAlign: "right" }}></th></tr></thead>
           <tbody>
             {users.map((u) => (
@@ -112,7 +112,7 @@ function PlayersAdmin({ reload }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </>
   );

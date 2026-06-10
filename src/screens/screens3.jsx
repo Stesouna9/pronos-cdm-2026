@@ -34,10 +34,10 @@ function ResultsBoard({ matches, go }) {
     );
   };
   const Table = ({ list, withPhase }) => (
-    <table className="tbl">
+    <div className="tblwrap"><table className="tbl">
       <thead><tr><th>{t("Date")}</th><th>{t("Match")}</th><th style={{ textAlign: "center" }}>{t("Score")}</th></tr></thead>
       <tbody>{list.map((m) => <Row key={m.id} m={m} withPhase={withPhase} />)}</tbody>
-    </table>
+    </table></div>
   );
   const groups = Object.keys(WC.GROUPS);
   const ko = matches.filter((m) => m.round === "ko").sort((a, b) => a.date - b.date);
@@ -198,7 +198,7 @@ export function Leaderboard({ go, profile, users: realUsers, me }) {
       </div>
 
       <div className="card pad">
-        <table className="tbl">
+        <div className="tblwrap"><table className="tbl">
           <thead><tr><th>#</th><th>{t("Joueur")}</th><th>{t("Exacts")}</th><th>{t("Bons")}</th><th>{t("Série")}</th><th style={{ textAlign: "right" }}>{t("Points")}</th></tr></thead>
           <tbody>
             {users.map((u) => (
@@ -217,7 +217,7 @@ export function Leaderboard({ go, profile, users: realUsers, me }) {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
         <hr className="divider" />
         <div className="mono muted" style={{ fontSize: 12, textAlign: "center" }}>🥄 <b style={{ color: "var(--ink)" }}>{last.pseudo}</b> — {t("c'est lui qui paie le McDo de Gabriel pour l'instant !")}</div>
       </div>
@@ -247,7 +247,7 @@ export function Profile({ profile, setProfile, predictions, me: meStats, matches
   return (
     <div className="content">
       <SectionTitle kicker={t("Ton compte")} title={t("Profil")} />
-      <div className="grid g-2" style={{ gridTemplateColumns: "1fr 1.2fr", alignItems: "start" }}>
+      <div className="grid profile-grid" style={{ alignItems: "start" }}>
         <div className="card pad-lg rise" style={{ textAlign: "center" }}>
           <div style={{ width: 92, height: 92, borderRadius: "50%", background: "var(--bg-2)", display: "grid", placeItems: "center", fontSize: 46, margin: "0 auto 12px", border: "2px solid var(--line)" }}>{draft.avatar}</div>
           <div className="poster" style={{ fontSize: 26 }}>{draft.pseudo || "—"}</div>

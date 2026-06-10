@@ -43,7 +43,7 @@ const JA = {
   "CE QUE TU PEUX GAGNER": "もらえる賞品",
   "Une journée + resto avec Gabriel": "ガブリエルと1日デート＋食事",
   "Un McDo offert par Gabriel": "ガブリエルおごりのマック",
-  "Un sex toy": "大人のおもちゃ",
+  "Un cadeau mystère": "ミステリーギフト",
   "🥄 Et le dernier du classement… paie le McDo de Gabriel.": "🥄 最下位は…ガブリエルのマック代を払う。",
   "En t'inscrivant tu acceptes de chambrer dans le respect.": "登録すると、リスペクトを持ってイジり合うことに同意したことになります。",
   "Mot de passe oublié ? Demande à l'admin de la ligue.": "パスワードを忘れた？リーグの管理者に聞いてね。",
@@ -155,7 +155,7 @@ const JA = {
   // Lots (tableau de bord / règles)
   "🏆 Une journée en tête-à-tête avec Gabriel + resto": "🏆 ガブリエルと1日デート＋食事",
   "🍔 Un McDo offert par Gabriel": "🍔 ガブリエルおごりのマック",
-  "🔞 Un sex toy": "🔞 大人のおもちゃ",
+  "🎁 Un cadeau mystère": "🎁 ミステリーギフト",
   "🍟 Tu paies le McDo de Gabriel": "🍟 ガブリエルのマック代を払う",
   "🥄 Cuillère de bois : le dernier du classement paie la première tournée.": "🥄 最下位賞：最下位はガブリエルにおごる。",
   // Hero / stats
