@@ -30,6 +30,9 @@ const NAV = [
 export default function App() {
   const persisted = loadState();
   const [authed, setAuthed] = useState(persisted.authed || false);
+  // true tant qu'on n'a pas vérifié si une session existe déjà (évite le
+  // faux écran de connexion au démarrage — la session EST mémorisée).
+  const [checkingSession, setCheckingSession] = useState(hasSupabase);
   const [screen, setScreen] = useState(persisted.screen || "home");
   const [params, setParams] = useState(persisted.params || {});
   const [predictions, setPredictions] = useState(hasSupabase ? {} : (persisted.predictions || WC.PREDICTIONS));
@@ -53,7 +56,8 @@ export default function App() {
     if (!hasSupabase) return;
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) setAuthed(true);
-    });
+      setCheckingSession(false);
+    }).catch(() => setCheckingSession(false));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       setAuthed(Boolean(session));
     });
@@ -155,6 +159,15 @@ export default function App() {
     || { position: users.length || 1, pts: 0, exacts: 0, bons: 0, serie: 0 };
   const aPredire = matches.filter((m) => m.status !== "fini" && m.home && m.away && !predictions[m.id]).length;
 
+  // Pendant la vérification de session : petit splash (pas d'écran de connexion trompeur).
+  if (checkingSession && !authed) return (
+    <div className="app-root" style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "var(--hero)" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ width: 64, height: 64, borderRadius: 16, margin: "0 auto 14px", background: "linear-gradient(150deg, var(--gold-soft), var(--gold))", color: "#14120a", display: "grid", placeItems: "center", fontFamily: "var(--f-poster)", fontSize: 30 }} className="ball-bounce">26</div>
+        <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", color: "var(--hero-ink)", opacity: .7 }}>…</div>
+      </div>
+    </div>
+  );
   if (!authed) return <AuthScreen onAuth={handleAuth} profile={profile} setProfile={setProfile} demoMode={!hasSupabase} />;
 
   function render() {
