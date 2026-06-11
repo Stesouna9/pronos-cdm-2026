@@ -362,7 +362,7 @@ export function Leaderboard({ go, profile, users: realUsers, me, matches: lbMatc
           </tbody>
         </table></div>
         <hr className="divider" />
-        <div className="mono muted" style={{ fontSize: 12, textAlign: "center" }}>🥄 <b style={{ color: "var(--ink)" }}>{last.pseudo}</b> — {t("c'est lui qui paie le McDo de Gabriel pour l'instant !")}</div>
+        <div className="mono muted" style={{ fontSize: 12, textAlign: "center" }}>🥄 <b style={{ color: "var(--ink)" }}>{last.pseudo}</b> — {t("pour l'instant, le McDo de Gabriel est pour toi !")}</div>
       </div>
       </>}
     </div>

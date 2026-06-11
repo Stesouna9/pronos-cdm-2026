@@ -138,7 +138,7 @@ const JA = {
   "Équipe": "チーム", "J": "試", "Diff": "差",
   "SCORE EXACT": "完全的中", "BON RÉSULTAT": "結果的中", "RATÉ": "ハズレ",
   // Classement / profil
-  "c'est lui qui paie le McDo de Gabriel pour l'instant !": "今のところガブリエルのマック代を払うのはこの人！",
+  "pour l'instant, le McDo de Gabriel est pour toi !": "今のところガブリエルのマック代はあなた持ち！",
   "Sniper": "スナイパー", "En feu": "絶好調", "Assidu": "皆勤賞", "Globe-trotter": "世界旅行者",
   "scores exacts": "完全的中", "Série de": "連続", "pronos joués": "予想済み",
   "Pronos sur 6 confédérations": "6大陸連盟の試合を予想", "Points": "得点", "Rang": "順位",
