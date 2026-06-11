@@ -365,6 +365,36 @@ a { color: inherit; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .center-screen { min-height: 100vh; display: grid; place-items: center; gap: 14px; }
 
+/* ====================== PACK FESTIF ====================== */
+/* Guirlande de fanions en haut des bandeaux sombres */
+.bunting { position: absolute; top: 0; left: 0; right: 0; height: 26px; z-index: 2; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='26'%3E%3Cline x1='0' y1='2' x2='200' y2='2' stroke='%23e8c97a' stroke-width='1.5' opacity='.6'/%3E%3Cpath d='M0 2 40 2 20 24Z' fill='%23d4a533'/%3E%3Cpath d='M40 2 80 2 60 24Z' fill='%231f8a4c'/%3E%3Cpath d='M80 2 120 2 100 24Z' fill='%23d52b1e'/%3E%3Cpath d='M120 2 160 2 140 24Z' fill='%232a5bd7'/%3E%3Cpath d='M160 2 200 2 180 24Z' fill='%23e8c97a'/%3E%3C/svg%3E");
+  background-repeat: repeat-x; transform-origin: top center; }
+/* Faisceau de projecteur qui balaie le bandeau */
+.hero .spot { content: ""; position: absolute; inset: -20%; pointer-events: none; opacity: .0;
+  background: linear-gradient(100deg, transparent 42%, rgba(255,255,255,.16) 50%, transparent 58%); }
+/* Bande bicolore aux couleurs des équipes en tête de carte match */
+.teamstripe { position: absolute; top: 0; left: 0; right: 0; height: 5px;
+  border-radius: var(--r-lg) var(--r-lg) 0 0; opacity: .9; }
+.card.match { position: relative; overflow: hidden; }
+/* Bannière jour de match */
+.matchday { position: relative; overflow: hidden; border-radius: var(--r-lg); padding: 12px 18px;
+  margin-bottom: 18px; color: #1a1607; font-weight: 800; display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(110deg, var(--gold-soft), var(--gold), #e9b949, var(--gold-soft));
+  background-size: 250% 100%; box-shadow: 0 10px 30px color-mix(in oklab, var(--gold) 40%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  .bunting { animation: bunt-sway 5s ease-in-out infinite; }
+  @keyframes bunt-sway { 0%, 100% { transform: skewX(0deg); } 50% { transform: skewX(2.5deg); } }
+  .hero .spot { animation: spot-sweep 7s ease-in-out infinite 2s; }
+  @keyframes spot-sweep { 0%, 100% { opacity: 0; transform: translateX(-30%); } 45%, 55% { opacity: 1; } 50% { transform: translateX(30%); } }
+  .matchday { animation: shimmer 4s linear infinite; }
+  .ball-bounce { display: inline-block; animation: ball-b 1.8s var(--ease) infinite; }
+  @keyframes ball-b { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-8px) rotate(20deg); } 55% { transform: translateY(0); } 70% { transform: translateY(-3px); } 85% { transform: translateY(0); } }
+  .roundel { transition: transform .25s var(--ease); }
+  .match .row:hover .roundel, .team-line:hover .roundel { transform: rotate(14deg) scale(1.12); }
+}
+[data-anim="off"] .bunting, [data-anim="off"] .hero .spot, [data-anim="off"] .matchday, [data-anim="off"] .ball-bounce { animation: none !important; }
+
 /* ====================== COMPTE À REBOURS ====================== */
 .cd-banner { display: flex; align-items: center; justify-content: center; gap: 8px;
   background: color-mix(in oklab, var(--accent) 10%, var(--surface-2)); border: 1px solid var(--line);

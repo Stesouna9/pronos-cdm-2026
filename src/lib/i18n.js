@@ -27,6 +27,8 @@ const JA = {
   "Allez les Bleus !": "アレ・レ・ブルー！",
   // Countdown / pronos ligue / stats fun
   "j": "日", "Les pronos de la ligue": "リーグみんなの予想",
+  "JOUR DE MATCH !": "試合日！", "match aujourd'hui": "試合（今日）", "matchs aujourd'hui": "試合（今日）",
+  "fais tes pronos avant le coup d'envoi !": "キックオフ前に予想しよう！",
   "Personne n'a pronostiqué ce match.": "この試合の予想はまだありません。",
   "Stats fun": "おもしろデータ", "Pas encore de stats": "まだデータがありません",
   "Les stats fun apparaissent dès que les premiers matchs sont verrouillés (les pronos deviennent publics au coup d'envoi).": "最初の試合が締め切られると表示されます（キックオフで予想は公開されます）。",

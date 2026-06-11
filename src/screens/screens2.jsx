@@ -40,8 +40,11 @@ function MatchRow({ m, pred, setPred, go }) {
   const fini = m.status === "fini";
   const locked = m.locked; // verrouillé : coup d'envoi passé
   const [a, b] = pred || [null, null];
+  const ch = m.home && WC.T[m.home] ? WC.T[m.home].colors[0] : "var(--line)";
+  const ca = m.away && WC.T[m.away] ? WC.T[m.away].colors[0] : "var(--line)";
   return (
     <div className="card pad rise match">
+      <div className="teamstripe" style={{ background: `linear-gradient(90deg, ${ch} 0 46%, ${ca} 54%)` }} />
       <div className="meta" style={{ justifyContent: "space-between" }}>
         <span><b style={{ color: "var(--ink)" }}>{tPhase(m.phase)}</b> · {WC.fmtDate(m.date)} · {WC.fmtHeure(m.date)}</span>
         <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -117,7 +120,7 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
       <div className="page-head">
         <div>
           <div className="eyebrow" style={{ marginBottom: 6 }}>{`104 ${t("matchs")} · ${aFaire} ${t("en attente de ton prono")}`}</div>
-          <h1 className="page-title poster">{t("Les matchs")}</h1>
+          <h1 className="page-title poster">{t("Les matchs")} <span className="ball-bounce" style={{ fontSize: "0.65em" }}>⚽</span></h1>
         </div>
         <div className="seg">{[["tous", "Tous"], ["apredire", "À pronostiquer"], ["termines", "Terminés"]].map(([k, l]) => (
           <button key={k} className={filtre === k ? "on" : ""} onClick={() => setFiltre(k)}>{t(l)}</button>))}</div>

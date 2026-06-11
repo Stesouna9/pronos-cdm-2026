@@ -45,6 +45,7 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
       {/* Panneau visuel */}
       <div className="auth-visual" style={{ background: "var(--hero)", color: "var(--hero-ink)", position: "relative", overflow: "hidden", padding: "48px", display: "flex", flexDirection: "column", justifyContent: "flex-start", gap: 28 }}>
         <div className="stripes" style={{ position: "absolute", inset: 0, opacity: .1, background: "repeating-linear-gradient(115deg, transparent 0 26px, var(--gold) 26px 28px)" }} />
+        <div className="bunting" />
         <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(150deg, var(--gold-soft), var(--gold))", color: "#14120a", display: "grid", placeItems: "center", fontFamily: "var(--f-poster)", fontSize: 20 }}>26</div>
           <div>
@@ -165,11 +166,23 @@ export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, 
 
   const prochain = matches.filter((m) => m.status !== "fini" && m.home && m.away).sort((a, b) => a.date - b.date)[0];
 
+  // matchs du jour (pour la bannière festive)
+  const now = new Date();
+  const today = matches.filter((m) => m.home && m.away && m.date.toDateString() === now.toDateString());
+
   return (
     <div className="content">
+      {today.length > 0 && (
+        <div className="matchday rise">
+          <span className="ball-bounce" style={{ fontSize: 22 }}>⚽</span>
+          <span>{t("JOUR DE MATCH !")} {today.length} {today.length > 1 ? t("matchs aujourd'hui") : t("match aujourd'hui")} — {t("fais tes pronos avant le coup d'envoi !")}</span>
+        </div>
+      )}
       <div className="hero rise" style={{ marginBottom: 22 }}>
         <div className="stripes" />
-        <div style={{ position: "relative", display: "flex", justifyContent: "space-between", gap: 24, flexWrap: "wrap", alignItems: "flex-end" }}>
+        <div className="bunting" />
+        <div className="spot" />
+        <div style={{ position: "relative", display: "flex", justifyContent: "space-between", gap: 24, flexWrap: "wrap", alignItems: "flex-end", paddingTop: 14 }}>
           <div>
             <div className="mono" style={{ fontSize: 12, letterSpacing: ".14em", opacity: .7 }}>{t("SALUT")} {me.pseudo.toUpperCase()} 👋 · {t("TA POSITION")}</div>
             <div className="big">#{me.position}</div>
