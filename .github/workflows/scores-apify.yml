@@ -5,10 +5,11 @@ name: Scores auto (Apify)
 
 on:
   schedule:
-    # 2x/jour (UTC) pour encadrer les matchs CDM et limiter le coût Apify.
-    # Le robot lit les matchs EN DIRECT : pour capter un score final il faut
-    # tourner pendant/juste après le match. Sinon, saisie manuelle (Admin).
-    - cron: "0 6,23 * * *"
+    # Passages calés sur les FINS de matchs CDM (kickoffs 16h→04h UTC, fins ~18h→06h).
+    # Le robot ne voit que les matchs en direct/à peine finis → il faut passer souvent
+    # pendant la nuit. 6 runs/jour ≈ qq centimes Apify/jour. Filet : saisie Admin.
+    - cron: "0 18,20,22 * * *"   # soirée (20h/22h/minuit heure française)
+    - cron: "0 0,3,6 * * *"      # nuit + matin (2h/5h/8h heure française)
   workflow_dispatch:
 
 jobs:
