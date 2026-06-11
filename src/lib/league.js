@@ -120,7 +120,7 @@ export async function fetchLeaderboard() {
     .order("exacts", { ascending: false })
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return (data || []).map((u, i) => ({
+  const list = (data || []).map((u, i) => ({
     id: u.user_id,
     pseudo: u.pseudo,
     avatar: u.avatar,
@@ -131,6 +131,14 @@ export async function fetchLeaderboard() {
     serie: 0,
     position: i + 1,
   }));
+  // Ex æquo : mêmes points ET mêmes exacts → même rang affiché (1,2,3,3,5…).
+  for (let i = 1; i < list.length; i++) {
+    if (list[i].pts === list[i - 1].pts && list[i].exacts === list[i - 1].exacts) {
+      list[i].position = list[i - 1].position;
+      list[i].tie = true; list[i - 1].tie = true;
+    }
+  }
+  return list;
 }
 
 /* Profil + identité du joueur connecté. */

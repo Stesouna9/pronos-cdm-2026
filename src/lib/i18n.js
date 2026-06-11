@@ -101,7 +101,8 @@ const JA = {
   "Mauvais résultat": "不的中", "Exemples concrets": "具体例", "Format du tournoi": "大会方式",
   "Les lots": "賞品", "🎁 Bonus": "🎁 ボーナス",
   "En cas d'égalité": "同点の場合",
-  "À points égaux, c'est le nombre de scores exacts qui départage. Si l'égalité persiste, avantage à celui qui s'est inscrit le plus tôt dans la ligue — les premiers arrivés sont récompensés.": "同点の場合は完全的中数で順位を決めます。それでも同じなら、先にリーグに登録した人が上位になります — 早い者勝ち！",
+  "Pendant le tournoi, les égalités s'affichent ex æquo (mêmes points et mêmes scores exacts = même place). Le départage final (scores exacts, puis ancienneté d'inscription) ne sert qu'à attribuer les lots à la fin.": "大会中、同点（得点も完全的中数も同じ）は同率として表示されます。最終的な順位決定（完全的中数→登録の早さ）は賞品の授与時のみ適用。",
+  "ex æquo": "同率",
   // Classement
   "Joueur": "プレイヤー", "Exacts": "完全", "Bons": "結果", "Série": "連続", "Points": "得点",
   "Général": "総合", "Cette semaine": "今週", "🏆 CHAMPION": "🏆 優勝", "Champion": "優勝",

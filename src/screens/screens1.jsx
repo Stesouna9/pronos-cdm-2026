@@ -155,8 +155,11 @@ export function AuthScreen({ onAuth, profile, setProfile, demoMode }) {
 /* ============================= DASHBOARD ============================= */
 export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, users = WC.USERS, me: meStats }) {
   const me = { ...(meStats || WC.ME), pseudo: profile.pseudo, avatar: profile.avatar };
-  const top3 = users.slice(0, 3);
-  while (top3.length < 3) top3.push({ id: "ph" + top3.length, pseudo: "—", avatar: "·", pts: 0 });
+  // marches par groupes de rang (ex æquo ensemble)
+  const rg = [];
+  users.forEach((u) => { const g = rg[rg.length - 1]; if (g && g[0].position === u.position) g.push(u); else rg.push([u]); });
+  while (rg.length < 3) rg.push([{ id: "ph" + rg.length, pseudo: "—", avatar: "·", pts: 0 }]);
+  const top3 = rg.slice(0, 3);
 
   const aPredire = matches
     .filter((m) => m.status !== "fini" && m.home && m.away && !predictions[m.id])
@@ -233,15 +236,18 @@ export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, 
           <Btn variant="ghost" onClick={() => go("leaderboard")}>{t("Voir le classement →")}</Btn>
         </div>
         <div className="podium">
-          {[top3[1], top3[0], top3[2]].map((u, i) => {
+          {[top3[1], top3[0], top3[2]].map((grp, i) => {
             const place = i === 1 ? 1 : i === 0 ? 2 : 3;
             const prize = WC.PRIZES.find((p) => p.rang === place);
+            const tie = grp.length > 1;
             return (
-              <div className={"pcol p" + place} key={u.id}>
-                <div className="medal">{place === 1 ? "🏆 1ER" : place === 2 ? "🥈 2E" : "🥉 3E"}</div>
-                <div className="av">{u.avatar}</div>
-                <div className="ps">{u.pseudo}</div>
-                <div className="mono" style={{ fontSize: 12, opacity: .8, marginTop: 2 }}>{u.pts} pts</div>
+              <div className={"pcol p" + place} key={grp[0].id}>
+                <div className="medal">{place === 1 ? "🏆 1ER" : place === 2 ? "🥈 2E" : "🥉 3E"}{tie && " · " + t("ex æquo")}</div>
+                <div style={{ display: "flex", justifyContent: "center", gap: 6 }}>
+                  {grp.slice(0, 3).map((u) => <div className="av" key={u.id} style={tie ? { width: 46, height: 46, fontSize: 22 } : null}>{u.avatar}</div>)}
+                </div>
+                <div className="ps" style={tie ? { fontSize: "clamp(16px,3vw,22px)" } : null}>{grp.map((u) => u.pseudo).join(" & ")}</div>
+                <div className="mono" style={{ fontSize: 12, opacity: .8, marginTop: 2 }}>{grp[0].pts} pts</div>
                 <div style={{ marginTop: 10, fontSize: 13, fontWeight: 700 }}>{t(prize.lot)}</div>
                 <div style={{ fontSize: 11.5, opacity: .8 }}>{t(prize.titre)}</div>
               </div>

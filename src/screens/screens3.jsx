@@ -309,8 +309,14 @@ export function Leaderboard({ go, profile, users: realUsers, me, matches: lbMatc
     ? { ...u, isMe: true, pseudo: profile.pseudo, avatar: profile.avatar } : u);
   const [scope, setScope] = useState("general");
   const last = users[users.length - 1] || { pseudo: "—" };
-  const podium = users.slice(0, 3);
-  while (podium.length < 3) podium.push({ id: "ph" + podium.length, pseudo: "—", avatar: "·", pts: 0, exacts: 0 });
+  // Marches du podium par GROUPES de rang (les ex æquo partagent la marche).
+  const rankGroups = [];
+  users.forEach((u) => {
+    const g = rankGroups[rankGroups.length - 1];
+    if (g && g[0].position === u.position) g.push(u); else rankGroups.push([u]);
+  });
+  while (rankGroups.length < 3) rankGroups.push([{ id: "ph" + rankGroups.length, pseudo: "—", avatar: "·", pts: 0, exacts: 0 }]);
+  const podium = rankGroups.slice(0, 3);
 
   return (
     <div className="content">
@@ -325,16 +331,19 @@ export function Leaderboard({ go, profile, users: realUsers, me, matches: lbMatc
       {scope === "evo" && <EvolutionChart matches={lbMatches} />}
       {scope !== "stats" && scope !== "evo" && <>
       <div className="podium rise" style={{ marginBottom: 22 }}>
-        {[podium[1], podium[0], podium[2]].map((u, i) => {
+        {[podium[1], podium[0], podium[2]].map((grp, i) => {
           const place = i === 1 ? 1 : i === 0 ? 2 : 3;
           const prize = WC.PRIZES.find((p) => p.rang === place);
+          const tie = grp.length > 1;
           return (
-            <div className={"pcol p" + place} key={u.id}>
-              <div className="medal">{place === 1 ? "🏆 " + t("Champion").toUpperCase() : place === 2 ? "🥈 2E" : "🥉 3E"}</div>
-              <div className="av">{u.avatar}</div>
-              <div className="ps">{u.pseudo}</div>
-              <div className="mono" style={{ fontSize: 12, opacity: .85 }}>{u.pts} {t("pts")} · {u.exacts} {t("exacts")}</div>
-              <div style={{ marginTop: 8, fontSize: 12.5, fontWeight: 700 }}>{prize.lot}</div>
+            <div className={"pcol p" + place} key={grp[0].id}>
+              <div className="medal">{place === 1 ? "🏆 " + t("Champion").toUpperCase() : place === 2 ? "🥈 2E" : "🥉 3E"}{tie && " · " + t("ex æquo")}</div>
+              <div style={{ display: "flex", justifyContent: "center", gap: 6 }}>
+                {grp.slice(0, 3).map((u) => <div className="av" key={u.id} style={tie ? { width: 46, height: 46, fontSize: 22 } : null}>{u.avatar}</div>)}
+              </div>
+              <div className="ps" style={tie ? { fontSize: "clamp(16px,3vw,22px)" } : null}>{grp.map((u) => u.pseudo).join(" & ")}</div>
+              <div className="mono" style={{ fontSize: 12, opacity: .85 }}>{grp[0].pts} {t("pts")} · {grp[0].exacts} {t("exacts")}</div>
+              <div style={{ marginTop: 8, fontSize: 12.5, fontWeight: 700 }}>{t(prize.lot)}</div>
             </div>
           );
         })}
@@ -346,7 +355,7 @@ export function Leaderboard({ go, profile, users: realUsers, me, matches: lbMatc
           <tbody>
             {users.map((u) => (
               <tr key={u.id} className={u.isMe ? "me" : ""}>
-                <td className="rank-n">{u.position}</td>
+                <td className="rank-n">{u.position}{u.tie ? <span className="mono muted" style={{ fontSize: 11 }}>=</span> : ""}</td>
                 <td>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--bg-2)", display: "grid", placeItems: "center", fontSize: 16 }}>{u.avatar}</div>
@@ -493,7 +502,7 @@ export function Rules() {
           </div>
           <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>⚖️ {t("En cas d'égalité")}</div>
-            <div className="muted" style={{ fontSize: 13.5 }}>{t("À points égaux, c'est le nombre de scores exacts qui départage. Si l'égalité persiste, avantage à celui qui s'est inscrit le plus tôt dans la ligue — les premiers arrivés sont récompensés.")}</div>
+            <div className="muted" style={{ fontSize: 13.5 }}>{t("Pendant le tournoi, les égalités s'affichent ex æquo (mêmes points et mêmes scores exacts = même place). Le départage final (scores exacts, puis ancienneté d'inscription) ne sert qu'à attribuer les lots à la fin.")}</div>
           </div>
         </div>
 
