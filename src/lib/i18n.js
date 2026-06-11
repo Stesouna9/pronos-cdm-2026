@@ -173,6 +173,8 @@ const JA = {
   "Le dernier de la ligue régale le boss.": "最下位はボスにおごる。",
   // Tableau / admin
   "Mise à jour auto": "自動更新",
+  "🕗 Mise à jour des tableaux tous les jours à 8h00": "🕗 表は毎日8時00分に更新",
+  "Les tableaux sont mis à jour tous les jours à 8h00.": "表は毎日8時00分に更新されます。",
   "Dès qu'un résultat tombe, les classements se recalculent automatiquement.": "結果が出ると順位は自動で再計算されます。",
   "Le tableau à élimination directe se remplira automatiquement après la phase de groupes (à partir du 28 juin). En attendant, fais tes pronos !": "ノックアウト表はグループステージ終了後（6月28日以降）に自動で埋まります。それまで予想しよう！",
   "Tape le score final d'un match et clique Valider : les points se calculent automatiquement. Tu peux corriger ou rouvrir un match à tout moment.": "試合の最終スコアを入力して「確定」を押すと、全員の得点が自動計算されます。いつでも修正・再開できます。",

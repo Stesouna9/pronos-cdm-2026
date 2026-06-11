@@ -5,11 +5,12 @@ name: Scores auto (Apify)
 
 on:
   schedule:
-    # Passages calés sur les FINS de matchs CDM (kickoffs 16h→04h UTC, fins ~18h→06h).
-    # Le robot ne voit que les matchs en direct/à peine finis → il faut passer souvent
-    # pendant la nuit. 6 runs/jour ≈ qq centimes Apify/jour. Filet : saisie Admin.
-    - cron: "0 18,20,22 * * *"   # soirée (20h/22h/minuit heure française)
-    - cron: "0 0,3,6 * * *"      # nuit + matin (2h/5h/8h heure française)
+    # Choix de Gabriel : 2 passages/jour — minuit et 8h (heure française, été = UTC+2).
+    # Les tableaux affichent "mise à jour tous les jours à 8h00".
+    # NB : le robot ne voit que les matchs en direct/à peine finis ; un score raté
+    # se saisit en 5 secondes via l'écran Admin.
+    - cron: "0 22 * * *"  # minuit heure française
+    - cron: "0 6 * * *"   # 8h heure française
   workflow_dispatch:
 
 jobs:
