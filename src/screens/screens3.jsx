@@ -4,6 +4,79 @@ import { WC } from "../lib/wc.js";
 import { Btn, Roundel, SectionTitle, teamName } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
 import { updateProfile, fetchAllLockedPredictions } from "../lib/league.js";
+
+/* Courbe d'évolution des points (SVG maison, cumul par jour). */
+const CHART_COLORS = ["#d4a533", "#2a5bd7", "#1f8a4c", "#d52b1e", "#7a5ae0", "#0ea5b7", "#e36414", "#666"];
+function EvolutionChart({ matches }) {
+  const [preds, setPreds] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    fetchAllLockedPredictions().then((p) => alive && setPreds(p)).catch(() => alive && setPreds([]));
+    return () => { alive = false; };
+  }, []);
+  if (!preds) return <div className="card pad-lg" style={{ textAlign: "center" }}><p className="muted">…</p></div>;
+  const byMatch = {};
+  matches.forEach((m) => (byMatch[m.id] = m));
+  const scored = preds.filter((p) => p.points != null && byMatch[p.match_id]);
+  if (!scored.length) return (
+    <div className="card pad-lg" style={{ textAlign: "center" }}>
+      <div className="poster" style={{ fontSize: 22 }}>📈 {t("Pas encore de courbe")}</div>
+      <p className="muted">{t("La courbe d'évolution se dessine dès les premiers matchs terminés.")}</p>
+    </div>
+  );
+  // jours triés + cumuls par joueur
+  const days = [...new Set(scored.map((p) => byMatch[p.match_id].date.toDateString()))]
+    .sort((a, b) => new Date(a) - new Date(b));
+  const players = {};
+  scored.forEach((p) => {
+    players[p.user_id] = players[p.user_id] || { pseudo: p.pseudo, avatar: p.avatar, byDay: {} };
+    const d = byMatch[p.match_id].date.toDateString();
+    players[p.user_id].byDay[d] = (players[p.user_id].byDay[d] || 0) + p.points;
+  });
+  const series = Object.values(players).map((pl, i) => {
+    let cum = 0;
+    return { ...pl, color: CHART_COLORS[i % CHART_COLORS.length], pts: days.map((d) => (cum += pl.byDay[d] || 0)) };
+  });
+  const maxY = Math.max(5, ...series.flatMap((s) => s.pts));
+  const W = 640, H = 280, PX = 38, PY = 24;
+  const x = (i) => PX + (days.length === 1 ? (W - 2 * PX) / 2 : (i * (W - 2 * PX)) / (days.length - 1));
+  const y = (v) => H - PY - (v * (H - 2 * PY)) / maxY;
+  return (
+    <div className="card pad">
+      <div className="eyebrow" style={{ marginBottom: 10 }}>📈 {t("Évolution des points (cumul)")}</div>
+      <div className="tblwrap">
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", minWidth: 420 }}>
+          {[0, 0.25, 0.5, 0.75, 1].map((f) => (
+            <g key={f}>
+              <line x1={PX} x2={W - PX} y1={y(maxY * f)} y2={y(maxY * f)} stroke="var(--line)" strokeWidth="1" />
+              <text x={PX - 6} y={y(maxY * f) + 4} textAnchor="end" fontSize="10" fill="var(--ink-soft)" fontFamily="var(--f-mono)">{Math.round(maxY * f)}</text>
+            </g>
+          ))}
+          {days.map((d, i) => (
+            <text key={d} x={x(i)} y={H - 6} textAnchor="middle" fontSize="9" fill="var(--ink-soft)" fontFamily="var(--f-mono)">
+              {new Date(d).getDate()}/{new Date(d).getMonth() + 1}
+            </text>
+          ))}
+          {series.map((s, si) => (
+            <g key={si}>
+              <polyline fill="none" stroke={s.color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"
+                points={s.pts.map((v, i) => `${x(i)},${y(v)}`).join(" ")} />
+              {s.pts.map((v, i) => <circle key={i} cx={x(i)} cy={y(v)} r="3.5" fill={s.color} />)}
+            </g>
+          ))}
+        </svg>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 10 }}>
+        {series.map((s, i) => (
+          <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700 }}>
+            <span style={{ width: 12, height: 12, borderRadius: 3, background: s.color, display: "inline-block" }} />
+            {s.avatar} {s.pseudo} <span className="mono muted">({s.pts[s.pts.length - 1]})</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 import { useEffect } from "react";
 
 /* Stats fun de la ligue, calculées sur les pronos verrouillés (visibles). */
@@ -229,7 +302,7 @@ export function Bracket({ go }) {
 }
 
 /* =================== CLASSEMENT =================== */
-export function Leaderboard({ go, profile, users: realUsers, me }) {
+export function Leaderboard({ go, profile, users: realUsers, me, matches: lbMatches = [] }) {
   const src = realUsers || WC.USERS;
   const meId = me && me.id;
   const users = src.map((u) => (u.isMe || (meId && u.id === meId))
@@ -245,10 +318,12 @@ export function Leaderboard({ go, profile, users: realUsers, me }) {
         right={<div className="seg">
           <button className={scope === "general" ? "on" : ""} onClick={() => setScope("general")}>{t("Général")}</button>
           <button className={scope === "stats" ? "on" : ""} onClick={() => setScope("stats")}>📊 {t("Stats fun")}</button>
+          <button className={scope === "evo" ? "on" : ""} onClick={() => setScope("evo")}>📈 {t("Évolution")}</button>
         </div>} />
 
       {scope === "stats" && <FunStats />}
-      {scope !== "stats" && <>
+      {scope === "evo" && <EvolutionChart matches={lbMatches} />}
+      {scope !== "stats" && scope !== "evo" && <>
       <div className="podium rise" style={{ marginBottom: 22 }}>
         {[podium[1], podium[0], podium[2]].map((u, i) => {
           const place = i === 1 ? 1 : i === 0 ? 2 : 3;
@@ -411,6 +486,10 @@ export function Rules() {
           <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>{t("🎁 Bonus")}</div>
             <div className="muted" style={{ fontSize: 13.5 }}>+{B.bonusSerie} {t("pts par série de 3 bons pronos d'affilée · les matchs de phase finale rapportent davantage.")}</div>
+          </div>
+          <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>⭐ {t("Prono de confiance")}</div>
+            <div className="muted" style={{ fontSize: 13.5 }}>{t("Chaque jour, choisis UN match avec l'étoile ⭐ : tes points y comptent double. À poser avant le coup d'envoi — choisis bien !")}</div>
           </div>
           <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>⚖️ {t("En cas d'égalité")}</div>

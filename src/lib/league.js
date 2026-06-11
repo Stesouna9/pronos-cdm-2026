@@ -43,11 +43,53 @@ export async function fetchMatches() {
 export async function fetchMyPredictions() {
   const { data, error } = await supabase
     .from("predictions")
-    .select("match_id, pred_home, pred_away");
+    .select("match_id, pred_home, pred_away, confidence");
   if (error) throw error;
-  const m = {};
-  (data || []).forEach((p) => (m[p.match_id] = [p.pred_home, p.pred_away]));
-  return m;
+  const m = {}, conf = {};
+  (data || []).forEach((p) => { m[p.match_id] = [p.pred_home, p.pred_away]; if (p.confidence) conf[p.match_id] = true; });
+  return { preds: m, conf };
+}
+
+/* Active/retire le prono de confiance (×2). Un seul par jour (la base vérifie). */
+export async function toggleConfidence(matchId, on, matchesSameDay = []) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "non connecté" };
+  if (on) {
+    // libère d'abord l'éventuelle confiance déjà posée sur un match du même jour
+    for (const otherId of matchesSameDay) {
+      if (otherId !== matchId) await supabase.from("predictions").update({ confidence: false }).eq("user_id", user.id).eq("match_id", otherId);
+    }
+  }
+  const { error } = await supabase.from("predictions").update({ confidence: on }).eq("user_id", user.id).eq("match_id", matchId);
+  return { error: error ? error.message : null };
+}
+
+/* Réactions emoji sur les pronos (après kickoff). */
+export async function fetchReactions(matchId) {
+  const { data, error } = await supabase
+    .from("reactions").select("target_user, author, emoji").eq("match_id", matchId);
+  if (error) throw error;
+  return data || [];
+}
+export async function setReaction(matchId, targetUser, emoji) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "non connecté" };
+  if (!emoji) {
+    const { error } = await supabase.from("reactions").delete()
+      .eq("match_id", matchId).eq("target_user", targetUser).eq("author", user.id);
+    return { error: error ? error.message : null };
+  }
+  const { error } = await supabase.from("reactions").upsert(
+    { match_id: matchId, target_user: targetUser, author: user.id, emoji },
+    { onConflict: "match_id,target_user,author" });
+  return { error: error ? error.message : null };
+}
+
+/* ADMIN : avancement des pronos (compteurs, pas le contenu). */
+export async function fetchPredProgress() {
+  const { data, error } = await supabase.from("pred_progress").select("*").order("today_done", { ascending: true });
+  if (error) throw error;
+  return data || [];
 }
 
 /* Enregistre / met à jour un prono (la base refuse après le coup d'envoi). */
@@ -131,7 +173,7 @@ export async function clearScore(matchId) {
 export async function fetchMatchPredictions(matchId) {
   const { data: preds, error } = await supabase
     .from("predictions")
-    .select("user_id, pred_home, pred_away, points")
+    .select("user_id, pred_home, pred_away, points, confidence")
     .eq("match_id", matchId);
   if (error) throw error;
   if (!preds || !preds.length) return [];

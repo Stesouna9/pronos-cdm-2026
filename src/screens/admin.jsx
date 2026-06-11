@@ -1,7 +1,7 @@
 /* admin.jsx — écran réservé à l'admin (Gabriel) : scores + gestion des joueurs. */
 import { useState, useEffect } from "react";
 import { WC } from "../lib/wc.js";
-import { saveScore, clearScore, fetchAllUsers, setBanned } from "../lib/league.js";
+import { saveScore, clearScore, fetchAllUsers, setBanned, fetchPredProgress } from "../lib/league.js";
 import { Roundel, Btn, SectionTitle } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
 
@@ -118,6 +118,48 @@ function PlayersAdmin({ reload }) {
   );
 }
 
+/* --- Suivi : qui n'a pas pronostiqué + état du robot scores --- */
+function AdminMonitor({ matches }) {
+  const [rows, setRows] = useState(null);
+  useEffect(() => { fetchPredProgress().then(setRows).catch(() => setRows([])); }, []);
+  const lastUpdate = matches.filter((m) => m.status === "fini").length
+    ? null : null; // placeholder simple
+  const todayTotal = rows && rows.length ? rows[0].today_total : 0;
+  return (
+    <>
+      <div className="card pad rise" style={{ marginBottom: 16, display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
+        <span className="muted" style={{ fontSize: 13.5 }}>
+          🤖 {t("Le robot des scores tourne 2×/jour. Pour le relancer à la main :")}
+        </span>
+        <a className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 13, textDecoration: "none" }}
+          href="https://github.com/Stesouna9/pronos-cdm-2026/actions/workflows/scores-apify.yml" target="_blank" rel="noreferrer">
+          ⚙️ {t("Ouvrir le robot (GitHub)")}
+        </a>
+      </div>
+      <div className="card pad">
+        <div className="eyebrow" style={{ marginBottom: 10 }}>
+          {t("Pronos saisis pour les matchs d'aujourd'hui")} {todayTotal ? `(${todayTotal} ${t("matchs")})` : ""}
+        </div>
+        {!rows && <p className="muted">…</p>}
+        {rows && rows.map((r) => {
+          const done = Number(r.today_done), total = Number(r.today_total);
+          const ok = total === 0 || done >= total;
+          return (
+            <div key={r.user_id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: "1px solid var(--line)" }}>
+              <span style={{ fontSize: 18 }}>{r.avatar}</span>
+              <b style={{ flex: 1 }}>{r.pseudo}</b>
+              <span className="mono muted" style={{ fontSize: 12 }}>{t("total")} {r.total_done}</span>
+              <span className={"pill " + (ok ? "pill--accent" : "pill--live")} style={{ fontSize: 11 }}>
+                {total === 0 ? t("rien à faire") : `${done}/${total} ${t("aujourd'hui")}`}{!ok && " 😴"}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 export function AdminScreen({ matches = [], reload }) {
   const [section, setSection] = useState("scores"); // scores | joueurs
   const [filtre, setFiltre] = useState("jouables"); // jouables | tous | finis
@@ -128,13 +170,15 @@ export function AdminScreen({ matches = [], reload }) {
 
   return (
     <div className="content">
-      <SectionTitle kicker={t("Réservé à toi (admin)")} title={section === "scores" ? t("Saisie des scores") : t("Joueurs")}
+      <SectionTitle kicker={t("Réservé à toi (admin)")} title={section === "scores" ? t("Saisie des scores") : section === "joueurs" ? t("Joueurs") : t("Suivi")}
         right={<div className="seg">
           <button className={section === "scores" ? "on" : ""} onClick={() => setSection("scores")}>{t("Scores")}</button>
           <button className={section === "joueurs" ? "on" : ""} onClick={() => setSection("joueurs")}>{t("Joueurs")}</button>
+          <button className={section === "suivi" ? "on" : ""} onClick={() => setSection("suivi")}>{t("Suivi")}</button>
         </div>} />
 
       {section === "joueurs" && <PlayersAdmin reload={reload} />}
+      {section === "suivi" && <AdminMonitor matches={matches} />}
 
       {section === "scores" && (
         <>

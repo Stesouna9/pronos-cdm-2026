@@ -1,7 +1,8 @@
 /* screens2.jsx — Liste des matchs, saisie de prono, détail d'un match */
 import { useState, useMemo, useEffect } from "react";
 import { WC } from "../lib/wc.js";
-import { fetchMatchPredictions } from "../lib/league.js";
+import { fetchMatchPredictions, fetchReactions, setReaction } from "../lib/league.js";
+import { supabase } from "../lib/supabase.js";
 import { Btn, Roundel, TeamLine, StatusPill, PointsBadge, slotLabel, teamName } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
 
@@ -36,7 +37,18 @@ export function PredEditor({ pred, onChange, home, away }) {
 }
 
 /* ---------- Carte match dans la liste ---------- */
-function MatchRow({ m, pred, setPred, go }) {
+/* Étoile "prono de confiance ×2" (1 par jour) */
+function ConfStar({ on, onToggle, disabled }) {
+  return (
+    <button type="button" className={"confstar" + (on ? " on" : "")} disabled={disabled}
+      title={on ? t("Confiance ×2 activée") : t("Jouer ma confiance ×2 sur ce match")}
+      onClick={(e) => { e.stopPropagation(); onToggle(!on); }}>
+      {on ? "⭐ ×2" : "☆ ×2"}
+    </button>
+  );
+}
+
+function MatchRow({ m, pred, setPred, go, conf, setConf }) {
   const fini = m.status === "fini";
   const locked = m.locked; // verrouillé : coup d'envoi passé
   const [a, b] = pred || [null, null];
@@ -66,9 +78,12 @@ function MatchRow({ m, pred, setPred, go }) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div className="mono muted" style={{ fontSize: 12 }}>{pred ? t("Ton prono :") : t("Ton prono ?")}</div>
           <PredEditor pred={pred} home={m.home} away={m.away} onChange={(p) => setPred(m.id, p)} />
-          <div style={{ minWidth: 120, textAlign: "right" }}>
+          <div style={{ minWidth: 120, textAlign: "right", display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
             {pred
-              ? <span className="pill pill--accent">✓ {a}–{b}</span>
+              ? <>
+                  <ConfStar on={!!conf} onToggle={(on) => setConf(m.id, on)} />
+                  <span className="pill pill--accent">✓ {a}–{b}</span>
+                </>
               : <span className="muted" style={{ fontSize: 12 }}>{t("Ajuste puis c'est sauvé")}</span>}
           </div>
         </div>
@@ -93,7 +108,7 @@ function MatchRow({ m, pred, setPred, go }) {
 }
 
 /* ---------- Écran liste des matchs ---------- */
-export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCHES }) {
+export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCHES, confidences = {}, setConf = () => {} }) {
   const [phase, setPhase] = useState("tous");
   const [filtre, setFiltre] = useState("tous"); // tous | apredire | termines
 
@@ -138,14 +153,14 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
             <div key={g} style={{ marginBottom: 28 }}>
               <h3 className="poster" style={{ fontSize: 22, margin: "0 0 12px" }}>{t("Groupe")} {g}</h3>
               <div className="grid g-2">
-                {gm.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} />)}
+                {gm.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} conf={confidences[m.id]} setConf={setConf} />)}
               </div>
             </div>
           );
         })
       ) : (
         <div className="grid g-2">
-          {list.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} />)}
+          {list.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} conf={confidences[m.id]} setConf={setConf} />)}
         </div>
       )}
       {list.length === 0 && <div className="card pad-lg" style={{ textAlign: "center" }}><div className="poster" style={{ fontSize: 22 }}>{t("Rien par ici 🎉")}</div><p className="muted">{t("Aucun match dans ce filtre. Les matchs deviennent saisissables une fois le coup d'envoi passé.")}</p></div>}
@@ -188,36 +203,77 @@ function Pitch({ code }) {
   );
 }
 
-/* Les pronos de toute la ligue (après coup d'envoi uniquement). */
+/* Les pronos de toute la ligue (après coup d'envoi) + réactions emoji. */
+const EMOJIS = ["🔥", "😂", "🤡", "👏", "😱"];
 function LeaguePredictions({ m }) {
   const [list, setList] = useState(null);
-  useEffect(() => {
-    let alive = true;
-    fetchMatchPredictions(m.id).then((l) => alive && setList(l)).catch(() => alive && setList([]));
-    return () => { alive = false; };
-  }, [m.id]);
+  const [reactions, setReactions] = useState([]);
+  const [meId, setMeId] = useState(null);
+  const [pickerFor, setPickerFor] = useState(null);
+
+  async function load() {
+    const [l, r, u] = await Promise.all([
+      fetchMatchPredictions(m.id).catch(() => []),
+      fetchReactions(m.id).catch(() => []),
+      supabase.auth.getUser(),
+    ]);
+    setList(l); setReactions(r); setMeId(u.data.user ? u.data.user.id : null);
+  }
+  useEffect(() => { let alive = true; load().then(() => {}); return () => { alive = false; }; }, [m.id]);
+
   if (!list) return null;
+  const reactFor = (uid) => reactions.filter((r) => r.target_user === uid);
+  const myReact = (uid) => (reactions.find((r) => r.target_user === uid && r.author === meId) || {}).emoji;
+
+  async function react(uid, emoji) {
+    setPickerFor(null);
+    const cur = myReact(uid);
+    await setReaction(m.id, uid, cur === emoji ? null : emoji);
+    const r = await fetchReactions(m.id).catch(() => reactions);
+    setReactions(r);
+  }
+
   return (
     <div className="card pad rise" style={{ marginBottom: 18 }}>
       <div className="eyebrow" style={{ marginBottom: 12 }}>👀 {t("Les pronos de la ligue")}</div>
       {list.length === 0 && <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>{t("Personne n'a pronostiqué ce match.")}</p>}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-        {list.map((p) => (
-          <div key={p.user_id} className="stat" style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 20 }}>{p.avatar}</span>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 13 }}>{p.pseudo}</div>
-              <div className="poster" style={{ fontSize: 20 }}>{p.pred_home}–{p.pred_away}</div>
+        {list.map((p) => {
+          const rs = reactFor(p.user_id);
+          const counts = {};
+          rs.forEach((r) => (counts[r.emoji] = (counts[r.emoji] || 0) + 1));
+          return (
+            <div key={p.user_id} className="stat" style={{ padding: "10px 14px", position: "relative" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 20 }}>{p.avatar}</span>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{p.pseudo}{p.confidence ? " ⭐" : ""}</div>
+                  <div className="poster" style={{ fontSize: 20 }}>{p.pred_home}–{p.pred_away}</div>
+                </div>
+                {p.points != null && <span className={"pts " + (p.points >= 5 ? "pts--exact" : p.points > 0 ? "pts--good" : "pts--zero")}>+{p.points}</span>}
+              </div>
+              <div style={{ display: "flex", gap: 6, marginTop: 6, alignItems: "center", flexWrap: "wrap" }}>
+                {Object.entries(counts).map(([e, n]) => (
+                  <span key={e} className="pill" style={{ fontSize: 11, padding: "2px 7px" }}>{e} {n > 1 ? n : ""}</span>
+                ))}
+                {meId && meId !== p.user_id && (
+                  <button className="reactbtn" onClick={() => setPickerFor(pickerFor === p.user_id ? null : p.user_id)}>{myReact(p.user_id) || "＋"}</button>
+                )}
+              </div>
+              {pickerFor === p.user_id && (
+                <div className="reactpicker">
+                  {EMOJIS.map((e) => <button key={e} onClick={() => react(p.user_id, e)}>{e}</button>)}
+                </div>
+              )}
             </div>
-            {p.points != null && <span className={"pts " + (p.points === 5 ? "pts--exact" : p.points > 0 ? "pts--good" : "pts--zero")}>+{p.points}</span>}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
 
-export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MATCHES }) {
+export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MATCHES, confidences = {}, setConf = () => {} }) {
   const m = matches.find((x) => x.id === id);
   const [tab, setTab] = useState("apercu");
   if (!m) return <div className="content"><p>{t("Match introuvable.")}</p></div>;
@@ -265,8 +321,13 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
               <div className="muted" style={{ fontSize: 13 }}>{t("Score exact")} = {WC.BAREME.exact} pts · {t("Bon résultat").toLowerCase()} = {WC.BAREME.issue} pts · {t("bon écart")} = {WC.BAREME.ecart} pts</div>
             </div>
             <PredEditor pred={predictions[m.id]} home={m.home} away={m.away} onChange={(p) => setPred(m.id, p)} />
-            <div style={{ minWidth: 130, textAlign: "right" }}>
-              {predictions[m.id] ? <span className="pill pill--accent">✓ {predictions[m.id][0]}–{predictions[m.id][1]}</span> : <span className="muted">{t("Règle les compteurs")}</span>}
+            <div style={{ minWidth: 130, textAlign: "right", display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
+              {predictions[m.id]
+                ? <>
+                    <ConfStar on={!!confidences[m.id]} onToggle={(on) => setConf(m.id, on)} />
+                    <span className="pill pill--accent">✓ {predictions[m.id][0]}–{predictions[m.id][1]}</span>
+                  </>
+                : <span className="muted">{t("Règle les compteurs")}</span>}
             </div>
           </div>
         </div>

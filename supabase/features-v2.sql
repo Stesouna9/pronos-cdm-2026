@@ -1,0 +1,3 @@
+-- Features v2 (appliqué le 2026-06-11) : prono de confiance ×2 (1/jour),
+-- réactions emoji post-kickoff, vue pred_progress (suivi admin).
+-- Voir l'historique de l'éditeur SQL Supabase pour le détail exécuté.

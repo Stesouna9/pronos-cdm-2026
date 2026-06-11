@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { WC } from "./lib/wc.js";
 import { supabase, hasSupabase } from "./lib/supabase.js";
-import { fetchMatches, fetchMyPredictions, savePrediction, fetchLeaderboard, fetchMe } from "./lib/league.js";
+import { fetchMatches, fetchMyPredictions, savePrediction, fetchLeaderboard, fetchMe, toggleConfidence } from "./lib/league.js";
 import { t, subscribeLang } from "./lib/i18n.js";
 import { LangToggle, ThemeToggle, Confetti } from "./components/ui.jsx";
 
@@ -45,6 +45,8 @@ export default function App() {
 
   // Confettis quand mes points augmentent depuis la dernière visite.
   const [confetti, setConfetti] = useState(false);
+  // Pronos de confiance (×2) : { matchId: true }
+  const [confidences, setConfidences] = useState({});
 
   // Si Supabase est branché, on suit la session réelle
   useEffect(() => {
@@ -73,11 +75,12 @@ export default function App() {
   async function loadData() {
     if (!hasSupabase) return;
     try {
-      const [ms, preds, lb, meRow] = await Promise.all([
+      const [ms, mine, lb, meRow] = await Promise.all([
         fetchMatches(), fetchMyPredictions(), fetchLeaderboard(), fetchMe(),
       ]);
       if (ms.length) setMatches(ms);
-      setPredictions(preds || {});
+      setPredictions((mine && mine.preds) || {});
+      setConfidences((mine && mine.conf) || {});
       if (lb.length) setUsers(lb);
       // points en hausse depuis la dernière visite → confettis 🎉
       if (meRow) {
@@ -105,6 +108,20 @@ export default function App() {
     }
     setPredictions((P) => ({ ...P, [id]: val }));
     if (hasSupabase) savePrediction(id, val).then((r) => { if (r && r.error) console.error("save prono:", r.error); });
+  }
+
+  // Pose/retire l'étoile de confiance (un seul match ×2 par jour).
+  function setConf(id, on) {
+    const m = matches.find((x) => x.id === id);
+    if (!m || m.date <= new Date()) { alert(t("🔒 Pronos fermés (coup d'envoi passé)")); return; }
+    const sameDay = matches.filter((x) => x.date.toDateString() === m.date.toDateString()).map((x) => x.id);
+    setConfidences(() => (on ? { ...stripDay() , [id]: true } : stripDay()));
+    function stripDay() {
+      const c = { ...confidences };
+      sameDay.forEach((mid) => delete c[mid]);
+      return c;
+    }
+    if (hasSupabase) toggleConfidence(id, on, sameDay).then((r) => { if (r && r.error) { console.error("confiance:", r.error); loadData(); } });
   }
 
   // Connexion : Supabase si dispo, sinon démo locale
@@ -143,10 +160,10 @@ export default function App() {
   function render() {
     switch (screen) {
       case "home": return <Dashboard go={go} predictions={predictions} profile={profile} matches={matches} users={users} me={me} />;
-      case "matches": return <MatchesScreen go={go} predictions={predictions} setPred={setPred} matches={matches} />;
-      case "match": return <MatchDetail id={params.id} go={go} predictions={predictions} setPred={setPred} matches={matches} />;
+      case "matches": return <MatchesScreen go={go} predictions={predictions} setPred={setPred} matches={matches} confidences={confidences} setConf={setConf} />;
+      case "match": return <MatchDetail id={params.id} go={go} predictions={predictions} setPred={setPred} matches={matches} confidences={confidences} setConf={setConf} />;
       case "tableau": return <TableauScreen go={go} matches={matches} />;
-      case "leaderboard": return <Leaderboard go={go} profile={profile} users={users} me={me} />;
+      case "leaderboard": return <Leaderboard go={go} profile={profile} users={users} me={me} matches={matches} />;
       case "profile": return <Profile profile={profile} setProfile={setProfile} predictions={predictions} matches={matches} me={me} onLogout={logout} />;
       case "rules": return <Rules />;
       case "admin": return <AdminScreen matches={matches} reload={loadData} />;

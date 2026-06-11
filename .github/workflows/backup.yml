@@ -1,0 +1,27 @@
+# Sauvegarde hebdomadaire de la base (artefact téléchargeable, gardé 90 jours).
+name: Sauvegarde base
+
+on:
+  schedule:
+    - cron: "0 4 * * 1" # lundi 04h UTC
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/backup-db.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backup-${{ github.run_number }}
+          path: backup/
+          retention-days: 90
