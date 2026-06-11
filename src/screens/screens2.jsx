@@ -90,8 +90,8 @@ function MatchRow({ m, pred, setPred, go, conf, setConf }) {
       )}
       {!fini && m.home && m.away && locked && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div className="mono muted" style={{ fontSize: 12 }}>{t("🔒 Pronos fermés (coup d'envoi passé)")}</div>
           <div className="mono" style={{ fontSize: 12 }}>{t("Ton prono :")} <b>{pred ? `${pred[0]}–${pred[1]}` : t("non joué")}</b></div>
+          <Btn variant="ghost" onClick={() => go("match", { id: m.id })} style={{ padding: "7px 12px", fontSize: 12.5 }}>👀 {t("Les pronos de la ligue")} →</Btn>
         </div>
       )}
       {!fini && (!m.home || !m.away) && (
@@ -100,7 +100,10 @@ function MatchRow({ m, pred, setPred, go, conf, setConf }) {
       {fini && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div className="mono muted" style={{ fontSize: 12 }}>{t("Ton prono :")} <b style={{ color: "var(--ink)" }}>{pred ? `${pred[0]}–${pred[1]}` : t("non joué")}</b></div>
-          {pred ? <PointsBadge pred={pred} real={m.score} /> : <span className="pts pts--zero">0 · {t("pas de prono")}</span>}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {pred ? <PointsBadge pred={pred} real={m.score} /> : <span className="pts pts--zero">0 · {t("pas de prono")}</span>}
+            <Btn variant="ghost" onClick={() => go("match", { id: m.id })} style={{ padding: "7px 12px", fontSize: 12.5 }}>👀 {t("Les pronos de la ligue")} →</Btn>
+          </div>
         </div>
       )}
     </div>
