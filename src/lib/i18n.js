@@ -172,6 +172,7 @@ const JA = {
   "Groupe": "グループ", "Résultats": "結果", "Score": "スコア", "Date": "日付", "Match": "試合",
   "Tous les résultats": "全試合の結果", "Résultats des matchs": "試合結果", "à venir": "予定",
   "Voir les matchs →": "試合を見る →", "Qualifié": "突破", "Repêchable": "敗者復活",
+  "qualifiés": "突破", "repêchable (8 meilleurs 3es)": "敗者復活枠（3位の上位8チーム）",
 };
 
 // Noms d'équipes en japonais (code FIFA -> JA).

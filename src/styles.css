@@ -238,6 +238,18 @@ a { color: inherit; }
 .tbl tr.me td { background: color-mix(in oklab, var(--accent) 9%, transparent); }
 .rank-n { font-family: var(--f-poster); font-size: 18px; width: 30px; }
 
+/* Tables de groupe : colonnes fixes, noms sur 1 ligne → zéro décalage */
+.tbl-group { table-layout: fixed; width: 100%; }
+.tbl-group th:nth-child(1) { width: 24px; }
+.tbl-group th:nth-child(3), .tbl-group th:nth-child(4), .tbl-group th:nth-child(5) { width: 36px; text-align: center; }
+.tbl-group td:nth-child(3), .tbl-group td:nth-child(4), .tbl-group td:nth-child(5) { text-align: center; }
+.tbl-group td { height: 54px; padding-top: 6px; padding-bottom: 6px; }
+.teamcell { display: flex; align-items: center; gap: 8px; min-width: 0; white-space: nowrap; }
+.teamcell .tname { overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
+/* statut de qualification porté par la couleur du rang (légende au-dessus) */
+.tbl-group .rk-q { color: var(--win); }
+.tbl-group .rk-r { color: var(--warn); }
+
 /* ====================== BRACKET ====================== */
 .bracket-scroll { overflow-x: auto; padding-bottom: 14px; }
 .bracket { display: flex; gap: 26px; min-width: max-content; align-items: stretch; }

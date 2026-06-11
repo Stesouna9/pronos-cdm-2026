@@ -104,9 +104,15 @@ export function TableauScreen({ go, matches = WC.ALL_MATCHES }) {
       )}
 
       {tab === "groupes" && (
-        <div className="grid g-3">
-          {letters.map((g) => <GroupTable key={g} g={g} matches={real ? matches : undefined} />)}
-        </div>
+        <>
+          <div className="mono muted" style={{ fontSize: 12, marginBottom: 14 }}>
+            <span style={{ color: "var(--win)", fontWeight: 800 }}>● 1–2</span> {t("qualifiés")} ·{" "}
+            <span style={{ color: "var(--warn)", fontWeight: 800 }}>● 3</span> {t("repêchable (8 meilleurs 3es)")}
+          </div>
+          <div className="grid g-3">
+            {letters.map((g) => <GroupTable key={g} g={g} matches={real ? matches : undefined} />)}
+          </div>
+        </>
       )}
     </div>
   );

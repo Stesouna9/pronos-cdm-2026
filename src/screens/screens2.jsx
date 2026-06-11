@@ -334,13 +334,18 @@ export function GroupTable({ g, matches }) {
   return (
     <div className="card pad">
       <div className="eyebrow" style={{ marginBottom: 10 }}>{t("Groupe")} {g} — {t("classement")}</div>
-      <div className="tblwrap"><table className="tbl">
+      <div className="tblwrap"><table className="tbl tbl-group">
         <thead><tr><th></th><th>{t("Équipe")}</th><th>{t("J")}</th><th>{t("Diff")}</th><th>Pts</th></tr></thead>
         <tbody>
           {s.map((r, i) => (
             <tr key={r.code} style={i < 2 ? { fontWeight: 700 } : i === 2 ? {} : { opacity: .6 }}>
-              <td className="rank-n">{i + 1}</td>
-              <td><div style={{ display: "flex", alignItems: "center", gap: 8 }}><Roundel code={r.code} size={20} />{teamName(r.code, WC.T[r.code].name)}{i < 2 && <span className="pill pill--accent" style={{ fontSize: 10 }}>{t("Qualifié")}</span>}{i === 2 && <span className="pill" style={{ fontSize: 10 }}>{t("Repêchable")}</span>}</div></td>
+              <td className={"rank-n " + (i < 2 ? "rk-q" : i === 2 ? "rk-r" : "")}>{i + 1}</td>
+              <td>
+                <div className="teamcell">
+                  <Roundel code={r.code} size={20} />
+                  <span className="tname" title={teamName(r.code, WC.T[r.code].name)}>{teamName(r.code, WC.T[r.code].name)}</span>
+                </div>
+              </td>
               <td className="mono">{r.j}</td><td className="mono">{r.diff > 0 ? "+" + r.diff : r.diff}</td>
               <td className="mono" style={{ fontWeight: 800 }}>{r.pts}</td>
             </tr>
