@@ -4,7 +4,10 @@ import { WC } from "./lib/wc.js";
 import { supabase, hasSupabase } from "./lib/supabase.js";
 import { fetchMatches, fetchMyPredictions, savePrediction, fetchLeaderboard, fetchMe } from "./lib/league.js";
 import { t, subscribeLang } from "./lib/i18n.js";
-import { LangToggle } from "./components/ui.jsx";
+import { LangToggle, ThemeToggle, Confetti } from "./components/ui.jsx";
+
+// applique le thème mémorisé avant le premier rendu
+try { const th = localStorage.getItem("pronos2026:theme"); if (th) document.documentElement.dataset.theme = th; } catch (e) {}
 import { AuthScreen, Dashboard } from "./screens/screens1.jsx";
 import { MatchesScreen, MatchDetail } from "./screens/screens2.jsx";
 import { TableauScreen, Leaderboard, Profile, Rules } from "./screens/screens3.jsx";
@@ -40,6 +43,9 @@ export default function App() {
   const [, forceLang] = useState(0);
   useEffect(() => subscribeLang(() => forceLang((x) => x + 1)), []);
 
+  // Confettis quand mes points augmentent depuis la dernière visite.
+  const [confetti, setConfetti] = useState(false);
+
   // Si Supabase est branché, on suit la session réelle
   useEffect(() => {
     if (!hasSupabase) return;
@@ -73,6 +79,16 @@ export default function App() {
       if (ms.length) setMatches(ms);
       setPredictions(preds || {});
       if (lb.length) setUsers(lb);
+      // points en hausse depuis la dernière visite → confettis 🎉
+      if (meRow) {
+        const mine = lb.find((u) => u.id === meRow.id);
+        if (mine) {
+          const key = "pronos2026:lastpts:" + meRow.id;
+          const prev = Number(localStorage.getItem(key) || "0");
+          if (mine.pts > prev) setConfetti(true);
+          localStorage.setItem(key, String(mine.pts));
+        }
+      }
       if (meRow) setProfile((p) => ({ ...p, id: meRow.id, pseudo: meRow.pseudo || p.pseudo, avatar: meRow.avatar || p.avatar, email: meRow.email || p.email, fav: meRow.fav || p.fav, is_admin: meRow.is_admin }));
     } catch (e) { console.error("Chargement données:", e); }
   }
@@ -143,6 +159,7 @@ export default function App() {
 
   return (
     <div className="app-root">
+      {confetti && <Confetti onDone={() => setConfetti(false)} />}
       <div className="shell">
         <aside className="sidebar">
           <div className="brand">
@@ -157,7 +174,7 @@ export default function App() {
           ))}
           {profile.fav === "FRA" && <div className="fanpill fra">🇫🇷 {t("Allez les Bleus !")}</div>}
           {profile.fav === "JPN" && <div className="fanpill jpn">🇯🇵 頑張れ日本！</div>}
-          <div style={{ marginTop: "auto", padding: "8px 4px 4px" }}><LangToggle /></div>
+          <div style={{ marginTop: "auto", padding: "8px 4px 4px", display: "flex", gap: 8 }}><LangToggle /><ThemeToggle /></div>
           <div className="userchip">
             <div className="av">{profile.avatar}</div>
             <div style={{ minWidth: 0 }}>
@@ -176,6 +193,7 @@ export default function App() {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <LangToggle compact />
+              <ThemeToggle compact />
               <span className="pill pill--accent" style={{ fontSize: 11 }}>{me.pts} pts · #{me.position}</span>
               <div style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--bg-2)", display: "grid", placeItems: "center" }}>{profile.avatar}</div>
               <button onClick={logout} title={t("Déconnexion")} style={{ border: "1px solid var(--line)", background: "var(--surface-2)", color: "var(--ink)", borderRadius: 8, width: 30, height: 30, fontSize: 14, cursor: "pointer" }}>⎋</button>

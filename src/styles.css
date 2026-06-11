@@ -365,6 +365,23 @@ a { color: inherit; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .center-screen { min-height: 100vh; display: grid; place-items: center; gap: 14px; }
 
+/* ====================== COMPTE À REBOURS ====================== */
+.cd-banner { display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: color-mix(in oklab, var(--accent) 10%, var(--surface-2)); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 8px 12px; font-size: 14px; }
+.cd b { font-size: 22px; letter-spacing: .02em; }
+.cd small { font-size: 11px; color: var(--ink-soft); margin-right: 2px; }
+.cd-live { font-family: var(--f-mono); font-weight: 700; color: var(--lose); display: inline-flex; align-items: center; gap: 6px; }
+
+/* ====================== CONFETTIS ====================== */
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+.confetti span { position: absolute; top: -3vh; border-radius: 2px; opacity: .95;
+  animation: conf-fall linear forwards; }
+@keyframes conf-fall {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(108vh) rotate(720deg); opacity: .8; }
+}
+
 /* ====================== MODES SUPPORTER ====================== */
 /* 🇫🇷 Les Bleus : accent bleu France, rayures tricolores */
 [data-fan="fra"] { --accent: #2a5bd7; --accent-ink: #ffffff; }

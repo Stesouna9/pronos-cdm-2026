@@ -127,6 +127,40 @@ export async function clearScore(matchId) {
   return { error: error ? error.message : null };
 }
 
+/* Pronos de TOUTE la ligue sur un match (lisibles seulement après le coup d'envoi, RLS). */
+export async function fetchMatchPredictions(matchId) {
+  const { data: preds, error } = await supabase
+    .from("predictions")
+    .select("user_id, pred_home, pred_away, points")
+    .eq("match_id", matchId);
+  if (error) throw error;
+  if (!preds || !preds.length) return [];
+  const ids = preds.map((p) => p.user_id);
+  const { data: profs } = await supabase
+    .from("profiles")
+    .select("id, pseudo, avatar, banned")
+    .in("id", ids);
+  const byId = {};
+  (profs || []).forEach((p) => (byId[p.id] = p));
+  return preds
+    .filter((p) => byId[p.user_id] && !byId[p.user_id].banned)
+    .map((p) => ({ ...p, pseudo: byId[p.user_id].pseudo, avatar: byId[p.user_id].avatar }));
+}
+
+/* Tous les pronos verrouillés (pour la page Stats). */
+export async function fetchAllLockedPredictions() {
+  const { data, error } = await supabase
+    .from("predictions")
+    .select("user_id, match_id, pred_home, pred_away, points");
+  if (error) throw error;
+  const { data: profs } = await supabase.from("profiles").select("id, pseudo, avatar, banned");
+  const byId = {};
+  (profs || []).forEach((p) => (byId[p.id] = p));
+  return (data || [])
+    .filter((p) => byId[p.user_id] && !byId[p.user_id].banned)
+    .map((p) => ({ ...p, pseudo: byId[p.user_id].pseudo, avatar: byId[p.user_id].avatar }));
+}
+
 /* Sauvegarde les infos de profil (pseudo, avatar, équipe de cœur). */
 export async function updateProfile({ pseudo, avatar, fav }) {
   const { data: { user } } = await supabase.auth.getUser();

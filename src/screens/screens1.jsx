@@ -1,7 +1,7 @@
 /* screens1.jsx — Auth + Dashboard */
 import { useState } from "react";
 import { WC } from "../lib/wc.js";
-import { Btn, StatusPill, slotLabel, LangToggle } from "../components/ui.jsx";
+import { Btn, StatusPill, slotLabel, LangToggle, Countdown } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
 
 // Lots affichés en podium sur l'écran d'accueil.
@@ -191,6 +191,7 @@ export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, 
           <div className="eyebrow" style={{ marginBottom: 12 }}>{t("Prochain coup d'envoi")}</div>
           {prochain && (
             <div className="match">
+              <div className="cd-banner">⏱️ <Countdown date={prochain.date} /></div>
               <div className="row">
                 {slotLabel(prochain, "home")}
                 <div style={{ textAlign: "center" }}>

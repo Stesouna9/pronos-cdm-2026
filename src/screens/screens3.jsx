@@ -3,7 +3,66 @@ import { useState } from "react";
 import { WC } from "../lib/wc.js";
 import { Btn, Roundel, SectionTitle, teamName } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
-import { updateProfile } from "../lib/league.js";
+import { updateProfile, fetchAllLockedPredictions } from "../lib/league.js";
+import { useEffect } from "react";
+
+/* Stats fun de la ligue, calculées sur les pronos verrouillés (visibles). */
+function FunStats() {
+  const [preds, setPreds] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    fetchAllLockedPredictions().then((p) => alive && setPreds(p)).catch(() => alive && setPreds([]));
+    return () => { alive = false; };
+  }, []);
+  if (!preds) return <div className="card pad-lg" style={{ textAlign: "center" }}><p className="muted">…</p></div>;
+  if (!preds.length) return (
+    <div className="card pad-lg" style={{ textAlign: "center" }}>
+      <div className="poster" style={{ fontSize: 22 }}>📊 {t("Pas encore de stats")}</div>
+      <p className="muted">{t("Les stats fun apparaissent dès que les premiers matchs sont verrouillés (les pronos deviennent publics au coup d'envoi).")}</p>
+    </div>
+  );
+  const per = {};
+  preds.forEach((p) => {
+    const k = p.user_id;
+    per[k] = per[k] || { pseudo: p.pseudo, avatar: p.avatar, n: 0, buts: 0, nuls: 0, petits: 0, cartons: 0 };
+    const s = per[k]; s.n++;
+    const tot = p.pred_home + p.pred_away;
+    s.buts += tot;
+    if (p.pred_home === p.pred_away) s.nuls++;
+    if (tot <= 2) s.petits++;
+    if (Math.abs(p.pred_home - p.pred_away) >= 3) s.cartons++;
+  });
+  const players = Object.values(per);
+  const top = (key, fmt) => [...players].sort((a, b) => b[key] - a[key]).slice(0, 3)
+    .filter((p) => p[key] > 0).map((p) => ({ ...p, val: fmt(p) }));
+  const cats = [
+    ["🌋", t("L'Optimiste"), t("le plus de buts pronostiqués"), top("buts", (p) => p.buts + " " + t("buts"))],
+    ["🤝", t("Le Diplomate"), t("le plus de matchs nuls pronostiqués"), top("nuls", (p) => p.nuls + " " + t("nuls"))],
+    ["🧊", t("Le Frileux"), t("le plus de petits scores (≤ 2 buts)"), top("petits", (p) => p.petits)],
+    ["🚀", t("Le Bourrin"), t("le plus de cartons pronostiqués (écart ≥ 3)"), top("cartons", (p) => p.cartons)],
+  ];
+  return (
+    <div className="grid g-2">
+      {cats.map(([emo, titre, desc, lst], i) => (
+        <div className="card pad rise" key={i}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+            <span style={{ fontSize: 26 }}>{emo}</span>
+            <div><div className="poster" style={{ fontSize: 18 }}>{titre}</div><div className="muted" style={{ fontSize: 12 }}>{desc}</div></div>
+          </div>
+          {lst.length === 0 && <p className="muted" style={{ fontSize: 13, margin: 0 }}>—</p>}
+          {lst.map((p, j) => (
+            <div key={j} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderTop: j ? "1px solid var(--line)" : "none" }}>
+              <span>{["🥇", "🥈", "🥉"][j]}</span>
+              <span style={{ fontSize: 18 }}>{p.avatar}</span>
+              <b style={{ flex: 1 }}>{p.pseudo}</b>
+              <span className="mono muted" style={{ fontSize: 12.5 }}>{p.val}</span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
 import { GroupTable } from "./screens2.jsx";
 
 /* Tableau des résultats des matchs, rangé PAR GROUPE (+ phase finale). */
@@ -185,9 +244,11 @@ export function Leaderboard({ go, profile, users: realUsers, me }) {
       <SectionTitle kicker="" title={t("Classement")}
         right={<div className="seg">
           <button className={scope === "general" ? "on" : ""} onClick={() => setScope("general")}>{t("Général")}</button>
-          <button className={scope === "semaine" ? "on" : ""} onClick={() => setScope("semaine")}>{t("Cette semaine")}</button>
+          <button className={scope === "stats" ? "on" : ""} onClick={() => setScope("stats")}>📊 {t("Stats fun")}</button>
         </div>} />
 
+      {scope === "stats" && <FunStats />}
+      {scope !== "stats" && <>
       <div className="podium rise" style={{ marginBottom: 22 }}>
         {[podium[1], podium[0], podium[2]].map((u, i) => {
           const place = i === 1 ? 1 : i === 0 ? 2 : 3;
@@ -228,6 +289,7 @@ export function Leaderboard({ go, profile, users: realUsers, me }) {
         <hr className="divider" />
         <div className="mono muted" style={{ fontSize: 12, textAlign: "center" }}>🥄 <b style={{ color: "var(--ink)" }}>{last.pseudo}</b> — {t("c'est lui qui paie le McDo de Gabriel pour l'instant !")}</div>
       </div>
+      </>}
     </div>
   );
 }

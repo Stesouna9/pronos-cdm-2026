@@ -1,10 +1,67 @@
 /* ui.jsx — primitives partagées */
+import { useState, useEffect } from "react";
 import { WC } from "../lib/wc.js";
 import { getLang, setLang, t, JA_TEAMS } from "../lib/i18n.js";
 
 // Nom d'équipe traduit (japonais si dispo).
 export function teamName(code, fr) {
   return getLang() === "ja" && JA_TEAMS[code] ? JA_TEAMS[code] : (fr != null ? fr : (WC.T[code] ? WC.T[code].name : "—"));
+}
+
+// Compte à rebours vivant jusqu'à une date (s'arrête à 0).
+export function Countdown({ date }) {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => tick((x) => x + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const ms = date - new Date();
+  if (ms <= 0) return <span className="cd-live"><span className="dot dot--pulse" /> {t("En cours")}</span>;
+  const s = Math.floor(ms / 1000);
+  const j = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return (
+    <span className="cd mono">
+      {j > 0 && <><b className="poster">{j}</b><small>{t("j")}</small> </>}
+      <b className="poster">{pad(h)}</b><small>h</small> <b className="poster">{pad(m)}</b><small>m</small> <b className="poster">{pad(sec)}</b><small>s</small>
+    </span>
+  );
+}
+
+// Bouton jour/nuit (le thème "nuit" existe dans le design system).
+export function ThemeToggle({ compact }) {
+  const [thm, setThm] = useState(document.documentElement.dataset.theme || "stade");
+  const toggle = () => {
+    const n = thm === "nuit" ? "stade" : "nuit";
+    document.documentElement.dataset.theme = n;
+    try { localStorage.setItem("pronos2026:theme", n); } catch (e) {}
+    setThm(n);
+  };
+  return (
+    <button onClick={toggle} title={thm === "nuit" ? "Mode jour" : "Mode nuit"}
+      style={{ border: "1px solid var(--line)", background: "var(--surface-2)", color: "var(--ink)",
+        borderRadius: 999, padding: compact ? "4px 8px" : "6px 12px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+      {thm === "nuit" ? "☀️" : "🌙"}
+    </button>
+  );
+}
+
+// Pluie de confettis (score exact / points gagnés). S'auto-détruit.
+export function Confetti({ onDone }) {
+  useEffect(() => { const id = setTimeout(() => onDone && onDone(), 3800); return () => clearTimeout(id); }, []);
+  const colors = ["#d4a533", "#e8c97a", "#1f8a4c", "#d52b1e", "#2a5bd7", "#ffffff"];
+  const pieces = Array.from({ length: 90 }, (_, i) => ({
+    left: (i * 37 % 100), delay: (i % 12) * 0.12, dur: 2.4 + (i % 7) * 0.25,
+    color: colors[i % colors.length], rot: (i * 53) % 360, w: 6 + (i % 3) * 3,
+  }));
+  return (
+    <div className="confetti" aria-hidden="true">
+      {pieces.map((p, i) => (
+        <span key={i} style={{ left: p.left + "%", animationDelay: p.delay + "s", animationDuration: p.dur + "s",
+          background: p.color, width: p.w, height: p.w * 0.45, transform: `rotate(${p.rot}deg)` }} />
+      ))}
+    </div>
+  );
 }
 
 // Bouton de bascule de langue FR / 日本語.

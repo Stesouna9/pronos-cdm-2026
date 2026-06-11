@@ -1,6 +1,7 @@
 /* screens2.jsx — Liste des matchs, saisie de prono, détail d'un match */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { WC } from "../lib/wc.js";
+import { fetchMatchPredictions } from "../lib/league.js";
 import { Btn, Roundel, TeamLine, StatusPill, PointsBadge, slotLabel, teamName } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
 
@@ -184,6 +185,35 @@ function Pitch({ code }) {
   );
 }
 
+/* Les pronos de toute la ligue (après coup d'envoi uniquement). */
+function LeaguePredictions({ m }) {
+  const [list, setList] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    fetchMatchPredictions(m.id).then((l) => alive && setList(l)).catch(() => alive && setList([]));
+    return () => { alive = false; };
+  }, [m.id]);
+  if (!list) return null;
+  return (
+    <div className="card pad rise" style={{ marginBottom: 18 }}>
+      <div className="eyebrow" style={{ marginBottom: 12 }}>👀 {t("Les pronos de la ligue")}</div>
+      {list.length === 0 && <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>{t("Personne n'a pronostiqué ce match.")}</p>}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+        {list.map((p) => (
+          <div key={p.user_id} className="stat" style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 20 }}>{p.avatar}</span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13 }}>{p.pseudo}</div>
+              <div className="poster" style={{ fontSize: 20 }}>{p.pred_home}–{p.pred_away}</div>
+            </div>
+            {p.points != null && <span className={"pts " + (p.points === 5 ? "pts--exact" : p.points > 0 ? "pts--good" : "pts--zero")}>+{p.points}</span>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MATCHES }) {
   const m = matches.find((x) => x.id === id);
   const [tab, setTab] = useState("apercu");
@@ -249,6 +279,8 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
           {predictions[m.id] ? <PointsBadge pred={predictions[m.id]} real={m.score} /> : <span className="pts pts--zero">0 pt</span>}
         </div>
       )}
+
+      {(m.locked || fini) && <LeaguePredictions m={m} />}
 
       <div className="seg scrollx" style={{ marginBottom: 16, display: "flex" }}>
         {tabs.map(([k, l]) => <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{t(l)}</button>)}
