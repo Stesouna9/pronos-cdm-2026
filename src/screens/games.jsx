@@ -1,71 +1,71 @@
-/* games.jsx — Mini-jeux : 5 foot + coin coquin 🔞.
-   Règles : 1 essai par jour et par jeu (verrou serveur), défi réussi = +1
-   au classement Jeux. Le 1er avant les quarts gagne +10 au général. */
+/* games.jsx — Mini-jeux foot. 1 essai par jour et par jeu (verrou serveur),
+   défi réussi = +1 au classement Jeux. Le 1er avant les quarts gagne +10
+   au classement général. */
 import { useState, useEffect, useRef } from "react";
 import { WC } from "../lib/wc.js";
 import { hasSupabase } from "../lib/supabase.js";
 import { fetchMyGamesToday, saveGameScore, fetchGamesLeaderboard, fetchGameRecords, todayFR } from "../lib/league.js";
-import { Btn, SectionTitle, teamName } from "../components/ui.jsx";
+import { Btn, SectionTitle, teamName, Confetti } from "../components/ui.jsx";
 import { t } from "../lib/i18n.js";
-import { daySeed, seededShuffle, flagEmoji, FLAG_POOL, ARBITRE, QUIZ18, EMOJI18, PENDU18, HILO18, GEO18 } from "../lib/gamesData.js";
+import { daySeed, seededShuffle, flagEmoji, FLAG_POOL, ARBITRE } from "../lib/gamesData.js";
 
 const GAMES = [
-  { id: "penalty", icon: "🥅", name: "Tirs au but", goal: "4 buts sur 5", adult: false },
-  { id: "jongles", icon: "⚽", name: "Jongles", goal: "20 jongles", adult: false },
-  { id: "arbitre", icon: "⏱️", name: "Réflexe arbitre", goal: "série de 10", adult: false },
-  { id: "casse", icon: "🧱", name: "Casse-brique foot", goal: "40 maillots", adult: false },
-  { id: "drapeau", icon: "🚩", name: "Devine le drapeau", goal: "8 sur 10", adult: false },
-  { id: "quiz18", icon: "🔥", name: "Quiz coquin", goal: "4 sur 5", adult: true },
-  { id: "emoji18", icon: "🍆", name: "Décode les emojis", goal: "6 sur 8", adult: true },
-  { id: "pendu18", icon: "😈", name: "Pendu coquin", goal: "trouve le mot", adult: true },
-  { id: "hilo18", icon: "📈", name: "Plus haut / plus bas", goal: "série de 5", adult: true },
-  { id: "geo18", icon: "🌍", name: "Géo coquine", goal: "5 sur 6", adult: true },
+  { id: "penalty", icon: "🥅", name: "Tirs au but", goal: "4 buts sur 5" },
+  { id: "jongles", icon: "⚽", name: "Jongles", goal: "20 jongles" },
+  { id: "arbitre", icon: "⏱️", name: "Réflexe arbitre", goal: "série de 10" },
+  { id: "casse", icon: "🧱", name: "Casse-brique foot", goal: "40 maillots" },
+  { id: "drapeau", icon: "🚩", name: "Devine le drapeau", goal: "8 sur 10" },
 ];
 
 /* =================== JEUX =================== */
 
-/* ---- 🥅 Tirs au but ---- */
+/* ---- 🥅 Tirs au but ----
+   Le gardien apprend : plus tu marques, plus il lit tes tirs.
+   La lucarne reste payante (75 %) mais elle est toute petite. */
 function Penalty({ onEnd }) {
-  const [shot, setShot] = useState(0);       // tir en cours (0..4)
-  const [buts, setButs] = useState(0);
-  const [anim, setAnim] = useState(null);    // { x, y, keeper, goal }
+  const [hist, setHist] = useState([]);   // true = but, false = arrêt
+  const [anim, setAnim] = useState(null);
   const busy = useRef(false);
 
   function shoot(e) {
-    if (busy.current || shot >= 5) return;
+    if (busy.current || hist.length >= 5) return;
     busy.current = true;
     const r = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-    // le gardien choisit un côté (un peu plus souvent le centre/les côtés faciles)
-    const sides = ["g", "g", "c", "c", "c", "d", "d"];
-    const keeper = sides[Math.floor(Math.random() * sides.length)];
+    const goals = hist.filter(Boolean).length;
     const ballSide = x < 0.34 ? "g" : x > 0.66 ? "d" : "c";
+    // le gardien lit le tir : 33 % de base, +8 % par but déjà marqué
+    const reads = Math.random() < 0.33 + goals * 0.08;
+    const keeper = reads ? ballSide : ["g", "c", "d"].filter((s) => s !== ballSide)[Math.floor(Math.random() * 2)];
+    const lucarne = y < 0.28 && (x < 0.2 || x > 0.8);
+    const corner = x < 0.12 || x > 0.88;
     let goal;
     if (keeper !== ballSide) goal = true;
-    else goal = (x < 0.12 || x > 0.88 || y < 0.25) ? Math.random() < 0.5 : false;
-    setAnim({ x, y, keeper, goal });
+    else goal = lucarne ? Math.random() < 0.75 : corner ? Math.random() < 0.45 : false;
+    setAnim({ x, y, keeper, goal, lucarne });
     setTimeout(() => {
-      const b = buts + (goal ? 1 : 0);
-      setButs(b); setAnim(null); busy.current = false;
-      if (shot + 1 >= 5) onEnd(b, b >= 4);
-      else setShot(shot + 1);
-    }, 900);
+      const nh = [...hist, goal];
+      setHist(nh); setAnim(null); busy.current = false;
+      if (nh.length >= 5) { const b = nh.filter(Boolean).length; onEnd(b, b >= 4); }
+    }, 950);
   }
 
   return (
     <div style={{ textAlign: "center" }}>
       <div className="mono muted" style={{ marginBottom: 8, fontSize: 13 }}>
-        {t("Tir")} {Math.min(shot + 1, 5)}/5 · ⚽ {buts} {t("but(s)")} — {t("tape où tu veux tirer (la lucarne paie, mais elle est petite !)")}
+        {t("Tir")} {Math.min(hist.length + 1, 5)}/5 — {t("tape où tu veux tirer (la lucarne paie, mais elle est petite !)")}
       </div>
       <div className="goalbox" onPointerDown={shoot}>
         <div className="goal-net" />
         <div className={"keeper" + (anim ? " dive-" + anim.keeper : "")}>🧤</div>
         {anim && <div className="shotball" style={{ left: anim.x * 100 + "%", top: anim.y * 100 + "%" }}>⚽</div>}
-        {anim && <div className={"verdict " + (anim.goal ? "v-goal" : "v-save")}>{anim.goal ? t("BUT !") : t("ARRÊT !")}</div>}
+        {anim && <div className={"verdict " + (anim.goal ? "v-goal" : "v-save")}>
+          {anim.goal ? (anim.lucarne ? t("LUCARNE !") + " 🎯" : t("BUT !")) : t("ARRÊT !")}
+        </div>}
       </div>
-      <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 10 }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 10, fontSize: 22 }}>
         {[0, 1, 2, 3, 4].map((i) => (
-          <span key={i} style={{ fontSize: 18 }}>{i < shot ? "⚪" : i === shot ? "⚽" : "·"}</span>
+          <span key={i}>{i < hist.length ? (hist[i] ? "⚽" : "🧤") : i === hist.length ? "👟" : "·"}</span>
         ))}
       </div>
     </div>
@@ -73,7 +73,7 @@ function Penalty({ onEnd }) {
 }
 
 /* ---- ⚽ Jongles ---- */
-function Jongles({ onEnd }) {
+function Jongles({ onEnd, record }) {
   const [count, setCount] = useState(0);
   const [running, setRunning] = useState(false);
   const box = useRef(null), ball = useRef(null), st = useRef(null);
@@ -93,7 +93,7 @@ function Jongles({ onEnd }) {
       if (s.x > s.W - 22) { s.x = s.W - 22; s.vx = -Math.abs(s.vx) * 0.85; }
       if (s.y > s.H - 24) { s.dead = true; setRunning(false); onEnd(s.n, s.n >= 20); return; }
       if (s.y < 24) { s.y = 24; s.vy = Math.abs(s.vy) * 0.5; }
-      if (ball.current) ball.current.style.transform = `translate(${s.x - 22}px, ${s.y - 22}px)`;
+      if (ball.current) ball.current.style.transform = `translate(${s.x - 22}px, ${s.y - 22}px) rotate(${s.n * 40 + s.x}deg)`;
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
@@ -104,8 +104,7 @@ function Jongles({ onEnd }) {
     if (!s || s.dead || !running) return;
     const r = box.current.getBoundingClientRect();
     const cx = e.clientX - r.left, cy = e.clientY - r.top;
-    const d = Math.hypot(cx - s.x, cy - s.y);
-    if (d < 52) {
+    if (Math.hypot(cx - s.x, cy - s.y) < 52) {
       s.vy = -(8.5 + Math.min(s.n * 0.08, 4));
       s.vx += (s.x - cx) * 0.22;             // tape sur le côté → le ballon part
       s.n++; setCount(s.n);
@@ -116,7 +115,10 @@ function Jongles({ onEnd }) {
 
   return (
     <div style={{ textAlign: "center" }}>
-      <div className="poster" style={{ fontSize: 40, marginBottom: 6 }}>{count}</div>
+      <div className={"poster jcount" + (count > 0 && count % 10 === 0 ? " pop" : "")} key={count} style={{ fontSize: 44, marginBottom: 4, color: count >= 20 ? "var(--win)" : "var(--ink)" }}>{count}</div>
+      <div className="mono muted" style={{ fontSize: 11.5, marginBottom: 6 }}>
+        {t("Objectif")} : 20 {record ? ` · 🏅 ${t("Record")} : ${record.pseudo} (${record.score})` : ""}
+      </div>
       <div ref={box} className="jugglebox" onPointerDown={tap}>
         {!running && <Btn variant="accent" onClick={(e) => { e.stopPropagation(); start(); }} style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", zIndex: 2 }}>⚽ {t("Lancer le ballon")}</Btn>}
         <div ref={ball} className="juggleball">⚽</div>
@@ -132,26 +134,36 @@ function Arbitre({ onEnd }) {
   const [deck] = useState(() => seededShuffle(ARBITRE, daySeed(todayFR()) ^ 99).concat(seededShuffle(ARBITRE, daySeed(todayFR()) ^ 7)));
   const [i, setI] = useState(0);
   const [serie, setSerie] = useState(0);
+  const [fb, setFb] = useState(null);      // 'good' | 'bad' : flash de feedback
   const timer = useRef(null);
   const deadline = Math.max(1500 - serie * 55, 750);
 
   useEffect(() => {
-    timer.current = setTimeout(() => onEnd(serie, serie >= 10), deadline);
+    if (fb) return;
+    timer.current = setTimeout(() => { setFb("bad"); setTimeout(() => onEnd(serie, serie >= 10), 450); }, deadline);
     return () => clearTimeout(timer.current);
-  }, [i]);
+  }, [i, fb]);
 
   function answer(a) {
+    if (fb) return;
     clearTimeout(timer.current);
-    if (a === deck[i][1]) { setSerie(serie + 1); setI(i + 1); }
-    else onEnd(serie, serie >= 10);
+    const ok = a === deck[i][1];
+    setFb(ok ? "good" : "bad");
+    setTimeout(() => {
+      if (ok) { setSerie(serie + 1); setI(i + 1); setFb(null); }
+      else onEnd(serie, serie >= 10);
+    }, ok ? 220 : 600);
   }
 
   return (
     <div style={{ textAlign: "center" }}>
-      <div className="mono muted" style={{ fontSize: 13 }}>{t("Série")} : <b style={{ color: "var(--ink)" }}>{serie}</b> / 10</div>
-      <div className="timerbar"><span key={i} style={{ animationDuration: deadline + "ms" }} /></div>
-      <div className="card pad-lg" style={{ margin: "10px 0 14px", minHeight: 84, display: "grid", placeItems: "center" }}>
+      <div className="mono muted" style={{ fontSize: 13 }}>{t("Série")} : <b style={{ color: "var(--ink)" }}>{serie}</b> / 10 — {t("de plus en plus vite !")}</div>
+      <div className="timerbar"><span key={i + (fb || "")} style={{ animationDuration: deadline + "ms", animationPlayState: fb ? "paused" : "running" }} /></div>
+      <div className={"card pad-lg fbcard" + (fb ? " fb-" + fb : "")} style={{ margin: "10px 0 14px", minHeight: 84, display: "grid", placeItems: "center" }}>
         <div style={{ fontSize: 17, fontWeight: 700 }}>{deck[i][0]}</div>
+        {fb === "bad" && <div className="mono" style={{ fontSize: 12, color: "var(--lose)" }}>
+          {t("Bonne décision :")} {deck[i][1] === "ok" ? "✅" : deck[i][1] === "j" ? "🟨" : "🟥"}
+        </div>}
       </div>
       <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
         <button className="refbtn" onClick={() => answer("ok")}>✅<br />{t("Laisser jouer")}</button>
@@ -162,7 +174,8 @@ function Arbitre({ onEnd }) {
   );
 }
 
-/* ---- 🧱 Casse-brique foot ---- */
+/* ---- 🧱 Casse-brique foot ----
+   Brique dorée = ballon plus rapide · brique bleue (gourde) = banc élargi 8 s. */
 function CasseBrique({ onEnd }) {
   const cv = useRef(null);
   const [info, setInfo] = useState({ broken: 0, lives: 3 });
@@ -172,65 +185,79 @@ function CasseBrique({ onEnd }) {
     const W = 340, H = 440;
     const COLS = 8, ROWS = 5, BW = 38, BH = 18, TOP = 40, GAP = 4;
     const bricks = [];
-    for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++)
-      bricks.push({ x: 3 + q * (BW + GAP), y: TOP + r * (BH + GAP), gold: Math.random() < 0.1, on: true });
-    let paddleX = W / 2, ball = { x: W / 2, y: H - 70, vx: 2.6, vy: -3.4 }, lives = 3, broken = 0, dead = false;
-    const colors = ["#d52b1e", "#2a5bd7", "#1f8a4c", "#e36414", "#7a5ae0"];
+    for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++) {
+      const roll = Math.random();
+      bricks.push({ x: 3 + q * (BW + GAP), y: TOP + r * (BH + GAP), kind: roll < 0.08 ? "gold" : roll < 0.16 ? "gourde" : "norm", row: r, on: true });
+    }
+    let paddleX = W / 2, paddleW = 68, wideUntil = 0;
+    let ball = { x: W / 2, y: H - 34, vx: 0, vy: 0, stuck: true };
+    let lives = 3, broken = 0, dead = false;
+    const rowColors = ["#d52b1e", "#e36414", "#1f8a4c", "#2a5bd7", "#7a5ae0"];
 
     function move(e) {
       const r = c.getBoundingClientRect();
       paddleX = ((e.clientX - r.left) / r.width) * W;
     }
+    function launch() {
+      if (ball.stuck) { ball.stuck = false; ball.vx = (Math.random() - 0.5) * 3; ball.vy = -3.6; }
+    }
     c.addEventListener("pointermove", move);
-    c.addEventListener("pointerdown", move);
+    c.addEventListener("pointerdown", (e) => { move(e); launch(); });
 
-    function loop() {
+    function loop(now) {
       if (dead) return;
-      ball.x += ball.vx; ball.y += ball.vy;
-      if (ball.x < 8 || ball.x > W - 8) ball.vx *= -1;
-      if (ball.y < 8) ball.vy *= -1;
-      const px = Math.max(34, Math.min(W - 34, paddleX));
-      if (ball.y > H - 26 && ball.y < H - 14 && Math.abs(ball.x - px) < 38 && ball.vy > 0) {
-        ball.vy = -Math.abs(ball.vy);
-        ball.vx += (ball.x - px) * 0.07;
-      }
-      if (ball.y > H + 10) {
-        lives--; setInfo({ broken, lives });
-        if (lives <= 0) { dead = true; onEnd(broken, broken >= 40); return; }
-        ball = { x: W / 2, y: H - 70, vx: 2.6, vy: -3.4 };
-      }
-      for (const b of bricks) {
-        if (!b.on) continue;
-        if (ball.x > b.x - 6 && ball.x < b.x + BW + 6 && ball.y > b.y - 6 && ball.y < b.y + BH + 6) {
-          b.on = false; broken++; ball.vy *= -1;
-          if (b.gold) { ball.vx *= 1.15; ball.vy *= 1.15; }
-          setInfo({ broken, lives });
-          break;
+      const px = Math.max(paddleW / 2, Math.min(W - paddleW / 2, paddleX));
+      paddleW = now < wideUntil ? 104 : 68;
+      if (ball.stuck) { ball.x = px; ball.y = H - 34; }
+      else {
+        ball.x += ball.vx; ball.y += ball.vy;
+        if (ball.x < 8 || ball.x > W - 8) ball.vx *= -1;
+        if (ball.y < 8) ball.vy *= -1;
+        if (ball.y > H - 26 && ball.y < H - 14 && Math.abs(ball.x - px) < paddleW / 2 + 4 && ball.vy > 0) {
+          ball.vy = -Math.abs(ball.vy);
+          ball.vx += (ball.x - px) * 0.07;
         }
+        if (ball.y > H + 10) {
+          lives--; setInfo({ broken, lives });
+          if (lives <= 0) { dead = true; onEnd(broken, broken >= 40); return; }
+          ball = { x: px, y: H - 34, vx: 0, vy: 0, stuck: true };
+        }
+        for (const b of bricks) {
+          if (!b.on) continue;
+          if (ball.x > b.x - 6 && ball.x < b.x + BW + 6 && ball.y > b.y - 6 && ball.y < b.y + BH + 6) {
+            b.on = false; broken++; ball.vy *= -1;
+            if (b.kind === "gold") { ball.vx = Math.max(-6.5, Math.min(6.5, ball.vx * 1.12)); ball.vy = Math.max(-6.5, Math.min(6.5, ball.vy * 1.12)); }
+            if (b.kind === "gourde") wideUntil = now + 8000;
+            setInfo({ broken, lives });
+            break;
+          }
+        }
+        if (broken >= COLS * ROWS) { dead = true; onEnd(broken, true); return; }
       }
-      if (broken >= COLS * ROWS) { dead = true; onEnd(broken, true); return; }
       // dessin
       ctx.fillStyle = "#10301c"; ctx.fillRect(0, 0, W, H);
       ctx.strokeStyle = "rgba(255,255,255,.15)"; ctx.strokeRect(4, 4, W - 8, H - 8);
       for (const b of bricks) {
         if (!b.on) continue;
-        ctx.fillStyle = b.gold ? "#d4a533" : colors[(b.x + b.y) % colors.length];
+        ctx.fillStyle = b.kind === "gold" ? "#d4a533" : b.kind === "gourde" ? "#39b6d8" : rowColors[b.row];
         ctx.fillRect(b.x, b.y, BW, BH);
-        ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.font = "10px sans-serif";
-        ctx.fillText("👕", b.x + BW / 2 - 6, b.y + BH - 5);
+        ctx.font = "10px sans-serif";
+        ctx.fillText(b.kind === "gourde" ? "🧴" : b.kind === "gold" ? "⚡" : "👕", b.x + BW / 2 - 6, b.y + BH - 5);
       }
-      ctx.fillStyle = "#f3ede2"; ctx.fillRect(px - 34, H - 20, 68, 8);
+      ctx.fillStyle = now < wideUntil ? "#39b6d8" : "#f3ede2";
+      ctx.fillRect(px - paddleW / 2, H - 20, paddleW, 8);
       ctx.font = "16px sans-serif"; ctx.fillText("⚽", ball.x - 8, ball.y + 6);
+      if (ball.stuck) { ctx.fillStyle = "rgba(255,255,255,.8)"; ctx.font = "13px sans-serif"; ctx.fillText(t("Tape pour lancer !"), W / 2 - 44, H / 2); }
       requestAnimationFrame(loop);
     }
     requestAnimationFrame(loop);
-    return () => { dead = true; c.removeEventListener("pointermove", move); c.removeEventListener("pointerdown", move); };
+    return () => { dead = true; c.removeEventListener("pointermove", move); };
   }, []);
 
   return (
     <div style={{ textAlign: "center" }}>
       <div className="mono muted" style={{ fontSize: 13, marginBottom: 8 }}>
-        👕 {info.broken}/40 · ❤️ {info.lives} — {t("glisse le doigt pour déplacer le banc")}
+        👕 {info.broken}/40 · {"❤️".repeat(Math.max(0, info.lives))} — ⚡ {t("= plus rapide")} · 🧴 {t("= banc élargi")}
       </div>
       <canvas ref={cv} width="340" height="440" className="brickcanvas" />
     </div>
@@ -250,6 +277,7 @@ function Drapeaux({ onEnd }) {
   const [i, setI] = useState(0);
   const [bonnes, setBonnes] = useState(0);
   const [left, setLeft] = useState(30.0);
+  const [fb, setFb] = useState(null); // { pick } : montre vert/rouge un instant
   const done = useRef(false);
 
   useEffect(() => {
@@ -261,12 +289,15 @@ function Drapeaux({ onEnd }) {
   }, [bonnes]);
 
   function pick(c) {
-    if (done.current) return;
+    if (done.current || fb) return;
+    setFb({ pick: c });
     const ok = c === rounds[i].code;
-    const b = bonnes + (ok ? 1 : 0);
-    setBonnes(b);
-    if (i + 1 >= 10) { done.current = true; onEnd(b + Math.round(left), b >= 8); }
-    else setI(i + 1);
+    setTimeout(() => {
+      const b = bonnes + (ok ? 1 : 0);
+      setBonnes(b); setFb(null);
+      if (i + 1 >= 10) { done.current = true; onEnd(b + Math.round(left), b >= 8); }
+      else setI(i + 1);
+    }, ok ? 180 : 550);
   }
 
   const nm = (c) => teamName(c, WC.T[c] ? WC.T[c].name : c);
@@ -275,165 +306,19 @@ function Drapeaux({ onEnd }) {
       <div className="mono muted" style={{ fontSize: 13 }}>{i + 1}/10 · ✅ {bonnes} · ⏱️ <b style={{ color: left < 8 ? "var(--lose)" : "var(--ink)" }}>{left.toFixed(0)}s</b></div>
       <div style={{ fontSize: 96, lineHeight: 1.2, margin: "10px 0" }}>{flagEmoji(rounds[i].code)}</div>
       <div className="choicegrid">
-        {rounds[i].choices.map((c) => <button key={c} className="choicebtn" onClick={() => pick(c)}>{nm(c)}</button>)}
-      </div>
-    </div>
-  );
-}
-
-/* ---- Quiz générique à choix (sert au Quiz 🔞 et à la Géo 🔞) ---- */
-function ChoiceQuiz({ items, perQuestion, need, onEnd, renderQ }) {
-  const [i, setI] = useState(0);
-  const [bonnes, setBonnes] = useState(0);
-  const [pts, setPts] = useState(0);
-  const [left, setLeft] = useState(perQuestion);
-  const done = useRef(false);
-
-  useEffect(() => {
-    setLeft(perQuestion);
-    const id = setInterval(() => setLeft((l) => {
-      if (l <= 1) { clearInterval(id); answer(-1); return 0; }
-      return l - 1;
-    }), 1000);
-    return () => clearInterval(id);
-  }, [i]);
-
-  function answer(idx) {
-    if (done.current) return;
-    const ok = idx === items[i].correct;
-    const b = bonnes + (ok ? 1 : 0);
-    const p = pts + (ok ? Math.max(1, left) : 0);
-    setBonnes(b); setPts(p);
-    if (i + 1 >= items.length) { done.current = true; onEnd(p, b >= need); }
-    else setI(i + 1);
-  }
-
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div className="mono muted" style={{ fontSize: 13 }}>{i + 1}/{items.length} · ✅ {bonnes} · ⏱️ {left}s</div>
-      <div className="card pad-lg" style={{ margin: "10px 0 14px", minHeight: 90, display: "grid", placeItems: "center" }}>
-        {renderQ(items[i])}
-      </div>
-      <div className="choicegrid">
-        {items[i].choices.map((c, idx) => <button key={idx} className="choicebtn" onClick={() => answer(idx)}>{c}</button>)}
-      </div>
-    </div>
-  );
-}
-
-function Quiz18({ onEnd }) {
-  const seed = daySeed(todayFR());
-  const items = seededShuffle(QUIZ18, seed).slice(0, 5).map(([q, choices, correct]) => ({ q, choices, correct }));
-  return <ChoiceQuiz items={items} perQuestion={15} need={4} onEnd={onEnd}
-    renderQ={(it) => <div style={{ fontSize: 16.5, fontWeight: 700 }}>{it.q}</div>} />;
-}
-
-function Geo18({ onEnd }) {
-  const seed = daySeed(todayFR()) ^ 555;
-  const items = seededShuffle(GEO18, seed).slice(0, 6).map(([txt, code], i) => {
-    const others = seededShuffle(FLAG_POOL.filter((c) => c !== code), seed + i * 17).slice(0, 3);
-    const codes = seededShuffle([code, ...others], seed + i * 41);
-    return { q: txt, choices: codes.map((c) => flagEmoji(c) + " " + teamName(c, WC.T[c] ? WC.T[c].name : c)), correct: codes.indexOf(code) };
-  });
-  return <ChoiceQuiz items={items} perQuestion={15} need={5} onEnd={onEnd}
-    renderQ={(it) => <div style={{ fontSize: 15.5, fontWeight: 700 }}>{it.q}</div>} />;
-}
-
-function Emoji18({ onEnd }) {
-  const seed = daySeed(todayFR()) ^ 333;
-  const base = seededShuffle(EMOJI18, seed).slice(0, 8).map(([q, choices, correct]) => ({ q, choices, correct }));
-  // 45 s au total pour 8 énigmes : ChoiceQuiz avec ~6 s par énigme
-  return <ChoiceQuiz items={base} perQuestion={6} need={6} onEnd={onEnd}
-    renderQ={(it) => <div style={{ fontSize: 44 }}>{it.q}</div>} />;
-}
-
-/* ---- 😈 Pendu coquin ---- */
-function Pendu18({ onEnd }) {
-  const seed = daySeed(todayFR()) ^ 777;
-  const [word, hint] = PENDU18[seed % PENDU18.length];
-  const [found, setFound] = useState([]);
-  const [errors, setErrors] = useState(0);
-  const done = useRef(false);
-  const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  const STAGES = ["😀", "🙂", "😐", "😟", "😰", "😱", "💀"];
-
-  function play(l) {
-    if (done.current || found.includes(l)) return;
-    const nf = [...found, l];
-    setFound(nf);
-    if (!word.includes(l)) {
-      const e = errors + 1;
-      setErrors(e);
-      if (e >= 6) { done.current = true; onEnd(0, false); }
-    } else if ([...word].every((c) => nf.includes(c))) {
-      done.current = true;
-      onEnd((6 - errors) * 2 + word.length, true);
-    }
-  }
-
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div className="mono muted" style={{ fontSize: 13 }}>💡 {hint} · {STAGES[errors]} {6 - errors} {t("vie(s)")}</div>
-      <div className="hangword">
-        {[...word].map((c, i) => <span key={i} className="hangletter">{found.includes(c) ? c : "_"}</span>)}
-      </div>
-      <div className="lettergrid">
-        {LETTERS.map((l) => (
-          <button key={l} disabled={found.includes(l)}
-            className={"letterbtn" + (found.includes(l) ? (word.includes(l) ? " good" : " bad") : "")}
-            onClick={() => play(l)}>{l}</button>
+        {rounds[i].choices.map((c) => (
+          <button key={c} onClick={() => pick(c)}
+            className={"choicebtn" + (fb ? (c === rounds[i].code ? " good" : c === fb.pick ? " bad" : "") : "")}>
+            {nm(c)}
+          </button>
         ))}
       </div>
     </div>
   );
 }
 
-/* ---- 📈 Plus haut / plus bas 🔞 ---- */
-function Hilo18({ onEnd }) {
-  const seed = daySeed(todayFR()) ^ 111;
-  const [deck] = useState(() => seededShuffle(HILO18, seed));
-  const [i, setI] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [reveal, setReveal] = useState(false);
-  const done = useRef(false);
-
-  const cur = deck[i], next = deck[i + 1];
-
-  function guess(higher) {
-    if (done.current || reveal) return;
-    setReveal(true);
-    const ok = higher ? next[1] >= cur[1] : next[1] <= cur[1];
-    setTimeout(() => {
-      if (!ok) { done.current = true; onEnd(streak, streak >= 5); return; }
-      const s = streak + 1;
-      setStreak(s); setReveal(false);
-      if (i + 2 >= deck.length) { done.current = true; onEnd(s, s >= 5); }
-      else setI(i + 1);
-    }, 1100);
-  }
-
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div className="mono muted" style={{ fontSize: 13 }}>{t("Série")} : <b style={{ color: "var(--ink)" }}>{streak}</b> / 5</div>
-      <div className="card pad" style={{ margin: "10px 0" }}>
-        <div className="mono muted" style={{ fontSize: 11 }}>{t("% de Français qui…")}</div>
-        <div style={{ fontSize: 15, fontWeight: 700, margin: "4px 0" }}>{cur[0]}</div>
-        <div className="poster" style={{ fontSize: 30 }}>{cur[1]}%</div>
-      </div>
-      <div className="card pad" style={{ marginBottom: 12, borderColor: "var(--accent)" }}>
-        <div style={{ fontSize: 15, fontWeight: 700, margin: "4px 0" }}>{next[0]}</div>
-        <div className="poster" style={{ fontSize: 30 }}>{reveal ? next[1] + "%" : "??"}</div>
-      </div>
-      <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-        <Btn variant="accent" onClick={() => guess(true)} disabled={reveal}>⬆️ {t("PLUS HAUT")}</Btn>
-        <Btn variant="accent" onClick={() => guess(false)} disabled={reveal}>⬇️ {t("PLUS BAS")}</Btn>
-      </div>
-    </div>
-  );
-}
-
 /* =================== HUB =================== */
-const COMPONENTS = { penalty: Penalty, jongles: Jongles, arbitre: Arbitre, casse: CasseBrique, drapeau: Drapeaux, quiz18: Quiz18, emoji18: Emoji18, pendu18: Pendu18, hilo18: Hilo18, geo18: Geo18 };
+const COMPONENTS = { penalty: Penalty, jongles: Jongles, arbitre: Arbitre, casse: CasseBrique, drapeau: Drapeaux };
 
 function GameCard({ g, today, record, onPlay }) {
   const played = today[g.id];
@@ -461,7 +346,6 @@ export function GamesScreen({ profile }) {
   const [board, setBoard] = useState(null);
   const [active, setActive] = useState(null);     // jeu en cours
   const [result, setResult] = useState(null);     // { g, score, won, saveErr }
-  const [nsfwOk, setNsfwOk] = useState(() => { try { return localStorage.getItem("pronos2026:nsfw") === "1"; } catch (e) { return false; } });
 
   async function load() {
     if (!hasSupabase) return;
@@ -483,13 +367,6 @@ export function GamesScreen({ profile }) {
     load();
   }
 
-  function openNsfw() {
-    if (window.confirm(t("🔞 Coin coquin — humour et sous-entendus entre adultes. Tu confirmes que tu es majeur(e) ?"))) {
-      try { localStorage.setItem("pronos2026:nsfw", "1"); } catch (e) {}
-      setNsfwOk(true);
-    }
-  }
-
   /* --- partie en cours --- */
   if (active) {
     const Comp = COMPONENTS[active.id];
@@ -500,7 +377,7 @@ export function GamesScreen({ profile }) {
           <Btn variant="ghost" onClick={() => setActive(null)} style={{ padding: "7px 12px", fontSize: 12.5 }}>{t("Abandonner")}</Btn>
         </div>
         <div className="card pad-lg">
-          <Comp onEnd={(score, won) => finish(active, score, won)} />
+          <Comp onEnd={(score, won) => finish(active, score, won)} record={records[active.id]} />
         </div>
       </div>
     );
@@ -508,6 +385,7 @@ export function GamesScreen({ profile }) {
 
   return (
     <div className="content">
+      {result && result.won && <Confetti onDone={() => {}} />}
       <SectionTitle kicker={t("Un essai par jour et par jeu")} title={t("Mini-jeux") + " 🎮"}
         right={<div className="seg">
           <button className={section === "jeux" ? "on" : ""} onClick={() => setSection("jeux")}>{t("Jeux")}</button>
@@ -535,22 +413,9 @@ export function GamesScreen({ profile }) {
               🏅 {t("Chaque défi réussi = +1 au classement Jeux. Juste avant les quarts de finale, le 1er du classement Jeux gagne +10 points au classement général !")}
             </span>
           </div>
-          <div className="grid g-2" style={{ marginBottom: 22 }}>
-            {GAMES.filter((g) => !g.adult).map((g) => <GameCard key={g.id} g={g} today={today} record={records[g.id]} onPlay={setActive} />)}
+          <div className="grid g-2">
+            {GAMES.map((g) => <GameCard key={g.id} g={g} today={today} record={records[g.id]} onPlay={setActive} />)}
           </div>
-
-          <h3 className="poster" style={{ fontSize: 20, margin: "0 0 10px" }}>🔞 {t("Coin coquin")}</h3>
-          {!nsfwOk ? (
-            <div className="card pad-lg" style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 34 }}>🔞</div>
-              <p className="muted" style={{ fontSize: 13.5, margin: "6px 0 12px" }}>{t("Humour et sous-entendus entre adultes — rien d'explicite, mais réservé aux majeurs.")}</p>
-              <Btn variant="accent" onClick={openNsfw}>{t("Entrer dans le coin coquin")}</Btn>
-            </div>
-          ) : (
-            <div className="grid g-2">
-              {GAMES.filter((g) => g.adult).map((g) => <GameCard key={g.id} g={g} today={today} record={records[g.id]} onPlay={setActive} />)}
-            </div>
-          )}
         </>
       )}
 
