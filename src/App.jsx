@@ -2,9 +2,10 @@
 import { useState, useEffect } from "react";
 import { WC } from "./lib/wc.js";
 import { supabase, hasSupabase } from "./lib/supabase.js";
-import { fetchMatches, fetchMyPredictions, savePrediction, fetchLeaderboard, fetchMe, toggleConfidence } from "./lib/league.js";
+import { fetchMatches, fetchMyPredictions, savePrediction, fetchLeaderboard, fetchMe, toggleConfidence, savePenWinner, setNotifyResults } from "./lib/league.js";
+import { pushSupported, enablePushOnThisDevice } from "./lib/push.js";
 import { t, subscribeLang } from "./lib/i18n.js";
-import { LangToggle, ThemeToggle, Confetti } from "./components/ui.jsx";
+import { LangToggle, ThemeToggle, Confetti, Btn } from "./components/ui.jsx";
 
 // applique le thème mémorisé avant le premier rendu
 try { const th = localStorage.getItem("pronos2026:theme"); if (th) document.documentElement.dataset.theme = th; } catch (e) {}
@@ -50,6 +51,10 @@ export default function App() {
   const [confetti, setConfetti] = useState(false);
   // Pronos de confiance (×2) : { matchId: true }
   const [confidences, setConfidences] = useState({});
+  // Choix tirs au but (phases finales, prono nul) : { matchId: "FRA" }
+  const [penPicks, setPenPicks] = useState({});
+  // Question notifications (s'affiche une fois par appareil tant que pas répondu)
+  const [askNotif, setAskNotif] = useState(false);
 
   // Si Supabase est branché, on suit la session réelle
   useEffect(() => {
@@ -85,6 +90,7 @@ export default function App() {
       if (ms.length) setMatches(ms);
       setPredictions((mine && mine.preds) || {});
       setConfidences((mine && mine.conf) || {});
+      setPenPicks((mine && mine.pens) || {});
       if (lb.length) setUsers(lb);
       // points en hausse depuis la dernière visite → confettis 🎉
       if (meRow) {
@@ -96,7 +102,9 @@ export default function App() {
           localStorage.setItem(key, String(mine.pts));
         }
       }
-      if (meRow) setProfile((p) => ({ ...p, id: meRow.id, pseudo: meRow.pseudo || p.pseudo, avatar: meRow.avatar || p.avatar, email: meRow.email || p.email, fav: meRow.fav || p.fav, is_admin: meRow.is_admin }));
+      if (meRow) setProfile((p) => ({ ...p, id: meRow.id, pseudo: meRow.pseudo || p.pseudo, avatar: meRow.avatar || p.avatar, email: meRow.email || p.email, fav: meRow.fav || p.fav, is_admin: meRow.is_admin, notify_results: meRow.notify_results }));
+      // jamais répondu à la question des notifs → on la pose (une fois par session)
+      if (meRow && meRow.notify_results == null && !sessionStorage.getItem("pronos2026:notifAsked")) setAskNotif(true);
     } catch (e) { console.error("Chargement données:", e); }
   }
   useEffect(() => { if (hasSupabase && authed) loadData(); }, [authed]);
@@ -127,6 +135,8 @@ export default function App() {
       return;
     }
     setPredictions((P) => ({ ...P, [id]: val }));
+    // plus un nul → le choix tirs au but tombe
+    if (val[0] !== val[1] && penPicks[id]) setPenPicks((P) => { const c = { ...P }; delete c[id]; return c; });
     if (hasSupabase) {
       savePrediction(id, val)
         .then((r) => {
@@ -139,6 +149,30 @@ export default function App() {
           alert(t("⚠️ Ton prono n'a PAS été enregistré (connexion ?). Réessaie !"));
           loadData();
         });
+    }
+  }
+
+  // Choix du vainqueur aux tirs au but (phases finales, prono nul).
+  function setPredPen(id, code) {
+    const m = matches.find((x) => x.id === id);
+    if (!m || m.date <= new Date()) { alert(t("🔒 Pronos fermés (coup d'envoi passé)")); return; }
+    setPenPicks((P) => ({ ...P, [id]: code }));
+    if (hasSupabase) savePenWinner(id, code).then((r) => { if (r && r.error) { console.error("t.a.b. :", r.error); loadData(); } });
+  }
+
+  // Réponse à la question "notifications après chaque résultat ?"
+  async function answerNotif(yes) {
+    setAskNotif(false);
+    try { sessionStorage.setItem("pronos2026:notifAsked", "1"); } catch (e) {}
+    if (!yes) { await setNotifyResults(false); setProfile((p) => ({ ...p, notify_results: false })); return; }
+    const r = await enablePushOnThisDevice();
+    if (r.ok) {
+      await setNotifyResults(true);
+      setProfile((p) => ({ ...p, notify_results: true }));
+    } else if (r.error === "denied") {
+      alert(t("Tu as refusé les notifications dans le navigateur. Tu peux les réactiver plus tard dans Profil."));
+    } else {
+      alert(t("Notifications impossibles sur cet appareil pour l'instant. Sur iPhone : installe d'abord l'app (Partager → Sur l'écran d'accueil), puis active-les dans Profil."));
     }
   }
 
@@ -201,8 +235,8 @@ export default function App() {
   function render() {
     switch (screen) {
       case "home": return <Dashboard go={go} predictions={predictions} profile={profile} matches={matches} users={users} me={me} />;
-      case "matches": return <MatchesScreen go={go} predictions={predictions} setPred={setPred} matches={matches} confidences={confidences} setConf={setConf} />;
-      case "match": return <MatchDetail id={params.id} go={go} predictions={predictions} setPred={setPred} matches={matches} confidences={confidences} setConf={setConf} />;
+      case "matches": return <MatchesScreen go={go} predictions={predictions} setPred={setPred} matches={matches} confidences={confidences} setConf={setConf} penPicks={penPicks} setPredPen={setPredPen} />;
+      case "match": return <MatchDetail id={params.id} go={go} predictions={predictions} setPred={setPred} matches={matches} confidences={confidences} setConf={setConf} penPicks={penPicks} setPredPen={setPredPen} />;
       case "tableau": return <TableauScreen go={go} matches={matches} />;
       case "leaderboard": return <Leaderboard go={go} profile={profile} users={users} me={me} matches={matches} />;
       case "profile": return <Profile profile={profile} setProfile={setProfile} predictions={predictions} matches={matches} me={me} onLogout={logout} />;
@@ -218,6 +252,26 @@ export default function App() {
   return (
     <div className="app-root">
       {confetti && <Confetti onDone={() => setConfetti(false)} />}
+      {askNotif && (
+        <div className="modal-veil" onClick={() => answerNotif(false)}>
+          <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 40, textAlign: "center", marginBottom: 8 }}>🔔</div>
+            <div className="poster" style={{ fontSize: 22, textAlign: "center", marginBottom: 8 }}>{t("Notifications de la ligue ?")}</div>
+            <p className="muted" style={{ fontSize: 14, textAlign: "center", margin: "0 0 16px" }}>
+              {t("Veux-tu recevoir une notification sur cet appareil après le résultat de chaque match ? (modifiable à tout moment dans Profil)")}
+            </p>
+            {!pushSupported() && (
+              <p className="mono muted" style={{ fontSize: 11.5, textAlign: "center", margin: "0 0 14px" }}>
+                {t("📱 Sur iPhone : installe d'abord l'app (Partager → Sur l'écran d'accueil) pour que ça marche.")}
+              </p>
+            )}
+            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+              <Btn variant="accent" onClick={() => answerNotif(true)}>🔔 {t("Oui, je veux !")}</Btn>
+              <Btn variant="ghost" onClick={() => answerNotif(false)}>{t("Non merci")}</Btn>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="shell">
         <aside className="sidebar">
           <div className="brand">

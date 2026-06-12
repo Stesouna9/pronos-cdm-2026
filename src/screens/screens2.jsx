@@ -48,7 +48,24 @@ function ConfStar({ on, onToggle, disabled }) {
   );
 }
 
-function MatchRow({ m, pred, setPred, go, conf, setConf }) {
+/* Choix du vainqueur aux tirs au but (phase finale, prono nul) */
+export function PenPicker({ m, pick, onPick, compact }) {
+  return (
+    <div className="penpick" style={compact ? { marginTop: 8 } : null}>
+      <span className="mono muted" style={{ fontSize: 12 }}>🥅 {t("Si tirs au but, qui gagne ?")} <b style={{ color: "var(--ink)" }}>(+2)</b></span>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {[m.home, m.away].map((c) => (
+          <button key={c} type="button" className={"penbtn" + (pick === c ? " on" : "")}
+            onClick={(e) => { e.stopPropagation(); onPick(c); }}>
+            <Roundel code={c} size={18} /> {teamName(c, WC.T[c] ? WC.T[c].name : c)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MatchRow({ m, pred, setPred, go, conf, setConf, pick, setPredPen }) {
   const fini = m.status === "fini";
   const locked = m.locked; // verrouillé : coup d'envoi passé
   const [a, b] = pred || [null, null];
@@ -75,22 +92,27 @@ function MatchRow({ m, pred, setPred, go, conf, setConf }) {
       <hr className="divider" style={{ margin: "6px 0" }} />
 
       {!fini && m.home && m.away && !locked && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-          <div className="mono muted" style={{ fontSize: 12 }}>{pred ? t("Ton prono :") : t("Ton prono ?")}</div>
-          <PredEditor pred={pred} home={m.home} away={m.away} onChange={(p) => setPred(m.id, p)} />
-          <div style={{ minWidth: 120, textAlign: "right", display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
-            {pred
-              ? <>
-                  <ConfStar on={!!conf} onToggle={(on) => setConf(m.id, on)} />
-                  <span className="pill pill--accent">✓ {a}–{b}</span>
-                </>
-              : <span className="muted" style={{ fontSize: 12 }}>{t("Ajuste puis c'est sauvé")}</span>}
+        <>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div className="mono muted" style={{ fontSize: 12 }}>{pred ? t("Ton prono :") : t("Ton prono ?")}</div>
+            <PredEditor pred={pred} home={m.home} away={m.away} onChange={(p) => setPred(m.id, p)} />
+            <div style={{ minWidth: 120, textAlign: "right", display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
+              {pred
+                ? <>
+                    <ConfStar on={!!conf} onToggle={(on) => setConf(m.id, on)} />
+                    <span className="pill pill--accent">✓ {a}–{b}</span>
+                  </>
+                : <span className="muted" style={{ fontSize: 12 }}>{t("Ajuste puis c'est sauvé")}</span>}
+            </div>
           </div>
-        </div>
+          {m.round === "ko" && pred && a === b && (
+            <PenPicker m={m} pick={pick} onPick={(c) => setPredPen(m.id, c)} compact />
+          )}
+        </>
       )}
       {!fini && m.home && m.away && locked && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div className="mono" style={{ fontSize: 12 }}>{t("Ton prono :")} <b>{pred ? `${pred[0]}–${pred[1]}` : t("non joué")}</b></div>
+          <div className="mono" style={{ fontSize: 12 }}>{t("Ton prono :")} <b>{pred ? `${pred[0]}–${pred[1]}` : t("non joué")}</b>{pick ? <span className="muted"> · 🥅 {pick}</span> : null}</div>
           <Btn variant="ghost" onClick={() => go("match", { id: m.id })} style={{ padding: "7px 12px", fontSize: 12.5 }}>👀 {t("Les pronos de la ligue")} →</Btn>
         </div>
       )}
@@ -99,7 +121,7 @@ function MatchRow({ m, pred, setPred, go, conf, setConf }) {
       )}
       {fini && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div className="mono muted" style={{ fontSize: 12 }}>{t("Ton prono :")} <b style={{ color: "var(--ink)" }}>{pred ? `${pred[0]}–${pred[1]}` : t("non joué")}</b></div>
+          <div className="mono muted" style={{ fontSize: 12 }}>{t("Ton prono :")} <b style={{ color: "var(--ink)" }}>{pred ? `${pred[0]}–${pred[1]}` : t("non joué")}</b>{pick ? <span> · 🥅 {pick}</span> : null}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {pred ? <PointsBadge pred={pred} real={m.score} /> : <span className="pts pts--zero">0 · {t("pas de prono")}</span>}
             <Btn variant="ghost" onClick={() => go("match", { id: m.id })} style={{ padding: "7px 12px", fontSize: 12.5 }}>👀 {t("Les pronos de la ligue")} →</Btn>
@@ -111,7 +133,7 @@ function MatchRow({ m, pred, setPred, go, conf, setConf }) {
 }
 
 /* ---------- Écran liste des matchs ---------- */
-export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCHES, confidences = {}, setConf = () => {} }) {
+export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCHES, confidences = {}, setConf = () => {}, penPicks = {}, setPredPen = () => {} }) {
   const [phase, setPhase] = useState("tous");
   const [filtre, setFiltre] = useState("tous"); // tous | apredire | termines
 
@@ -156,14 +178,14 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
             <div key={g} style={{ marginBottom: 28 }}>
               <h3 className="poster" style={{ fontSize: 22, margin: "0 0 12px" }}>{t("Groupe")} {g}</h3>
               <div className="grid g-2">
-                {gm.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} conf={confidences[m.id]} setConf={setConf} />)}
+                {gm.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} conf={confidences[m.id]} setConf={setConf} pick={penPicks[m.id]} setPredPen={setPredPen} />)}
               </div>
             </div>
           );
         })
       ) : (
         <div className="grid g-2">
-          {list.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} conf={confidences[m.id]} setConf={setConf} />)}
+          {list.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} conf={confidences[m.id]} setConf={setConf} pick={penPicks[m.id]} setPredPen={setPredPen} />)}
         </div>
       )}
       {list.length === 0 && <div className="card pad-lg" style={{ textAlign: "center" }}><div className="poster" style={{ fontSize: 22 }}>{t("Rien par ici 🎉")}</div><p className="muted">{t("Aucun match dans ce filtre. Les matchs deviennent saisissables une fois le coup d'envoi passé.")}</p></div>}
@@ -251,7 +273,7 @@ function LeaguePredictions({ m }) {
                 <span style={{ fontSize: 20 }}>{p.avatar}</span>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 13 }}>{p.pseudo}{p.confidence ? " ⭐" : ""}</div>
-                  <div className="poster" style={{ fontSize: 20 }}>{p.pred_home}–{p.pred_away}</div>
+                  <div className="poster" style={{ fontSize: 20 }}>{p.pred_home}–{p.pred_away}{p.pred_pen_winner ? <span className="mono muted" style={{ fontSize: 11, fontFamily: "var(--f-mono)" }}> 🥅{p.pred_pen_winner}</span> : null}</div>
                 </div>
                 {p.points != null && <span className={"pts " + (p.points >= 5 ? "pts--exact" : p.points > 0 ? "pts--good" : "pts--zero")}>+{p.points}</span>}
               </div>
@@ -276,7 +298,7 @@ function LeaguePredictions({ m }) {
   );
 }
 
-export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MATCHES, confidences = {}, setConf = () => {} }) {
+export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MATCHES, confidences = {}, setConf = () => {}, penPicks = {}, setPredPen = () => {} }) {
   const m = matches.find((x) => x.id === id);
   const [tab, setTab] = useState("apercu");
   if (!m) return <div className="content"><p>{t("Match introuvable.")}</p></div>;
@@ -333,16 +355,19 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
                 : <span className="muted">{t("Règle les compteurs")}</span>}
             </div>
           </div>
+          {m.round === "ko" && predictions[m.id] && predictions[m.id][0] === predictions[m.id][1] && (
+            <PenPicker m={m} pick={penPicks[m.id]} onPick={(c) => setPredPen(m.id, c)} />
+          )}
         </div>
       )}
       {!fini && m.home && m.away && m.locked && (
         <div className="card pad rise" style={{ marginBottom: 18 }}>
-          <div className="mono" style={{ fontSize: 13 }}>{t("🔒 Pronos fermés (coup d'envoi passé)")} — <b>{predictions[m.id] ? `${predictions[m.id][0]}–${predictions[m.id][1]}` : t("non joué")}</b></div>
+          <div className="mono" style={{ fontSize: 13 }}>{t("🔒 Pronos fermés (coup d'envoi passé)")} — <b>{predictions[m.id] ? `${predictions[m.id][0]}–${predictions[m.id][1]}` : t("non joué")}</b>{penPicks[m.id] ? <span className="muted"> · 🥅 {penPicks[m.id]}</span> : null}</div>
         </div>
       )}
       {fini && (
         <div className="card pad rise" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-          <div className="mono" style={{ fontSize: 13 }}>{t("TON PRONO :")} <b>{predictions[m.id] ? `${predictions[m.id][0]}–${predictions[m.id][1]}` : t("non joué")}</b> · {t("RÉSULTAT :")} <b>{m.score[0]}–{m.score[1]}</b></div>
+          <div className="mono" style={{ fontSize: 13 }}>{t("TON PRONO :")} <b>{predictions[m.id] ? `${predictions[m.id][0]}–${predictions[m.id][1]}` : t("non joué")}</b>{penPicks[m.id] ? <span className="muted"> · 🥅 {penPicks[m.id]}</span> : null} · {t("RÉSULTAT :")} <b>{m.score[0]}–{m.score[1]}</b>{m.winner && m.score[0] === m.score[1] ? <span className="muted"> · 🥅 {m.winner}</span> : null}</div>
           {predictions[m.id] ? <PointsBadge pred={predictions[m.id]} real={m.score} /> : <span className="pts pts--zero">0 pt</span>}
         </div>
       )}

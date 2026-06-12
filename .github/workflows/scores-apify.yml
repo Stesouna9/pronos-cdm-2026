@@ -28,6 +28,9 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
           APIFY_MAX_ITEMS: "50"
+          # notifications push (résultats + alertes admin)
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
       # Classement de la ligue dans le résumé du run (visible sur GitHub → Actions)
       - name: Classement dans le résumé
         if: always()

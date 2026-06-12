@@ -43,11 +43,25 @@ export async function fetchMatches() {
 export async function fetchMyPredictions() {
   const { data, error } = await supabase
     .from("predictions")
-    .select("match_id, pred_home, pred_away, confidence");
+    .select("match_id, pred_home, pred_away, confidence, pred_pen_winner");
   if (error) throw error;
-  const m = {}, conf = {};
-  (data || []).forEach((p) => { m[p.match_id] = [p.pred_home, p.pred_away]; if (p.confidence) conf[p.match_id] = true; });
-  return { preds: m, conf };
+  const m = {}, conf = {}, pens = {};
+  (data || []).forEach((p) => {
+    m[p.match_id] = [p.pred_home, p.pred_away];
+    if (p.confidence) conf[p.match_id] = true;
+    if (p.pred_pen_winner) pens[p.match_id] = p.pred_pen_winner;
+  });
+  return { preds: m, conf, pens };
+}
+
+/* Choix du vainqueur aux tirs au but (phases finales, prono nul). */
+export async function savePenWinner(matchId, code) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "non connecté" };
+  const { error } = await supabase.from("predictions")
+    .update({ pred_pen_winner: code || null, updated_at: new Date().toISOString() })
+    .eq("user_id", user.id).eq("match_id", matchId);
+  return { error: error ? error.message : null };
 }
 
 /* Active/retire le prono de confiance (×2). Un seul par jour (la base vérifie). */
@@ -97,16 +111,16 @@ export async function savePrediction(matchId, pred) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "non connecté" };
   const [a, b] = pred;
-  const { error } = await supabase.from("predictions").upsert(
-    {
-      user_id: user.id,
-      match_id: matchId,
-      pred_home: a,
-      pred_away: b,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id,match_id" }
-  );
+  const row = {
+    user_id: user.id,
+    match_id: matchId,
+    pred_home: a,
+    pred_away: b,
+    updated_at: new Date().toISOString(),
+  };
+  // prono qui n'est plus un nul → le choix tirs au but n'a plus de sens
+  if (a !== b) row.pred_pen_winner = null;
+  const { error } = await supabase.from("predictions").upsert(row, { onConflict: "user_id,match_id" });
   return { error: error ? error.message : null };
 }
 
@@ -147,24 +161,49 @@ export async function fetchMe() {
   if (!user) return null;
   const { data } = await supabase
     .from("profiles")
-    .select("id, pseudo, avatar, fav, is_admin")
+    .select("id, pseudo, avatar, fav, is_admin, notify_results")
     .eq("id", user.id)
     .single();
   return data ? { ...data, email: user.email } : { id: user.id, email: user.email };
 }
 
-/* ADMIN : enregistre le score final d'un match (déclenche le calcul des points). */
-export async function saveScore(matchId, sh, sa, winnerCode) {
-  const { error } = await supabase
-    .from("matches")
-    .update({
-      score_home: sh,
-      score_away: sa,
-      status: "fini",
-      winner: winnerCode || null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", matchId);
+/* ---------- Notifications push ---------- */
+/* Mémorise le choix "notif après chaque résultat ?" (null = pas encore demandé). */
+export async function setNotifyResults(on) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "non connecté" };
+  const { error } = await supabase.from("profiles").update({ notify_results: on }).eq("id", user.id);
+  return { error: error ? error.message : null };
+}
+
+/* Enregistre l'abonnement push de CET appareil. */
+export async function savePushSub(sub) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "non connecté" };
+  const { error } = await supabase.from("push_subs").upsert(
+    { user_id: user.id, endpoint: sub.endpoint, sub },
+    { onConflict: "endpoint" }
+  );
+  return { error: error ? error.message : null };
+}
+
+/* ADMIN : enregistre le score final d'un match (déclenche le calcul des points).
+   Sur un nul en phase finale : winnerCode = vainqueur aux tirs au but,
+   pens = [tirs marqués domicile, extérieur] (optionnel, pour l'affichage). */
+export async function saveScore(matchId, sh, sa, winnerCode, pens) {
+  const patch = {
+    score_home: sh,
+    score_away: sa,
+    status: "fini",
+    winner: winnerCode || null,
+    updated_at: new Date().toISOString(),
+  };
+  if (pens && pens[0] != null && pens[1] != null) {
+    patch.pens_home = pens[0]; patch.pens_away = pens[1];
+  } else {
+    patch.pens_home = null; patch.pens_away = null;
+  }
+  const { error } = await supabase.from("matches").update(patch).eq("id", matchId);
   return { error: error ? error.message : null };
 }
 
@@ -172,7 +211,7 @@ export async function saveScore(matchId, sh, sa, winnerCode) {
 export async function clearScore(matchId) {
   const { error } = await supabase
     .from("matches")
-    .update({ score_home: null, score_away: null, status: "a_venir", winner: null })
+    .update({ score_home: null, score_away: null, status: "a_venir", winner: null, pens_home: null, pens_away: null })
     .eq("id", matchId);
   return { error: error ? error.message : null };
 }
@@ -181,7 +220,7 @@ export async function clearScore(matchId) {
 export async function fetchMatchPredictions(matchId) {
   const { data: preds, error } = await supabase
     .from("predictions")
-    .select("user_id, pred_home, pred_away, points, confidence")
+    .select("user_id, pred_home, pred_away, points, confidence, pred_pen_winner")
     .eq("match_id", matchId);
   if (error) throw error;
   if (!preds || !preds.length) return [];

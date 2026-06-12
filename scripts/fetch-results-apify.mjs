@@ -15,6 +15,7 @@
      APIFY_MAX_ITEMS       = (option) défaut 60
    ============================================================ */
 import { createClient } from "@supabase/supabase-js";
+import { pushConfigured, setupPush, sendToSubs, resultSubs, adminSubs } from "./push-utils.mjs";
 
 const {
   APIFY_TOKEN,
@@ -83,7 +84,45 @@ async function runActor() {
   return await items.json();
 }
 
+/* Alerte l'admin (Gabriel) quand une action manuelle est nécessaire :
+   - match sorti de la fenêtre du robot sans score → à saisir dans Admin
+   - match nul en phase finale sans vainqueur t.a.b. → à valider dans Admin
+   Une seule alerte par match (admin_nag_at). */
+async function checkAdminAlerts() {
+  if (!pushConfigured()) return;
+  const now = Date.now(), H = 3600e3;
+  const { data: all } = await sb.from("matches")
+    .select("id, home_name, away_name, kickoff, status, round, score_home, score_away, winner, admin_nag_at")
+    .not("home", "is", null);
+  const missed = (all || []).filter((m) =>
+    m.status !== "fini" && !m.admin_nag_at && now > new Date(m.kickoff).getTime() + 8 * H);
+  const needPens = (all || []).filter((m) =>
+    m.status === "fini" && m.round === "ko" && !m.admin_nag_at
+    && m.score_home != null && m.score_home === m.score_away && !m.winner);
+  if (!missed.length && !needPens.length) return;
+  const subs = await adminSubs(sb);
+  for (const m of missed) {
+    const n = await sendToSubs(sb, subs, {
+      title: "✍️ Score à saisir",
+      body: `${m.home_name} – ${m.away_name} : le robot n'a pas trouvé le score. Saisis-le dans Admin → Scores.`,
+      tag: "admin-" + m.id,
+    });
+    await sb.from("matches").update({ admin_nag_at: new Date().toISOString() }).eq("id", m.id);
+    console.log(`🔔 Alerte admin (score manquant) ${m.id} → ${n} appareil(s)`);
+  }
+  for (const m of needPens) {
+    const n = await sendToSubs(sb, subs, {
+      title: "🥅 Tirs au but à valider",
+      body: `${m.home_name} – ${m.away_name} (${m.score_home}-${m.score_away}) : valide le vainqueur aux tirs au but dans Admin.`,
+      tag: "admin-" + m.id,
+    });
+    await sb.from("matches").update({ admin_nag_at: new Date().toISOString() }).eq("id", m.id);
+    console.log(`🔔 Alerte admin (t.a.b.) ${m.id} → ${n} appareil(s)`);
+  }
+}
+
 async function main() {
+  if (pushConfigured()) setupPush();
   // Garde "fin de match" : on n'appelle Apify QUE si un match a commencé il y a
   // plus de 3h (durée max d'un match) et n'a pas encore son score. Fenêtre de
   // 8h max — au-delà, le flux live ne l'a plus, c'est la saisie Admin qui prend.
@@ -98,6 +137,7 @@ async function main() {
   });
   if (!due.length) {
     console.log("✅ Aucun match en attente de score (fenêtre kickoff+3h→8h). Pas d'appel Apify.");
+    await checkAdminAlerts();
     return;
   }
   console.log("🎯 Matchs à scorer :", due.map((m) => `${m.home_name}-${m.away_name}`).join(", "));
@@ -107,12 +147,13 @@ async function main() {
   console.log(`📥 ${items.length} matchs live récupérés.`);
 
   // index de mes matchs par paire de codes
-  const { data: matches, error } = await sb.from("matches").select("id, home, away, status");
+  const { data: matches, error } = await sb.from("matches").select("id, home, away, status, home_name, away_name");
   if (error) throw error;
   const byPair = {};
   matches.forEach((m) => { if (m.home && m.away) byPair[[m.home, m.away].sort().join("|")] = m; });
 
   let updated = 0;
+  const finished = []; // matchs passés à "fini" pendant ce run → notification joueurs
   for (const it of items) {
     const ch = code(it.home_team), ca = code(it.away_team);
     if (!ch || !ca) continue;                       // pas une équipe CDM
@@ -132,9 +173,26 @@ async function main() {
     const { error: e2 } = await sb.from("matches").update(patch).eq("id", m.id);
     if (e2) { console.error("  ⚠️ update", m.id, e2.message); continue; }
     updated++;
+    if (fini && m.status !== "fini") finished.push({ ...m, sh, sa });
     console.log(`  ✓ ${m.id} ${m.home} ${sh}-${sa} ${m.away}${fini ? " (FINI)" : " (live)"}`);
   }
   console.log(`✅ ${updated} match(s) CDM mis à jour.`);
+
+  // 🔔 notification "résultat" aux joueurs abonnés
+  if (finished.length && pushConfigured()) {
+    const subs = await resultSubs(sb);
+    for (const m of finished) {
+      const n = await sendToSubs(sb, subs, {
+        title: `⚽ Terminé : ${m.home_name} ${m.sh}–${m.sa} ${m.away_name}`,
+        body: "Les points sont calculés — viens voir le classement !",
+        tag: "result-" + m.id,
+      });
+      console.log(`🔔 Résultat ${m.id} notifié → ${n} appareil(s)`);
+    }
+  }
+
+  // alertes admin (score manquant / t.a.b. à valider)
+  await checkAdminAlerts();
 }
 
 main().catch((e) => { console.error("❌", e.message); process.exit(1); });

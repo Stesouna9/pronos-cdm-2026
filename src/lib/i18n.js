@@ -200,6 +200,28 @@ const JA = {
   "Tous les résultats": "全試合の結果", "Résultats des matchs": "試合結果", "à venir": "予定",
   "Voir les matchs →": "試合を見る →", "Qualifié": "突破", "Repêchable": "敗者復活",
   "qualifiés": "突破", "repêchable (8 meilleurs 3es)": "敗者復活枠（3位の上位8チーム）",
+  // Tirs au but (phase finale)
+  "Si tirs au but, qui gagne ?": "PK戦ならどっちが勝つ？",
+  "Vainqueur aux tirs au but :": "PK戦の勝者：",
+  "t.a.b. (option) :": "PKスコア（任意）：",
+  "choisis le vainqueur aux tirs au but": "PK戦の勝者を選んでください",
+  "Tirs au but (phase finale)": "PK戦（決勝トーナメント）",
+  "Dès les 16es de finale, si tu pronostiques un match nul, choisis aussi qui gagne aux tirs au but : +2 points bonus si tu as vu juste. Le score se juge à la fin du match (hors tirs au but), comme d'habitude.": "ラウンド32からは、引き分け予想のときPK戦の勝者も選ぼう。的中なら+2ボーナス。スコアはこれまで通りPK戦を除いた最終スコアで判定。",
+  // Notifications
+  "Notifications de la ligue ?": "リーグの通知を受け取る？",
+  "Veux-tu recevoir une notification sur cet appareil après le résultat de chaque match ? (modifiable à tout moment dans Profil)": "各試合の結果が出たらこの端末に通知を送る？（プロフィールでいつでも変更可）",
+  "📱 Sur iPhone : installe d'abord l'app (Partager → Sur l'écran d'accueil) pour que ça marche.": "📱 iPhoneでは先にアプリをインストール（共有 → ホーム画面に追加）してください。",
+  "Oui, je veux !": "はい、受け取る！",
+  "Non merci": "いいえ",
+  "Tu as refusé les notifications dans le navigateur. Tu peux les réactiver plus tard dans Profil.": "ブラウザで通知が拒否されました。プロフィールから後で有効にできます。",
+  "Notifications impossibles sur cet appareil pour l'instant. Sur iPhone : installe d'abord l'app (Partager → Sur l'écran d'accueil), puis active-les dans Profil.": "この端末では今は通知を使えません。iPhoneでは先にアプリをインストールしてから、プロフィールで有効にしてください。",
+  "Notifications": "通知",
+  "Une notification après le résultat de chaque match": "各試合の結果が出たら通知",
+  "Admin : cet appareil reçoit aussi les alertes « score à saisir / tirs au but à valider ».": "管理者：この端末は「スコア入力・PK戦確認」のアラートも受け取ります。",
+  "Notifications activées sur cet appareil": "この端末で通知を有効にしました",
+  "Refusées dans le navigateur — autorise les notifications pour ce site dans les réglages.": "ブラウザで拒否されています。設定でこのサイトの通知を許可してください。",
+  "Pas possible sur cet appareil. Sur iPhone : installe d'abord l'app (écran d'accueil).": "この端末では使えません。iPhoneでは先にアプリ（ホーム画面）をインストールしてください。",
+  "Notifications coupées": "通知をオフにしました",
 };
 
 // Noms d'équipes en japonais (code FIFA -> JA).

@@ -503,3 +503,14 @@ a { color: inherit; }
 [data-anim="off"] .pcol.p1::before, [data-anim="off"] .btn--gold, [data-anim="off"] .btn--gold::after {
   animation: none !important;
 }
+
+/* ---------- Tirs au but (choix du vainqueur) ---------- */
+.penpick { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 8px; border-top: 1px dashed var(--line); }
+.penbtn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-weight: 700; font-size: 12.5px; cursor: pointer; transition: all .15s; }
+.penbtn:hover { border-color: var(--accent); }
+.penbtn.on { background: color-mix(in oklab, var(--accent) 18%, var(--surface-2)); border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 30%, transparent); }
+
+/* ---------- Modale (question notifications) ---------- */
+.modal-veil { position: fixed; inset: 0; z-index: 90; background: rgba(10, 10, 14, .55); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 18px; }
+.modal-box { max-width: 420px; width: 100%; animation: modal-in .25s ease both; }
+@keyframes modal-in { from { opacity: 0; transform: translateY(14px) scale(.97); } }

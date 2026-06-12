@@ -3,7 +3,8 @@ import { useState } from "react";
 import { WC } from "../lib/wc.js";
 import { Btn, Roundel, SectionTitle, teamName } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
-import { updateProfile, fetchAllLockedPredictions } from "../lib/league.js";
+import { updateProfile, fetchAllLockedPredictions, setNotifyResults } from "../lib/league.js";
+import { enablePushOnThisDevice, pushSupported } from "../lib/push.js";
 
 /* Courbe d'évolution des points (SVG maison, cumul par jour). */
 const CHART_COLORS = ["#d4a533", "#2a5bd7", "#1f8a4c", "#d52b1e", "#7a5ae0", "#0ea5b7", "#e36414", "#666"];
@@ -396,6 +397,30 @@ export function Profile({ profile, setProfile, predictions, me: meStats, matches
     setSaved(true); setTimeout(() => setSaved(false), 1800);
   }
 
+  // Notifications : active (permission + abonnement de CET appareil) ou coupe.
+  const [notifBusy, setNotifBusy] = useState(false);
+  const [notifMsg, setNotifMsg] = useState("");
+  async function toggleNotif(on) {
+    setNotifBusy(true); setNotifMsg("");
+    if (on) {
+      const r = await enablePushOnThisDevice();
+      if (r.ok) {
+        await setNotifyResults(true);
+        setProfile((p) => ({ ...p, notify_results: true }));
+        setNotifMsg("✓ " + t("Notifications activées sur cet appareil"));
+      } else if (r.error === "denied") {
+        setNotifMsg(t("Refusées dans le navigateur — autorise les notifications pour ce site dans les réglages."));
+      } else {
+        setNotifMsg(t("Pas possible sur cet appareil. Sur iPhone : installe d'abord l'app (écran d'accueil)."));
+      }
+    } else {
+      await setNotifyResults(false);
+      setProfile((p) => ({ ...p, notify_results: false }));
+      setNotifMsg("✓ " + t("Notifications coupées"));
+    }
+    setNotifBusy(false);
+  }
+
   const badges = [
     ["🎯", t("Sniper"), exacts + " " + t("scores exacts")],
     ["🔥", t("En feu"), t("Série de") + " " + me.serie],
@@ -452,12 +477,16 @@ export function Profile({ profile, setProfile, predictions, me: meStats, matches
             {saved && <span className="pill pill--accent">✓ {t("Profil mis à jour")}</span>}
           </div>
           <hr className="divider" />
-          <div className="eyebrow" style={{ marginBottom: 8 }}>{t("Préférences")}</div>
-          {["Rappel email avant chaque coup d'envoi", "Notifs quand quelqu'un me dépasse", "Profil visible par toute la ligue"].map((p, i) => (
-            <label key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", fontSize: 14 }}>
-              <input type="checkbox" defaultChecked={i < 2} style={{ width: 18, height: 18, accentColor: "var(--accent)" }} />{t(p)}
-            </label>
-          ))}
+          <div className="eyebrow" style={{ marginBottom: 8 }}>🔔 {t("Notifications")}</div>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", fontSize: 14 }}>
+            <input type="checkbox" checked={profile.notify_results === true} disabled={notifBusy}
+              onChange={(e) => toggleNotif(e.target.checked)}
+              style={{ width: 18, height: 18, accentColor: "var(--accent)" }} />
+            {t("Une notification après le résultat de chaque match")}
+          </label>
+          {notifMsg && <div className="mono" style={{ fontSize: 11.5, color: notifMsg.startsWith("✓") ? "var(--win)" : "var(--lose)" }}>{notifMsg}</div>}
+          {!pushSupported() && <div className="mono muted" style={{ fontSize: 11.5 }}>{t("📱 Sur iPhone : installe d'abord l'app (Partager → Sur l'écran d'accueil) pour que ça marche.")}</div>}
+          {profile.is_admin && <div className="mono muted" style={{ fontSize: 11.5, marginTop: 4 }}>👑 {t("Admin : cet appareil reçoit aussi les alertes « score à saisir / tirs au but à valider ».")}</div>}
           <hr className="divider" />
           <Btn variant="ghost block" onClick={onLogout}>⎋ {t("Déconnexion")}</Btn>
         </div>
@@ -499,6 +528,10 @@ export function Rules() {
           <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>⭐ {t("Prono de confiance")}</div>
             <div className="muted" style={{ fontSize: 13.5 }}>{t("Chaque jour, choisis UN match avec l'étoile ⭐ : tes points y comptent double. À poser avant le coup d'envoi — choisis bien !")}</div>
+          </div>
+          <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>🥅 {t("Tirs au but (phase finale)")}</div>
+            <div className="muted" style={{ fontSize: 13.5 }}>{t("Dès les 16es de finale, si tu pronostiques un match nul, choisis aussi qui gagne aux tirs au but : +2 points bonus si tu as vu juste. Le score se juge à la fin du match (hors tirs au but), comme d'habitude.")}</div>
           </div>
           <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>⚖️ {t("En cas d'égalité")}</div>

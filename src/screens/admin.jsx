@@ -13,14 +13,22 @@ function nameOf(m, side) {
 function AdminRow({ m, onSaved }) {
   const [a, setA] = useState(m.score ? m.score[0] : 0);
   const [b, setB] = useState(m.score ? m.score[1] : 0);
+  const [w, setW] = useState(m.winner || "");                       // vainqueur t.a.b. (phase finale)
+  const [pa, setPa] = useState(m.pens ? m.pens[0] : "");            // tirs marqués (optionnel)
+  const [pb, setPb] = useState(m.pens ? m.pens[1] : "");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const fini = m.status === "fini";
+  const isKo = m.round === "ko";
+  const draw = Number(a) === Number(b);
 
   async function save() {
-    setBusy(true); setMsg("");
-    const winner = a > b ? m.home : b > a ? m.away : null;
-    const r = await saveScore(m.id, Number(a), Number(b), winner);
+    setMsg("");
+    const winner = Number(a) > Number(b) ? m.home : Number(b) > Number(a) ? m.away : (isKo ? w : null);
+    if (isKo && draw && !winner) { setMsg("Erreur : " + t("choisis le vainqueur aux tirs au but")); return; }
+    setBusy(true);
+    const pens = isKo && draw && pa !== "" && pb !== "" ? [Number(pa), Number(pb)] : null;
+    const r = await saveScore(m.id, Number(a), Number(b), winner, pens);
     setBusy(false);
     if (r.error) setMsg("Erreur : " + r.error);
     else { setMsg("✓ Score enregistré, points calculés"); onSaved && onSaved(); }
@@ -49,6 +57,20 @@ function AdminRow({ m, onSaved }) {
         <Btn variant="accent" onClick={save} disabled={busy} style={{ padding: "8px 14px", fontSize: 13 }}>{fini ? t("Corriger") : t("Valider")}</Btn>
         {fini && <Btn variant="ghost" onClick={reopen} disabled={busy} style={{ padding: "8px 12px", fontSize: 12 }}>{t("Rouvrir")}</Btn>}
       </div>
+      {isKo && draw && (
+        <div style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "center", paddingTop: 6, borderTop: "1px dashed var(--line)" }}>
+          <span className="mono muted" style={{ fontSize: 12 }}>🥅 {t("Vainqueur aux tirs au but :")}</span>
+          {[m.home, m.away].map((c) => (
+            <button key={c} type="button" className={"penbtn" + (w === c ? " on" : "")} onClick={() => setW(c)}>
+              <Roundel code={c} size={16} /> {nameOf(m, c === m.home ? "home" : "away")}
+            </button>
+          ))}
+          <span className="mono muted" style={{ fontSize: 11 }}>{t("t.a.b. (option) :")}</span>
+          <input className="input" type="number" min="0" max="30" style={{ width: 48, textAlign: "center", padding: "6px 4px" }} value={pa} onChange={(e) => setPa(e.target.value)} />
+          <span>–</span>
+          <input className="input" type="number" min="0" max="30" style={{ width: 48, textAlign: "center", padding: "6px 4px" }} value={pb} onChange={(e) => setPb(e.target.value)} />
+        </div>
+      )}
       {msg && <div className="mono" style={{ fontSize: 11, width: "100%", textAlign: "right", color: msg.startsWith("Erreur") ? "var(--lose)" : "var(--win)" }}>{msg}</div>}
     </div>
   );
