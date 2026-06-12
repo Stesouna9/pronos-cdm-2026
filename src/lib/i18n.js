@@ -225,7 +225,7 @@ const JA = {
   // Stats réelles (détail match)
   "aucun match joué": "まだ試合なし",
   "Cote de la ligue": "リーグの予想比率",
-  "Forme = matchs de ce tournoi · cote = % des pronos de la ligue, visible au coup d'envoi.": "フォーム＝今大会の試合 · 比率＝リーグ予想の％（キックオフ後に表示）。",
+  "Forme = matchs de ce tournoi · cote = % des pronos de la ligue (vainqueur seulement, jamais les scores).": "フォーム＝今大会の試合 · 比率＝リーグ予想の％（勝敗のみ、スコアは非公開）。",
   "match(s) joué(s) dans ce tournoi": "試合（今大会）",
   "Face-à-face (dans ce tournoi)": "対戦成績（今大会）",
   "Premier duel entre ces deux équipes dans ce tournoi.": "今大会でこの2チームは初対戦。",

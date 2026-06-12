@@ -1,7 +1,7 @@
 /* screens2.jsx — Liste des matchs, saisie de prono, détail d'un match */
 import { useState, useMemo, useEffect } from "react";
 import { WC } from "../lib/wc.js";
-import { fetchMatchPredictions, fetchReactions, setReaction, fetchAllLockedPredictions } from "../lib/league.js";
+import { fetchMatchPredictions, fetchReactions, setReaction, fetchCotes } from "../lib/league.js";
 import { supabase } from "../lib/supabase.js";
 import { Btn, Roundel, TeamLine, StatusPill, PointsBadge, slotLabel, teamName } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
@@ -116,7 +116,7 @@ function MatchRow({ m, pred, setPred, go, conf, setConf, pick, setPredPen, cote 
       </div>
       {fini && m.pens && <div className="mono muted" style={{ fontSize: 11, textAlign: "center", marginTop: -4 }}>t.a.b. {m.pens[0]}–{m.pens[1]}</div>}
 
-      {(m.locked || fini) && <CoteBar m={m} cote={cote} compact />}
+      <CoteBar m={m} cote={cote} compact />
 
       <hr className="divider" style={{ margin: "6px 0" }} />
 
@@ -166,23 +166,9 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
   const [phase, setPhase] = useState("tous");
   const [filtre, setFiltre] = useState("tous"); // tous | apredire | termines
 
-  // Cotes de la ligue : 1 seul chargement pour tous les matchs verrouillés/finis.
+  // Cotes de la ligue : 1 seul chargement, visibles AVANT les matchs (choix de Gabriel).
   const [cotes, setCotes] = useState({});
-  useEffect(() => {
-    fetchAllLockedPredictions().then((all) => {
-      const map = {};
-      all.forEach((p) => {
-        const c = map[p.match_id] || (map[p.match_id] = { h: 0, n: 0, a: 0, tot: 0 });
-        c.tot++;
-        if (p.pred_home > p.pred_away) c.h++; else if (p.pred_home < p.pred_away) c.a++; else c.n++;
-      });
-      Object.values(map).forEach((c) => {
-        c.h = Math.round((c.h / c.tot) * 100); c.a = Math.round((c.a / c.tot) * 100);
-        c.n = Math.max(0, 100 - c.h - c.a);
-      });
-      setCotes(map);
-    }).catch(() => {});
-  }, [matches]);
+  useEffect(() => { fetchCotes().then(setCotes).catch(() => {}); }, [matches]);
 
   const phases = [
     ["tous", "Tous"], ["group", "Groupes"], ["16es de finale", "16es"], ["8es de finale", "8es"],
@@ -375,19 +361,11 @@ function LeaguePredictions({ m }) {
 export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MATCHES, confidences = {}, setConf = () => {}, penPicks = {}, setPredPen = () => {} }) {
   const m = matches.find((x) => x.id === id);
   const [tab, setTab] = useState("apercu");
-  // Cote de la ligue : répartition des pronos (visible après le coup d'envoi)
+  // Cote de la ligue : répartition des pronos (visible AVANT le match, choix de Gabriel)
   const [cote, setCote] = useState(null);
   useEffect(() => {
     setCote(null);
-    const mm = matches.find((x) => x.id === id);
-    if (!mm || (!mm.locked && mm.status !== "fini")) return;
-    fetchMatchPredictions(id).then((l) => {
-      const tot = l.length;
-      if (!tot) { setCote({ h: 0, n: 0, a: 0, tot: 0 }); return; }
-      const h = l.filter((p) => p.pred_home > p.pred_away).length;
-      const a = l.filter((p) => p.pred_home < p.pred_away).length;
-      setCote({ h: Math.round((h / tot) * 100), a: Math.round((a / tot) * 100), n: Math.round(((tot - h - a) / tot) * 100), tot });
-    }).catch(() => {});
+    fetchCotes().then((map) => setCote(map[id] || null)).catch(() => {});
   }, [id]);
   if (!m) return <div className="content"><p>{t("Match introuvable.")}</p></div>;
   const fini = m.status === "fini";
@@ -460,7 +438,7 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
         </div>
       )}
 
-      {(m.locked || fini) && cote && cote.tot > 0 && (
+      {cote && cote.tot > 0 && (
         <div className="card pad rise" style={{ marginBottom: 18 }}>
           <div className="eyebrow" style={{ marginBottom: 10 }}>📊 {t("Cote de la ligue")}</div>
           <CoteBar m={m} cote={cote} />
@@ -479,14 +457,14 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
             <div className="eyebrow" style={{ marginBottom: 12 }}>{t("Confrontation")}</div>
             {[[t("Classement FIFA"), `#${th.rank}`, `#${ta.rank}`], [t("Confédération"), th.conf, ta.conf],
               [t("Forme (5 derniers)"), "form-h", "form-a"],
-              [t("Cote de la ligue"), cote ? `${cote.h}%` : "🔒", cote ? `${cote.a}%` : "🔒"]].map((r, i) => (
+              [t("Cote de la ligue"), cote ? `${cote.h}%` : "—", cote ? `${cote.a}%` : "—"]].map((r, i) => (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 10, padding: "10px 0", borderTop: i ? "1px solid var(--line)" : "none" }}>
                 <div style={{ fontWeight: 700 }}>{r[1] === "form-h" ? <FormDots code={m.home} matches={matches} /> : r[1]}</div>
                 <div className="mono muted" style={{ fontSize: 11, textAlign: "center" }}>{r[0]}</div>
                 <div style={{ fontWeight: 700, textAlign: "right", display: "flex", justifyContent: "flex-end" }}>{r[2] === "form-a" ? <FormDots code={m.away} matches={matches} /> : r[2]}</div>
               </div>
             ))}
-            <p className="mono muted" style={{ fontSize: 10.5, margin: "8px 0 0" }}>{t("Forme = matchs de ce tournoi · cote = % des pronos de la ligue, visible au coup d'envoi.")}</p>
+            <p className="mono muted" style={{ fontSize: 10.5, margin: "8px 0 0" }}>{t("Forme = matchs de ce tournoi · cote = % des pronos de la ligue (vainqueur seulement, jamais les scores).")}</p>
           </div>
           <div className="card pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>{t("Infos match")}</div>

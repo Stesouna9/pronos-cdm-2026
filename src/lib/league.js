@@ -236,6 +236,22 @@ export async function fetchMatchPredictions(matchId) {
     .map((p) => ({ ...p, pseudo: byId[p.user_id].pseudo, avatar: byId[p.user_id].avatar }));
 }
 
+/* Cotes de la ligue (vue agrégée match_cotes : % victoire/nul/victoire,
+   visible AVANT le match — ne révèle jamais les scores exacts des autres). */
+export async function fetchCotes() {
+  const { data, error } = await supabase.from("match_cotes").select("*");
+  if (error) throw error;
+  const map = {};
+  (data || []).forEach((r) => {
+    const tot = Number(r.tot);
+    if (!tot) return;
+    const h = Math.round((Number(r.h) / tot) * 100);
+    const a = Math.round((Number(r.a) / tot) * 100);
+    map[r.match_id] = { h, a, n: Math.max(0, 100 - h - a), tot };
+  });
+  return map;
+}
+
 /* Tous les pronos verrouillés (pour la page Stats). */
 export async function fetchAllLockedPredictions() {
   const { data, error } = await supabase
