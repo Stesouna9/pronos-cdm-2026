@@ -514,3 +514,9 @@ a { color: inherit; }
 .modal-veil { position: fixed; inset: 0; z-index: 90; background: rgba(10, 10, 14, .55); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 18px; }
 .modal-box { max-width: 420px; width: 100%; animation: modal-in .25s ease both; }
 @keyframes modal-in { from { opacity: 0; transform: translateY(14px) scale(.97); } }
+
+/* ---------- Cote de la ligue (barre de répartition des pronos) ---------- */
+.cotebar { width: 100%; }
+.cotebar-labels { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 12px; margin-bottom: 6px; }
+.cotebar-track { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--surface-2); border: 1px solid var(--line); }
+.cotebar-track > span { height: 100%; transition: width .4s var(--ease, ease); }

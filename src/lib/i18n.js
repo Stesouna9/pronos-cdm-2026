@@ -231,6 +231,7 @@ const JA = {
   "Premier duel entre ces deux équipes dans ce tournoi.": "今大会でこの2チームは初対戦。",
   "📆 Jour du tournoi": "📆 大会日程",
   "Jour": "第",
+  "nul": "引分",
 };
 
 // Noms d'équipes en japonais (code FIFA -> JA).

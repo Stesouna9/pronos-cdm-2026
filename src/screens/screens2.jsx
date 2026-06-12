@@ -1,7 +1,7 @@
 /* screens2.jsx — Liste des matchs, saisie de prono, détail d'un match */
 import { useState, useMemo, useEffect } from "react";
 import { WC } from "../lib/wc.js";
-import { fetchMatchPredictions, fetchReactions, setReaction } from "../lib/league.js";
+import { fetchMatchPredictions, fetchReactions, setReaction, fetchAllLockedPredictions } from "../lib/league.js";
 import { supabase } from "../lib/supabase.js";
 import { Btn, Roundel, TeamLine, StatusPill, PointsBadge, slotLabel, teamName } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
@@ -36,6 +36,33 @@ export function PredEditor({ pred, onChange, home, away }) {
   );
 }
 
+/* Barre "cote de la ligue" : répartition des pronos (victoire / nul / victoire) */
+export function CoteBar({ m, cote, compact }) {
+  if (!cote || !cote.tot) return null;
+  // 1re couleur non blanche de l'équipe (sinon la barre est invisible)
+  const teamCol = (code) => {
+    const cs = code && WC.T[code] ? WC.T[code].colors : null;
+    if (!cs) return "var(--win)";
+    return cs.find((c) => c && c.toLowerCase() !== "#ffffff" && c.toLowerCase() !== "#fff") || cs[0];
+  };
+  const ch = teamCol(m.home), ca = teamCol(m.away);
+  return (
+    <div className="cotebar" style={compact ? { marginTop: 8 } : null}>
+      <div className="cotebar-labels">
+        <span style={{ fontWeight: 800 }}>{m.home} {cote.h}%</span>
+        <span className="muted">{t("nul")} {cote.n}%</span>
+        <span style={{ fontWeight: 800 }}>{cote.a}% {m.away}</span>
+      </div>
+      <div className="cotebar-track">
+        <span style={{ width: cote.h + "%", background: ch }} />
+        <span style={{ width: cote.n + "%", background: "color-mix(in oklab, var(--ink) 22%, transparent)" }} />
+        <span style={{ width: cote.a + "%", background: ca }} />
+      </div>
+      {!compact && <div className="mono muted" style={{ fontSize: 10.5, marginTop: 5 }}>{cote.tot} {t("pronos de la ligue").toLowerCase()}</div>}
+    </div>
+  );
+}
+
 /* ---------- Carte match dans la liste ---------- */
 /* Étoile "prono de confiance ×2" (1 par jour) */
 function ConfStar({ on, onToggle, disabled }) {
@@ -65,7 +92,7 @@ export function PenPicker({ m, pick, onPick, compact }) {
   );
 }
 
-function MatchRow({ m, pred, setPred, go, conf, setConf, pick, setPredPen }) {
+function MatchRow({ m, pred, setPred, go, conf, setConf, pick, setPredPen, cote }) {
   const fini = m.status === "fini";
   const locked = m.locked; // verrouillé : coup d'envoi passé
   const [a, b] = pred || [null, null];
@@ -88,6 +115,8 @@ function MatchRow({ m, pred, setPred, go, conf, setConf, pick, setPredPen }) {
         {slotLabel(m, "away")}
       </div>
       {fini && m.pens && <div className="mono muted" style={{ fontSize: 11, textAlign: "center", marginTop: -4 }}>t.a.b. {m.pens[0]}–{m.pens[1]}</div>}
+
+      {(m.locked || fini) && <CoteBar m={m} cote={cote} compact />}
 
       <hr className="divider" style={{ margin: "6px 0" }} />
 
@@ -137,6 +166,24 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
   const [phase, setPhase] = useState("tous");
   const [filtre, setFiltre] = useState("tous"); // tous | apredire | termines
 
+  // Cotes de la ligue : 1 seul chargement pour tous les matchs verrouillés/finis.
+  const [cotes, setCotes] = useState({});
+  useEffect(() => {
+    fetchAllLockedPredictions().then((all) => {
+      const map = {};
+      all.forEach((p) => {
+        const c = map[p.match_id] || (map[p.match_id] = { h: 0, n: 0, a: 0, tot: 0 });
+        c.tot++;
+        if (p.pred_home > p.pred_away) c.h++; else if (p.pred_home < p.pred_away) c.a++; else c.n++;
+      });
+      Object.values(map).forEach((c) => {
+        c.h = Math.round((c.h / c.tot) * 100); c.a = Math.round((c.a / c.tot) * 100);
+        c.n = Math.max(0, 100 - c.h - c.a);
+      });
+      setCotes(map);
+    }).catch(() => {});
+  }, [matches]);
+
   const phases = [
     ["tous", "Tous"], ["group", "Groupes"], ["16es de finale", "16es"], ["8es de finale", "8es"],
     ["Quarts de finale", "Quarts"], ["Demi-finales", "Demies"], ["Finale", "Finale"],
@@ -178,14 +225,14 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
             <div key={g} style={{ marginBottom: 28 }}>
               <h3 className="poster" style={{ fontSize: 22, margin: "0 0 12px" }}>{t("Groupe")} {g}</h3>
               <div className="grid g-2">
-                {gm.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} conf={confidences[m.id]} setConf={setConf} pick={penPicks[m.id]} setPredPen={setPredPen} />)}
+                {gm.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} conf={confidences[m.id]} setConf={setConf} pick={penPicks[m.id]} setPredPen={setPredPen} cote={cotes[m.id]} />)}
               </div>
             </div>
           );
         })
       ) : (
         <div className="grid g-2">
-          {list.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} conf={confidences[m.id]} setConf={setConf} pick={penPicks[m.id]} setPredPen={setPredPen} />)}
+          {list.map((m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go} conf={confidences[m.id]} setConf={setConf} pick={penPicks[m.id]} setPredPen={setPredPen} cote={cotes[m.id]} />)}
         </div>
       )}
       {list.length === 0 && <div className="card pad-lg" style={{ textAlign: "center" }}><div className="poster" style={{ fontSize: 22 }}>{t("Rien par ici 🎉")}</div><p className="muted">{t("Aucun match dans ce filtre. Les matchs deviennent saisissables une fois le coup d'envoi passé.")}</p></div>}
@@ -410,6 +457,13 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
         <div className="card pad rise" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div className="mono" style={{ fontSize: 13 }}>{t("TON PRONO :")} <b>{predictions[m.id] ? `${predictions[m.id][0]}–${predictions[m.id][1]}` : t("non joué")}</b>{penPicks[m.id] ? <span className="muted"> · 🥅 {penPicks[m.id]}</span> : null} · {t("RÉSULTAT :")} <b>{m.score[0]}–{m.score[1]}</b>{m.winner && m.score[0] === m.score[1] ? <span className="muted"> · 🥅 {m.winner}</span> : null}</div>
           {predictions[m.id] ? <PointsBadge pred={predictions[m.id]} real={m.score} /> : <span className="pts pts--zero">0 pt</span>}
+        </div>
+      )}
+
+      {(m.locked || fini) && cote && cote.tot > 0 && (
+        <div className="card pad rise" style={{ marginBottom: 18 }}>
+          <div className="eyebrow" style={{ marginBottom: 10 }}>📊 {t("Cote de la ligue")}</div>
+          <CoteBar m={m} cote={cote} />
         </div>
       )}
 
