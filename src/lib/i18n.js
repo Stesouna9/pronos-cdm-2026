@@ -232,6 +232,8 @@ const JA = {
   "📆 Jour du tournoi": "📆 大会日程",
   "Jour": "第",
   "nul": "引分",
+  "Scores pronostiqués": "予想されたスコア",
+  "anonymes jusqu'au coup d'envoi": "キックオフまで匿名",
 };
 
 // Noms d'équipes en japonais (code FIFA -> JA).

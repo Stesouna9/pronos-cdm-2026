@@ -13,3 +13,13 @@ join public.profiles pr on pr.id = p.user_id and coalesce(pr.banned, false) = fa
 group by p.match_id;
 
 grant select on public.match_cotes to anon, authenticated;
+
+-- Scores pronostiqués PAR MATCH, anonymes (demande Gabriel) : on voit les
+-- pronos d'un match avant le coup d'envoi, jamais qui les a faits.
+create or replace view public.match_pred_scores as
+select p.match_id, p.pred_home, p.pred_away, count(*) as nb
+from public.predictions p
+join public.profiles pr on pr.id = p.user_id and coalesce(pr.banned, false) = false
+group by p.match_id, p.pred_home, p.pred_away;
+
+grant select on public.match_pred_scores to anon, authenticated;

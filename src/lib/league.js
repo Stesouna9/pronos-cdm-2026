@@ -252,6 +252,18 @@ export async function fetchCotes() {
   return map;
 }
 
+/* Scores pronostiqués sur UN match, anonymes (vue match_pred_scores) :
+   visibles avant le coup d'envoi, sans révéler qui a parié quoi. */
+export async function fetchScoreDist(matchId) {
+  const { data, error } = await supabase
+    .from("match_pred_scores")
+    .select("pred_home, pred_away, nb")
+    .eq("match_id", matchId)
+    .order("nb", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
 /* Tous les pronos verrouillés (pour la page Stats). */
 export async function fetchAllLockedPredictions() {
   const { data, error } = await supabase

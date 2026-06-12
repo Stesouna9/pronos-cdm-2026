@@ -1,7 +1,7 @@
 /* screens2.jsx — Liste des matchs, saisie de prono, détail d'un match */
 import { useState, useMemo, useEffect } from "react";
 import { WC } from "../lib/wc.js";
-import { fetchMatchPredictions, fetchReactions, setReaction, fetchCotes } from "../lib/league.js";
+import { fetchMatchPredictions, fetchReactions, setReaction, fetchCotes, fetchScoreDist } from "../lib/league.js";
 import { supabase } from "../lib/supabase.js";
 import { Btn, Roundel, TeamLine, StatusPill, PointsBadge, slotLabel, teamName } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
@@ -363,9 +363,11 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
   const [tab, setTab] = useState("apercu");
   // Cote de la ligue : répartition des pronos (visible AVANT le match, choix de Gabriel)
   const [cote, setCote] = useState(null);
+  const [dist, setDist] = useState([]); // scores pronostiqués, anonymes
   useEffect(() => {
-    setCote(null);
+    setCote(null); setDist([]);
     fetchCotes().then((map) => setCote(map[id] || null)).catch(() => {});
+    fetchScoreDist(id).then(setDist).catch(() => {});
   }, [id]);
   if (!m) return <div className="content"><p>{t("Match introuvable.")}</p></div>;
   const fini = m.status === "fini";
@@ -442,6 +444,20 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
         <div className="card pad rise" style={{ marginBottom: 18 }}>
           <div className="eyebrow" style={{ marginBottom: 10 }}>📊 {t("Cote de la ligue")}</div>
           <CoteBar m={m} cote={cote} />
+          {dist.length > 0 && (
+            <>
+              <div className="mono muted" style={{ fontSize: 11, margin: "12px 0 6px" }}>
+                {t("Scores pronostiqués")}{!m.locked && !fini ? " · " + t("anonymes jusqu'au coup d'envoi") : ""}
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {dist.map((d, i) => (
+                  <span key={i} className="pill" style={{ fontSize: 13, fontWeight: 800 }}>
+                    {d.pred_home}–{d.pred_away}{Number(d.nb) > 1 ? <span className="muted" style={{ fontWeight: 600 }}> ×{d.nb}</span> : null}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 
