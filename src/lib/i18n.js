@@ -255,6 +255,8 @@ const JA = {
   "Laisser jouer": "プレーオン", "Jaune": "イエロー", "Rouge": "レッド",
   "glisse le doigt pour déplacer le banc": "指でスライドしてバーを動かす",
   "Objectif": "目標",
+  "Tester": "テスト",
+  "Partie test (admin) — non comptée au classement.": "テストプレイ（管理者）— ランキングに反映されません。",
   "de plus en plus vite !": "どんどん速くなる！",
   "Bonne décision :": "正解：",
   "LUCARNE !": "ど真ん中の隅！",

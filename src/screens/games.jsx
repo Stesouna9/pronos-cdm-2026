@@ -320,7 +320,7 @@ function Drapeaux({ onEnd }) {
 /* =================== HUB =================== */
 const COMPONENTS = { penalty: Penalty, jongles: Jongles, arbitre: Arbitre, casse: CasseBrique, drapeau: Drapeaux };
 
-function GameCard({ g, today, record, onPlay }) {
+function GameCard({ g, today, record, onPlay, isAdmin }) {
   const played = today[g.id];
   return (
     <div className="card pad gamecard rise">
@@ -332,8 +332,11 @@ function GameCard({ g, today, record, onPlay }) {
           {record && <div className="mono muted" style={{ fontSize: 11 }}>🏅 {t("Record")} : {record.pseudo} ({record.score})</div>}
         </div>
         {played
-          ? <span className={"pill " + (played.won ? "pill--accent" : "")} style={{ fontSize: 12 }}>{played.won ? "✓ +1" : "✗"} · {played.score}</span>
-          : <Btn variant="accent" onClick={() => onPlay(g)} style={{ padding: "8px 16px", whiteSpace: "nowrap" }}>{t("Jouer")}</Btn>}
+          ? <span style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
+              <span className={"pill " + (played.won ? "pill--accent" : "")} style={{ fontSize: 12 }}>{played.won ? "✓ +1" : "✗"} · {played.score}</span>
+              {isAdmin && <Btn variant="ghost" onClick={() => onPlay(g, true)} style={{ padding: "5px 10px", fontSize: 11.5 }}>🧪 {t("Tester")}</Btn>}
+            </span>
+          : <Btn variant="accent" onClick={() => onPlay(g, false)} style={{ padding: "8px 16px", whiteSpace: "nowrap" }}>{t("Jouer")}</Btn>}
       </div>
     </div>
   );
@@ -344,8 +347,8 @@ export function GamesScreen({ profile }) {
   const [today, setToday] = useState({});
   const [records, setRecords] = useState({});
   const [board, setBoard] = useState(null);
-  const [active, setActive] = useState(null);     // jeu en cours
-  const [result, setResult] = useState(null);     // { g, score, won, saveErr }
+  const [active, setActive] = useState(null);     // { g, test } : jeu en cours
+  const [result, setResult] = useState(null);     // { g, score, won, saveErr, test }
 
   async function load() {
     if (!hasSupabase) return;
@@ -356,28 +359,30 @@ export function GamesScreen({ profile }) {
   }
   useEffect(() => { load(); }, []);
 
-  async function finish(g, score, won) {
+  async function finish(g, score, won, test) {
     let saveErr = null;
-    if (hasSupabase) {
+    if (hasSupabase && !test) {
       const r = await saveGameScore(g.id, score, won);
       saveErr = r.error;
     }
     setActive(null);
-    setResult({ g, score, won, saveErr });
-    load();
+    setResult({ g, score, won, saveErr, test });
+    if (!test) load();
   }
 
   /* --- partie en cours --- */
   if (active) {
-    const Comp = COMPONENTS[active.id];
+    const g = active.g;
+    const Comp = COMPONENTS[g.id];
     return (
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <h2 className="poster" style={{ margin: 0, fontSize: 24 }}>{active.icon} {t(active.name)}</h2>
+          <h2 className="poster" style={{ margin: 0, fontSize: 24 }}>{g.icon} {t(g.name)}{active.test ? " 🧪" : ""}</h2>
           <Btn variant="ghost" onClick={() => setActive(null)} style={{ padding: "7px 12px", fontSize: 12.5 }}>{t("Abandonner")}</Btn>
         </div>
+        {active.test && <div className="mono muted" style={{ fontSize: 11.5, marginBottom: 10 }}>🧪 {t("Partie test (admin) — non comptée au classement.")}</div>}
         <div className="card pad-lg">
-          <Comp onEnd={(score, won) => finish(active, score, won)} record={records[active.id]} />
+          <Comp onEnd={(score, won) => finish(g, score, won, active.test)} record={records[g.id]} />
         </div>
       </div>
     );
@@ -394,12 +399,14 @@ export function GamesScreen({ profile }) {
 
       {result && (
         <div className={"card pad-lg rise"} style={{ marginBottom: 16, textAlign: "center", borderColor: result.won ? "var(--win)" : "var(--line)" }}>
-          <div style={{ fontSize: 40 }}>{result.won ? "🎉" : "😅"}</div>
+          <div style={{ fontSize: 40 }}>{result.test ? "🧪" : result.won ? "🎉" : "😅"}</div>
           <div className="poster" style={{ fontSize: 22 }}>
             {result.g.icon} {t(result.g.name)} — {t("score")} {result.score}
           </div>
           <div style={{ fontWeight: 700, color: result.won ? "var(--win)" : "var(--ink-soft)", margin: "4px 0 10px" }}>
-            {result.won ? t("Défi réussi : +1 au classement Jeux !") : t("Raté pour aujourd'hui… retente demain !")}
+            {result.test
+              ? t("Partie test (admin) — non comptée au classement.")
+              : result.won ? t("Défi réussi : +1 au classement Jeux !") : t("Raté pour aujourd'hui… retente demain !")}
           </div>
           {result.saveErr && <div className="mono" style={{ fontSize: 11.5, color: "var(--lose)" }}>⚠️ {result.saveErr}</div>}
           <Btn variant="ghost" onClick={() => setResult(null)} style={{ padding: "7px 14px", fontSize: 12.5 }}>OK</Btn>
@@ -414,7 +421,8 @@ export function GamesScreen({ profile }) {
             </span>
           </div>
           <div className="grid g-2">
-            {GAMES.map((g) => <GameCard key={g.id} g={g} today={today} record={records[g.id]} onPlay={setActive} />)}
+            {GAMES.map((g) => <GameCard key={g.id} g={g} today={today} record={records[g.id]} isAdmin={!!profile.is_admin}
+              onPlay={(game, test) => setActive({ g: game, test })} />)}
           </div>
         </>
       )}
