@@ -111,7 +111,19 @@ export default function App() {
       return;
     }
     setPredictions((P) => ({ ...P, [id]: val }));
-    if (hasSupabase) savePrediction(id, val).then((r) => { if (r && r.error) console.error("save prono:", r.error); });
+    if (hasSupabase) {
+      savePrediction(id, val)
+        .then((r) => {
+          if (r && r.error) {
+            alert(t("⚠️ Ton prono n'a PAS été enregistré (connexion ?). Réessaie !") + "\n" + r.error);
+            loadData(); // remet l'écran en accord avec le serveur
+          }
+        })
+        .catch(() => {
+          alert(t("⚠️ Ton prono n'a PAS été enregistré (connexion ?). Réessaie !"));
+          loadData();
+        });
+    }
   }
 
   // Pose/retire l'étoile de confiance (un seul match ×2 par jour).

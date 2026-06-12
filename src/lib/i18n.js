@@ -89,6 +89,7 @@ const JA = {
   "Ajuste puis c'est sauvé": "調整すると自動保存", "non joué": "未予想",
   "Pronostic ouvert dès que les qualifiés sont connus.": "出場チームが決まり次第、予想できます。",
   "🔒 Pronos fermés (coup d'envoi passé)": "🔒 締切（キックオフ済み）",
+  "⚠️ Ton prono n'a PAS été enregistré (connexion ?). Réessaie !": "⚠️ 予想が保存されていません（接続エラー？）。もう一度お試しください！",
   "À déterminer": "未定", "Terminé": "終了", "Bientôt": "まもなく", "À venir": "予定",
   "En cours": "進行中",
   // Détail
