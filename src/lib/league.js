@@ -278,6 +278,63 @@ export async function fetchAllLockedPredictions() {
     .map((p) => ({ ...p, pseudo: byId[p.user_id].pseudo, avatar: byId[p.user_id].avatar }));
 }
 
+/* ---------- Mini-jeux ---------- */
+/* Jour "français" (réinitialisation à minuit heure de Paris). */
+export function todayFR() {
+  return new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format(new Date());
+}
+
+/* Mes parties du jour -> { [game]: { score, won } } */
+export async function fetchMyGamesToday() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return {};
+  const { data, error } = await supabase
+    .from("minigame_scores").select("game, score, won")
+    .eq("user_id", user.id).eq("day", todayFR());
+  if (error) throw error;
+  const m = {};
+  (data || []).forEach((r) => (m[r.game] = r));
+  return m;
+}
+
+/* Enregistre la partie du jour (le serveur refuse un 2e essai : unique + insert-only). */
+export async function saveGameScore(game, score, won) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "non connecté" };
+  const { error } = await supabase.from("minigame_scores")
+    .insert({ user_id: user.id, game, day: todayFR(), score: Math.round(score), won });
+  if (error && (error.code === "23505" || /duplicate/i.test(error.message)))
+    return { error: "déjà joué aujourd'hui" };
+  if (error && /row-level security/i.test(error.message))
+    return { error: "score non enregistré (compte non autorisé)" };
+  return { error: error ? error.message : null };
+}
+
+/* Classement Jeux (1 pt par défi réussi), trié. */
+export async function fetchGamesLeaderboard() {
+  const { data, error } = await supabase.from("games_leaderboard").select("*")
+    .order("pts", { ascending: false }).order("parties", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+/* Records de la ligue : meilleur score par jeu. */
+export async function fetchGameRecords() {
+  const { data, error } = await supabase.from("minigame_scores").select("game, score, user_id");
+  if (error) throw error;
+  const { data: profs } = await supabase.from("profiles").select("id, pseudo, avatar, banned");
+  const byId = {};
+  (profs || []).forEach((p) => (byId[p.id] = p));
+  const best = {};
+  (data || []).forEach((r) => {
+    const u = byId[r.user_id];
+    if (!u || u.banned) return;
+    if (!best[r.game] || r.score > best[r.game].score)
+      best[r.game] = { score: r.score, pseudo: u.pseudo, avatar: u.avatar };
+  });
+  return best;
+}
+
 /* Sauvegarde les infos de profil (pseudo, avatar, équipe de cœur). */
 export async function updateProfile({ pseudo, avatar, fav }) {
   const { data: { user } } = await supabase.auth.getUser();

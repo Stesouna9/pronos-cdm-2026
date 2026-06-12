@@ -520,3 +520,50 @@ a { color: inherit; }
 .cotebar-labels { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 12px; margin-bottom: 6px; }
 .cotebar-track { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--surface-2); border: 1px solid var(--line); }
 .cotebar-track > span { height: 100%; transition: width .4s var(--ease, ease); }
+
+/* ---------- Mini-jeux ---------- */
+.gamecard { transition: transform .15s; }
+.gamecard:hover { transform: translateY(-2px); }
+
+/* Tirs au but */
+.goalbox { position: relative; width: 100%; max-width: 440px; aspect-ratio: 16/9; margin: 0 auto; background: linear-gradient(#1c4d2e, #16381f); border: 4px solid #f3ede2; border-bottom: none; border-radius: 8px 8px 0 0; cursor: crosshair; overflow: hidden; touch-action: manipulation; }
+.goal-net { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 14px, rgba(255,255,255,.12) 14px 15px), repeating-linear-gradient(90deg, transparent 0 14px, rgba(255,255,255,.12) 14px 15px); }
+.keeper { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); font-size: 44px; transition: all .35s ease; }
+.keeper.dive-g { left: 16%; bottom: 22%; transform: translateX(-50%) rotate(-40deg); }
+.keeper.dive-d { left: 84%; bottom: 22%; transform: translateX(-50%) rotate(40deg); }
+.keeper.dive-c { bottom: 30%; }
+.shotball { position: absolute; font-size: 26px; transform: translate(-50%,-50%); animation: shot-in .25s ease both; }
+@keyframes shot-in { from { transform: translate(-50%,-50%) scale(2.6); opacity: .4; } }
+.verdict { position: absolute; left: 50%; top: 38%; transform: translate(-50%,-50%); font-family: var(--f-poster); font-size: 34px; letter-spacing: .04em; animation: shot-in .3s ease both; }
+.v-goal { color: #ffd95e; text-shadow: 0 2px 10px rgba(0,0,0,.5); }
+.v-save { color: #ff7a6e; text-shadow: 0 2px 10px rgba(0,0,0,.5); }
+
+/* Jongles */
+.jugglebox { position: relative; width: 100%; max-width: 440px; height: 320px; margin: 0 auto; background: linear-gradient(#bfe3ff00, color-mix(in oklab, var(--accent) 8%, var(--surface-2))); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; touch-action: manipulation; user-select: none; }
+.juggleball { position: absolute; left: 0; top: 0; width: 44px; height: 44px; font-size: 40px; line-height: 44px; will-change: transform; }
+.juggle-floor { position: absolute; left: 0; right: 0; bottom: 0; height: 10px; background: color-mix(in oklab, var(--win) 35%, var(--surface-2)); }
+
+/* Réflexe arbitre */
+.timerbar { height: 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; margin-top: 8px; }
+.timerbar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--win), var(--warn), var(--lose)); animation: tb-shrink linear both; transform-origin: left; }
+@keyframes tb-shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.refbtn { flex: 1; max-width: 130px; padding: 14px 8px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-weight: 800; font-size: 13px; line-height: 1.5; cursor: pointer; }
+.refbtn:active { transform: scale(.96); }
+
+/* Casse-brique */
+.brickcanvas { width: 100%; max-width: 380px; border-radius: var(--r-md); border: 1px solid var(--line); touch-action: none; }
+
+/* Choix (drapeaux, quiz...) */
+.choicegrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 440px; margin: 0 auto; }
+.choicebtn { padding: 13px 10px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-weight: 700; font-size: 14px; cursor: pointer; }
+.choicebtn:hover { border-color: var(--accent); }
+.choicebtn:active { transform: scale(.97); }
+
+/* Pendu */
+.hangword { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 16px 0; }
+.hangletter { width: 26px; border-bottom: 2px solid var(--ink); font-family: var(--f-poster); font-size: 24px; text-align: center; }
+.lettergrid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; max-width: 440px; margin: 0 auto; }
+.letterbtn { padding: 8px 0; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-weight: 800; cursor: pointer; }
+.letterbtn:disabled { opacity: .35; cursor: default; }
+.letterbtn.good { background: color-mix(in oklab, var(--win) 30%, var(--surface-2)); opacity: 1; }
+.letterbtn.bad { background: color-mix(in oklab, var(--lose) 30%, var(--surface-2)); }

@@ -534,6 +534,10 @@ export function Rules() {
             <div className="muted" style={{ fontSize: 13.5 }}>{t("Dès les 16es de finale, si tu pronostiques un match nul, choisis aussi qui gagne aux tirs au but : +2 points bonus si tu as vu juste. Le score se juge à la fin du match (hors tirs au but), comme d'habitude.")}</div>
           </div>
           <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>🎮 {t("Mini-jeux")}</div>
+            <div className="muted" style={{ fontSize: 13.5 }}>{t("Onglet Jeux : un essai par jour et par jeu, défi réussi = +1 au classement Jeux (séparé). Juste avant les quarts de finale, le 1er du classement Jeux gagne +10 points au classement général.")}</div>
+          </div>
+          <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>⚖️ {t("En cas d'égalité")}</div>
             <div className="muted" style={{ fontSize: 13.5 }}>{t("Pendant le tournoi, les égalités s'affichent ex æquo (mêmes points et mêmes scores exacts = même place). Le départage final (scores exacts, puis ancienneté d'inscription) ne sert qu'à attribuer les lots à la fin.")}</div>
           </div>

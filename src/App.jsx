@@ -13,6 +13,7 @@ import { AuthScreen, Dashboard } from "./screens/screens1.jsx";
 import { MatchesScreen, MatchDetail } from "./screens/screens2.jsx";
 import { TableauScreen, Leaderboard, Profile, Rules } from "./screens/screens3.jsx";
 import { AdminScreen } from "./screens/admin.jsx";
+import { GamesScreen } from "./screens/games.jsx";
 
 const LS = "pronos2026:v1";
 function loadState() {
@@ -24,6 +25,7 @@ const NAV = [
   ["matches", "Matchs", "⚽"],
   ["tableau", "Tableau", "🏆"],
   ["leaderboard", "Classement", "📊"],
+  ["games", "Jeux", "🎮"],
   ["profile", "Profil", "👤"],
   ["rules", "Règles", "📖"],
 ];
@@ -240,6 +242,7 @@ export default function App() {
       case "tableau": return <TableauScreen go={go} matches={matches} />;
       case "leaderboard": return <Leaderboard go={go} profile={profile} users={users} me={me} matches={matches} />;
       case "profile": return <Profile profile={profile} setProfile={setProfile} predictions={predictions} matches={matches} me={me} onLogout={logout} />;
+      case "games": return <GamesScreen profile={profile} />;
       case "rules": return <Rules />;
       case "admin": return <AdminScreen matches={matches} reload={loadData} />;
       default: return <Dashboard go={go} predictions={predictions} profile={profile} matches={matches} users={users} me={me} />;
