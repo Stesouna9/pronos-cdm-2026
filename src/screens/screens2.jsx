@@ -202,9 +202,36 @@ function pitchPositions() {
 }
 function seedNum(code, i) { let s = 0; for (const c of code + i) s = (s * 31 + c.charCodeAt(0)) % 97; return (s % 23) + 1; }
 
-function FormDots({ code }) {
-  let s = 0; for (const c of code) s += c.charCodeAt(0);
-  const seq = [0, 1, 2, 3, 4].map((i) => ["W", "W", "N", "L", "W"][(s + i * 3) % 5]);
+/* ---- Vraies stats, calculées sur les matchs JOUÉS du tournoi ---- */
+function teamFinished(code, matches) {
+  return (matches || [])
+    .filter((x) => x.status === "fini" && x.score && (x.home === code || x.away === code))
+    .sort((a, b) => a.date - b.date);
+}
+function resFor(code, m) {
+  const gf = m.home === code ? m.score[0] : m.score[1];
+  const ga = m.home === code ? m.score[1] : m.score[0];
+  if (gf > ga) return "W";
+  if (gf < ga) return "L";
+  // nul en phase finale : le vainqueur aux tirs au but compte comme victoire
+  if (m.round === "ko" && m.winner) return m.winner === code ? "W" : "L";
+  return "N";
+}
+function teamStats(code, matches) {
+  const ms = teamFinished(code, matches);
+  let gf = 0, cs = 0, streak = 0;
+  ms.forEach((m) => {
+    const f = m.home === code ? m.score[0] : m.score[1];
+    const a = m.home === code ? m.score[1] : m.score[0];
+    gf += f; if (a === 0) cs++;
+  });
+  for (let i = ms.length - 1; i >= 0; i--) { if (resFor(code, ms[i]) === "W") streak++; else break; }
+  return { joues: ms.length, gf, cs, streak };
+}
+
+function FormDots({ code, matches }) {
+  const seq = teamFinished(code, matches).slice(-5).map((m) => resFor(code, m));
+  if (!seq.length) return <span className="mono muted" style={{ fontSize: 11 }}>{t("aucun match joué")}</span>;
   const col = { W: "var(--win)", N: "var(--warn)", L: "var(--lose)" };
   return <div style={{ display: "flex", gap: 4 }}>{seq.map((r, i) => (
     <span key={i} title={r} style={{ width: 18, height: 18, borderRadius: 5, display: "grid", placeItems: "center", fontSize: 10, fontWeight: 800, color: "#fff", background: col[r] }}>{r === "W" ? "V" : r === "N" ? "N" : "D"}</span>
@@ -301,6 +328,20 @@ function LeaguePredictions({ m }) {
 export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MATCHES, confidences = {}, setConf = () => {}, penPicks = {}, setPredPen = () => {} }) {
   const m = matches.find((x) => x.id === id);
   const [tab, setTab] = useState("apercu");
+  // Cote de la ligue : répartition des pronos (visible après le coup d'envoi)
+  const [cote, setCote] = useState(null);
+  useEffect(() => {
+    setCote(null);
+    const mm = matches.find((x) => x.id === id);
+    if (!mm || (!mm.locked && mm.status !== "fini")) return;
+    fetchMatchPredictions(id).then((l) => {
+      const tot = l.length;
+      if (!tot) { setCote({ h: 0, n: 0, a: 0, tot: 0 }); return; }
+      const h = l.filter((p) => p.pred_home > p.pred_away).length;
+      const a = l.filter((p) => p.pred_home < p.pred_away).length;
+      setCote({ h: Math.round((h / tot) * 100), a: Math.round((a / tot) * 100), n: Math.round(((tot - h - a) / tot) * 100), tot });
+    }).catch(() => {});
+  }, [id]);
   if (!m) return <div className="content"><p>{t("Match introuvable.")}</p></div>;
   const fini = m.status === "fini";
   const open = !fini && m.home && m.away && !m.locked;
@@ -383,22 +424,23 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
           <div className="card pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>{t("Confrontation")}</div>
             {[[t("Classement FIFA"), `#${th.rank}`, `#${ta.rank}`], [t("Confédération"), th.conf, ta.conf],
-              [t("Forme (5 derniers)"), "form-h", "form-a"], [t("Cote pronostiqueurs"), "58%", "42%"]].map((r, i) => (
+              [t("Forme (5 derniers)"), "form-h", "form-a"],
+              [t("Cote de la ligue"), cote ? `${cote.h}%` : "🔒", cote ? `${cote.a}%` : "🔒"]].map((r, i) => (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 10, padding: "10px 0", borderTop: i ? "1px solid var(--line)" : "none" }}>
-                <div style={{ fontWeight: 700 }}>{r[1] === "form-h" ? <FormDots code={m.home} /> : r[1]}</div>
+                <div style={{ fontWeight: 700 }}>{r[1] === "form-h" ? <FormDots code={m.home} matches={matches} /> : r[1]}</div>
                 <div className="mono muted" style={{ fontSize: 11, textAlign: "center" }}>{r[0]}</div>
-                <div style={{ fontWeight: 700, textAlign: "right", display: "flex", justifyContent: "flex-end" }}>{r[2] === "form-a" ? <FormDots code={m.away} /> : r[2]}</div>
+                <div style={{ fontWeight: 700, textAlign: "right", display: "flex", justifyContent: "flex-end" }}>{r[2] === "form-a" ? <FormDots code={m.away} matches={matches} /> : r[2]}</div>
               </div>
             ))}
+            <p className="mono muted" style={{ fontSize: 10.5, margin: "8px 0 0" }}>{t("Forme = matchs de ce tournoi · cote = % des pronos de la ligue, visible au coup d'envoi.")}</p>
           </div>
           <div className="card pad">
             <div className="eyebrow" style={{ marginBottom: 12 }}>{t("Infos match")}</div>
             <div className="grid g-2 keep" style={{ gap: 10 }}>
-              {[[t("📍 Stade"), m.venue.stade], [t("🏙️ Ville"), m.venue.city], [t("📅 Date"), WC.fmtDate(m.date)], [t("⏰ Coup d'envoi"), WC.fmtHeure(m.date)], [t("🏆 Phase"), tPhase(m.phase)], [t("🎟️ Affluence"), "~" + (40 + (th.rank % 30)) + " 000"]].map(([l, v], i) => (
+              {[[t("📍 Stade"), m.venue.stade], [t("🏙️ Ville"), m.venue.city], [t("📅 Date"), WC.fmtDate(m.date)], [t("⏰ Coup d'envoi"), WC.fmtHeure(m.date)], [t("🏆 Phase"), tPhase(m.phase)], [t("📆 Jour du tournoi"), t("Jour") + " " + (Math.floor((m.date - new Date(2026, 5, 11)) / 86400e3) + 1)]].map(([l, v], i) => (
                 <div key={i} className="stat" style={{ padding: 12 }}><div className="l" style={{ marginBottom: 2 }}>{l}</div><div style={{ fontWeight: 700, fontSize: 15 }}>{v}</div></div>
               ))}
             </div>
-            <p className="mono muted" style={{ fontSize: 11, marginTop: 12 }}>{t("Données d'illustration.")}</p>
           </div>
         </div>
       )}
@@ -420,25 +462,43 @@ export function MatchDetail({ id, go, predictions, setPred, matches = WC.ALL_MAT
 
       {tab === "forme" && th && ta && (
         <div className="grid g-2">
-          {[m.home, m.away].map((c) => (
-            <div className="card pad" key={c}>
-              <TeamLine code={c} bold showCode={false} size={28} />
-              <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "14px 0" }}><span className="muted" style={{ fontSize: 13 }}>{t("5 derniers :")}</span><FormDots code={c} /></div>
-              <div className="grid g-3 keep2" style={{ gap: 10 }}>
-                {[[t("Buts marqués"), 7 + (WC.T[c].rank % 5)], [t("Clean sheets"), 1 + (WC.T[c].rank % 3)], [t("Série"), "3 V"]].map(([l, v], i) => (
-                  <div className="stat" key={i} style={{ padding: 12 }}><div className="n" style={{ fontSize: 24 }}>{v}</div><div className="l">{l}</div></div>
-                ))}
+          {[m.home, m.away].map((c) => {
+            const st = teamStats(c, matches);
+            return (
+              <div className="card pad" key={c}>
+                <TeamLine code={c} bold showCode={false} size={28} />
+                <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "14px 0" }}><span className="muted" style={{ fontSize: 13 }}>{t("5 derniers :")}</span><FormDots code={c} matches={matches} /></div>
+                <div className="grid g-3 keep2" style={{ gap: 10 }}>
+                  {[[t("Buts marqués"), st.gf], [t("Clean sheets"), st.cs], [t("Série"), st.streak ? st.streak + " V" : "—"]].map(([l, v], i) => (
+                    <div className="stat" key={i} style={{ padding: 12 }}><div className="n" style={{ fontSize: 24 }}>{v}</div><div className="l">{l}</div></div>
+                  ))}
+                </div>
+                <p className="mono muted" style={{ fontSize: 10.5, margin: "10px 0 0" }}>{st.joues} {t("match(s) joué(s) dans ce tournoi")}</p>
               </div>
-            </div>
-          ))}
-          <div className="card pad" style={{ gridColumn: "1 / -1" }}>
-            <div className="eyebrow" style={{ marginBottom: 10 }}>{t("Face-à-face (historique)")}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", textAlign: "center", alignItems: "center" }}>
-              <div><div className="poster" style={{ fontSize: 30 }}>{2 + (th.rank % 3)}</div><TeamLine code={m.home} showCode={false} size={20} /></div>
-              <div><div className="poster" style={{ fontSize: 30 }}>{1 + (th.rank % 2)}</div><div className="mono muted" style={{ fontSize: 11 }}>{t("NULS")}</div></div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}><div className="poster" style={{ fontSize: 30 }}>{1 + (ta.rank % 3)}</div><TeamLine code={m.away} reverse showCode={false} size={20} /></div>
-            </div>
-          </div>
+            );
+          })}
+          {(() => {
+            const h2h = matches.filter((x) => x.id !== m.id && x.status === "fini" && x.score
+              && ((x.home === m.home && x.away === m.away) || (x.home === m.away && x.away === m.home)));
+            if (!h2h.length) return (
+              <div className="card pad" style={{ gridColumn: "1 / -1", textAlign: "center" }}>
+                <div className="eyebrow" style={{ marginBottom: 6 }}>{t("Face-à-face (dans ce tournoi)")}</div>
+                <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>🤝 {t("Premier duel entre ces deux équipes dans ce tournoi.")}</p>
+              </div>
+            );
+            const wH = h2h.filter((x) => resFor(m.home, x) === "W").length;
+            const wA = h2h.filter((x) => resFor(m.away, x) === "W").length;
+            return (
+              <div className="card pad" style={{ gridColumn: "1 / -1" }}>
+                <div className="eyebrow" style={{ marginBottom: 10 }}>{t("Face-à-face (dans ce tournoi)")}</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", textAlign: "center", alignItems: "center" }}>
+                  <div><div className="poster" style={{ fontSize: 30 }}>{wH}</div><TeamLine code={m.home} showCode={false} size={20} /></div>
+                  <div><div className="poster" style={{ fontSize: 30 }}>{h2h.length - wH - wA}</div><div className="mono muted" style={{ fontSize: 11 }}>{t("NULS")}</div></div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}><div className="poster" style={{ fontSize: 30 }}>{wA}</div><TeamLine code={m.away} reverse showCode={false} size={20} /></div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 

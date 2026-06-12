@@ -83,7 +83,10 @@ export function Roundel({ code, size = 26 }) {
   const t = WC.T[code];
   if (!t) return <div className="roundel" style={{ width: size, height: size }} />;
   const c = t.colors;
-  const bg = `linear-gradient(120deg, ${c[0]} 0 38%, ${c[1]} 38% 64%, ${c[2] || c[0]} 64% 100%)`;
+  // Japon : le vrai drapeau (point rouge centré sur fond blanc), pas des bandes.
+  const bg = code === "JPN"
+    ? "radial-gradient(circle at 50% 50%, #bc002d 0 32%, #ffffff 32%)"
+    : `linear-gradient(120deg, ${c[0]} 0 38%, ${c[1]} 38% 64%, ${c[2] || c[0]} 64% 100%)`;
   return <div className="roundel" style={{ width: size, height: size }}><span style={{ background: bg }} /></div>;
 }
 

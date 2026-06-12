@@ -222,6 +222,15 @@ const JA = {
   "Refusées dans le navigateur — autorise les notifications pour ce site dans les réglages.": "ブラウザで拒否されています。設定でこのサイトの通知を許可してください。",
   "Pas possible sur cet appareil. Sur iPhone : installe d'abord l'app (écran d'accueil).": "この端末では使えません。iPhoneでは先にアプリ（ホーム画面）をインストールしてください。",
   "Notifications coupées": "通知をオフにしました",
+  // Stats réelles (détail match)
+  "aucun match joué": "まだ試合なし",
+  "Cote de la ligue": "リーグの予想比率",
+  "Forme = matchs de ce tournoi · cote = % des pronos de la ligue, visible au coup d'envoi.": "フォーム＝今大会の試合 · 比率＝リーグ予想の％（キックオフ後に表示）。",
+  "match(s) joué(s) dans ce tournoi": "試合（今大会）",
+  "Face-à-face (dans ce tournoi)": "対戦成績（今大会）",
+  "Premier duel entre ces deux équipes dans ce tournoi.": "今大会でこの2チームは初対戦。",
+  "📆 Jour du tournoi": "📆 大会日程",
+  "Jour": "第",
 };
 
 // Noms d'équipes en japonais (code FIFA -> JA).
