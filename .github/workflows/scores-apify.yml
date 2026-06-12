@@ -5,12 +5,11 @@ name: Scores auto (Apify)
 
 on:
   schedule:
-    # Choix de Gabriel : 2 passages/jour — minuit et 8h (heure française, été = UTC+2).
-    # Les tableaux affichent "mise à jour tous les jours à 8h00".
-    # NB : le robot ne voit que les matchs en direct/à peine finis ; un score raté
-    # se saisit en 5 secondes via l'écran Admin.
-    - cron: "0 22 * * *"  # minuit heure française
-    - cron: "0 6 * * *"   # 8h heure française
+    # Règle "fin de match" (choix de Gabriel) : passage TOUTES LES HEURES, mais
+    # Apify n'est appelé QUE si un match a commencé depuis +3h et n'a pas encore
+    # son score (garde dans le script → coût nul le reste du temps).
+    # → le site est à jour dans l'heure qui suit chaque fin de match.
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 jobs:

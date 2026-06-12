@@ -129,7 +129,7 @@ function AdminMonitor({ matches }) {
     <>
       <div className="card pad rise" style={{ marginBottom: 16, display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
         <span className="muted" style={{ fontSize: 13.5 }}>
-          🤖 {t("Le robot des scores tourne 2×/jour. Pour le relancer à la main :")}
+          🤖 {t("Le robot des scores passe chaque heure et met à jour les matchs finis (kickoff +3h). Pour le relancer à la main :")}
         </span>
         <a className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 13, textDecoration: "none" }}
           href="https://github.com/Stesouna9/pronos-cdm-2026/actions/workflows/scores-apify.yml" target="_blank" rel="noreferrer">

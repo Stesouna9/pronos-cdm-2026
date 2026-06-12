@@ -101,6 +101,22 @@ export default function App() {
   }
   useEffect(() => { if (hasSupabase && authed) loadData(); }, [authed]);
 
+  // Resynchronisation : au retour au premier plan (app/onglet rouvert) et
+  // toutes les 2 min. Évite les états périmés sur les téléphones où l'app
+  // reste ouverte des jours (source du bug "prono fantôme").
+  useEffect(() => {
+    if (!hasSupabase || !authed) return;
+    const onVisible = () => { if (!document.hidden) loadData(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    const id = setInterval(() => { if (!document.hidden) loadData(); }, 120000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+      clearInterval(id);
+    };
+  }, [authed]);
+
   function go(s, p = {}) { setScreen(s); setParams(p); window.scrollTo({ top: 0 }); }
   function setPred(id, val) {
     // Verrou : dès le coup d'envoi, plus aucun pari (le serveur refuse aussi via RLS).

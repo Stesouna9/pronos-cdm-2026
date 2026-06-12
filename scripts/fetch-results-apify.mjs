@@ -84,6 +84,24 @@ async function runActor() {
 }
 
 async function main() {
+  // Garde "fin de match" : on n'appelle Apify QUE si un match a commencé il y a
+  // plus de 3h (durée max d'un match) et n'a pas encore son score. Fenêtre de
+  // 8h max — au-delà, le flux live ne l'a plus, c'est la saisie Admin qui prend.
+  const now = Date.now(), H = 3600e3;
+  const { data: open, error: e0 } = await sb
+    .from("matches").select("id, home_name, away_name, kickoff")
+    .neq("status", "fini").not("home", "is", null);
+  if (e0) throw e0;
+  const due = (open || []).filter((m) => {
+    const k = new Date(m.kickoff).getTime();
+    return now >= k + 3 * H && now <= k + 8 * H;
+  });
+  if (!due.length) {
+    console.log("✅ Aucun match en attente de score (fenêtre kickoff+3h→8h). Pas d'appel Apify.");
+    return;
+  }
+  console.log("🎯 Matchs à scorer :", due.map((m) => `${m.home_name}-${m.away_name}`).join(", "));
+
   console.log("⏳ Lancement de l'actor Flashscore…");
   const items = await runActor();
   console.log(`📥 ${items.length} matchs live récupérés.`);

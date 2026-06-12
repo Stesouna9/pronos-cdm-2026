@@ -204,7 +204,7 @@ export function TableauScreen({ go, matches = WC.ALL_MATCHES }) {
   const letters = real ? Object.keys(WC.GROUPS) : WC.GROUP_LETTERS;
   return (
     <div className="content">
-      <SectionTitle kicker={t("🕗 Mise à jour des tableaux tous les jours à 8h00")} title={t("Le tableau")}
+      <SectionTitle kicker={t("🕗 Mise à jour automatique dans l'heure qui suit chaque fin de match")} title={t("Le tableau")}
         right={<div className="seg">
           <button className={tab === "groupes" ? "on" : ""} onClick={() => setTab("groupes")}>{t("12 groupes")}</button>
           <button className={tab === "resultats" ? "on" : ""} onClick={() => setTab("resultats")}>{t("Résultats")}</button>
@@ -219,7 +219,7 @@ export function TableauScreen({ go, matches = WC.ALL_MATCHES }) {
             <div className="card pad rise" style={{ marginBottom: 18, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
               <span className="pill pill--accent"><span className="dot dot--pulse" /> {t("Mise à jour auto")}</span>
               <span className="muted" style={{ fontSize: 13.5 }}>
-                {t("Les tableaux sont mis à jour tous les jours à 8h00.")}
+                {t("Les tableaux se mettent à jour automatiquement dans l'heure qui suit chaque fin de match.")}
               </span>
             </div>
             <Bracket go={go} />
