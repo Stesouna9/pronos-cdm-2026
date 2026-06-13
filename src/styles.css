@@ -273,8 +273,13 @@ a { color: inherit; }
 /* hauteurs en marches : 1er nettement au-dessus */
 .pcol.p1 { min-height: 320px; background: linear-gradient(165deg, var(--gold-soft), var(--gold)); color: #1a1607;
   padding-top: 38px; box-shadow: 0 22px 54px color-mix(in oklab, var(--gold) 45%, transparent); z-index: 1; }
-.pcol.p2 { min-height: 235px; background: var(--hero); }
-.pcol.p3 { min-height: 205px; background: color-mix(in oklab, var(--hero) 86%, var(--gold) 14%); }
+/* argent réel */
+.pcol.p2 { min-height: 235px; background: linear-gradient(165deg, #f3f5f8, #aab2bd); color: #20242b;
+  box-shadow: 0 16px 40px rgba(140,150,165,.4); }
+/* bronze réel */
+.pcol.p3 { min-height: 205px; background: linear-gradient(165deg, #e6a675, #a9682f); color: #2a1808;
+  box-shadow: 0 16px 40px rgba(150,95,40,.4); }
+.pcol.p2 .av, .pcol.p3 .av { background: rgba(255,255,255,.4); }
 .pcol.p1 .av { width: 84px; height: 84px; font-size: 42px; background: rgba(255,255,255,.4); box-shadow: 0 8px 22px rgba(0,0,0,.18); }
 .pcol.p1 .ps { font-size: clamp(28px,5vw,42px); }
 .pcol.p1 .medal { font-size: 16px; }

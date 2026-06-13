@@ -344,7 +344,7 @@ export function Leaderboard({ go, profile, users: realUsers, me, matches: lbMatc
                 {grp.slice(0, 3).map((u) => <div className="av" key={u.id} style={tie ? { width: 46, height: 46, fontSize: 22 } : null}>{u.avatar}</div>)}
               </div>
               <div className="ps" style={tie ? { fontSize: "clamp(16px,3vw,22px)" } : null}>{grp.map((u) => u.pseudo).join(" & ")}</div>
-              <div className="mono" style={{ fontSize: 12, opacity: .85 }}>{grp[0].pts} {t("pts")} · {grp[0].exacts} {t("exacts")}</div>
+              <div className="mono" style={{ fontSize: 12, opacity: .85 }}>{grp[0].pts} {t("pts")}</div>
               <div style={{ marginTop: 8, fontSize: 12.5, fontWeight: 700 }}>{t(prize.lot)}</div>
             </div>
           );
