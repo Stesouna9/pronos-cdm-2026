@@ -573,3 +573,11 @@ a { color: inherit; }
 .fbcard.fb-bad { box-shadow: 0 0 0 3px color-mix(in oklab, var(--lose) 55%, transparent); }
 .jcount.pop { animation: jpop .35s ease; }
 @keyframes jpop { 40% { transform: scale(1.35); } }
+
+/* ---------- Liste matchs : passés grisés + prochain mis en avant ---------- */
+.match--past { opacity: .55; filter: saturate(.6); }
+.match--past:hover { opacity: 1; filter: none; }
+.match--next { position: relative; border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 45%, transparent), 0 14px 34px color-mix(in oklab, var(--accent) 20%, transparent); }
+.nextbadge { position: absolute; top: -10px; left: 14px; background: var(--accent); color: #fff; font-family: var(--f-poster); font-size: 11px; letter-spacing: .04em; padding: 3px 10px; border-radius: 999px; box-shadow: 0 4px 10px rgba(0,0,0,.2); }
+.pastToggle { width: 100%; padding: 11px; margin-bottom: 14px; border-radius: var(--r-md); border: 1px dashed var(--line); background: var(--surface-2); color: var(--ink-soft); font-weight: 700; font-size: 13px; cursor: pointer; transition: all .15s; }
+.pastToggle:hover { border-color: var(--accent); color: var(--ink); }

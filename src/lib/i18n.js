@@ -254,6 +254,8 @@ const JA = {
   "Tape le ballon pour le garder en l'air. 20 = défi réussi !": "ボールをタップして落とさない。20回で成功！",
   "Laisser jouer": "プレーオン", "Jaune": "イエロー", "Rouge": "レッド",
   "glisse le doigt pour déplacer le banc": "指でスライドしてバーを動かす",
+  "Prochain match": "次の試合", "Prochains matchs": "次の試合",
+  "matchs passés": "終了した試合", "Masquer les matchs passés": "終了した試合を隠す",
   "Objectif": "目標",
   "Tester": "テスト",
   "Partie test (admin) — non comptée au classement.": "テストプレイ（管理者）— ランキングに反映されません。",
