@@ -434,14 +434,19 @@ export function GamesScreen({ profile }) {
           {board && <div className="tblwrap"><table className="tbl">
             <thead><tr><th>#</th><th>{t("Joueur")}</th><th>{t("Parties")}</th><th>{t("Points")}</th></tr></thead>
             <tbody>
-              {board.map((u, i) => (
-                <tr key={u.user_id} style={u.user_id === profile.id ? { fontWeight: 800 } : null}>
-                  <td className="mono">{i + 1}</td>
-                  <td><span style={{ marginRight: 8 }}>{u.avatar}</span>{u.pseudo}</td>
-                  <td className="mono">{u.parties}</td>
-                  <td className="mono" style={{ fontWeight: 800 }}>{u.pts}</td>
-                </tr>
-              ))}
+              {board.map((u, i, arr) => {
+                // Ex æquo : mêmes points = même rang (1, 2, 2, 4…). Le "=" signale l'égalité.
+                const rank = arr.findIndex((x) => x.pts === u.pts) + 1;
+                const tie = arr.filter((x) => x.pts === u.pts).length > 1;
+                return (
+                  <tr key={u.user_id} style={u.user_id === profile.id ? { fontWeight: 800 } : null}>
+                    <td className="mono">{rank}{tie ? "=" : ""}</td>
+                    <td><span style={{ marginRight: 8 }}>{u.avatar}</span>{u.pseudo}</td>
+                    <td className="mono">{u.parties}</td>
+                    <td className="mono" style={{ fontWeight: 800 }}>{u.pts}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table></div>}
         </div>
