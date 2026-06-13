@@ -336,9 +336,10 @@ export function Leaderboard({ go, profile, users: realUsers, me, matches: lbMatc
           const place = i === 1 ? 1 : i === 0 ? 2 : 3;
           const prize = WC.PRIZES.find((p) => p.rang === place);
           const tie = grp.length > 1;
+          const realRank = grp[0].position || place;   // vrai rang (suit les ex æquo au-dessus)
           return (
             <div className={"pcol p" + place} key={grp[0].id}>
-              <div className="medal">{place === 1 ? "🏆 " + t("Champion").toUpperCase() : place === 2 ? "🥈 2E" : "🥉 3E"}{tie && " · " + t("ex æquo")}</div>
+              <div className="medal">{place === 1 ? "🏆 " + t("Champion").toUpperCase() : (place === 2 ? "🥈 " : "🥉 ") + realRank + "E"}{tie && " · " + t("ex æquo")}</div>
               <div style={{ display: "flex", justifyContent: "center", gap: 6 }}>
                 {grp.slice(0, 3).map((u) => <div className="av" key={u.id} style={tie ? { width: 46, height: 46, fontSize: 22 } : null}>{u.avatar}</div>)}
               </div>
@@ -539,7 +540,7 @@ export function Rules() {
           </div>
           <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>⚖️ {t("En cas d'égalité")}</div>
-            <div className="muted" style={{ fontSize: 13.5 }}>{t("Pendant le tournoi, les égalités s'affichent ex æquo (mêmes points et mêmes scores exacts = même place). Le départage final (scores exacts, puis ancienneté d'inscription) ne sert qu'à attribuer les lots à la fin.")}</div>
+            <div className="muted" style={{ fontSize: 13.5 }}>{t("Pendant le tournoi, à points égaux les joueurs sont ex æquo (même place). Le départage (scores exacts, puis ancienneté d'inscription) ne sert qu'à attribuer les lots à la toute fin.")}</div>
           </div>
         </div>
 

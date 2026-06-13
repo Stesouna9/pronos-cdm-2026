@@ -145,9 +145,10 @@ export async function fetchLeaderboard() {
     serie: 0,
     position: i + 1,
   }));
-  // Ex æquo : mêmes points ET mêmes exacts → même rang affiché (1,2,3,3,5…).
+  // Ex æquo PENDANT le tournoi : mêmes points = même rang affiché (1,2,2,4…).
+  // Le départage (exacts, puis ancienneté d'inscription) ne sert qu'aux lots à la fin.
   for (let i = 1; i < list.length; i++) {
-    if (list[i].pts === list[i - 1].pts && list[i].exacts === list[i - 1].exacts) {
+    if (list[i].pts === list[i - 1].pts) {
       list[i].position = list[i - 1].position;
       list[i].tie = true; list[i - 1].tie = true;
     }
