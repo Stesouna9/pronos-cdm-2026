@@ -92,17 +92,18 @@ export function PenPicker({ m, pick, onPick, compact }) {
   );
 }
 
-function MatchRow({ m, pred, setPred, go, conf, setConf, pick, setPredPen, cote, next }) {
+function MatchRow({ m, pred, setPred, go, conf, setConf, pick, setPredPen, cote, next, live }) {
   const fini = m.status === "fini";
   const locked = m.locked; // verrouillé : coup d'envoi passé
-  const past = locked || fini; // match passé → grisé
+  const past = (locked || fini) && !live; // passé (grisé) — un match EN COURS n'est pas grisé
   const [a, b] = pred || [null, null];
   const ch = m.home && WC.T[m.home] ? WC.T[m.home].colors[0] : "var(--line)";
   const ca = m.away && WC.T[m.away] ? WC.T[m.away].colors[0] : "var(--line)";
   return (
-    <div className={"card pad rise match" + (past ? " match--past" : "") + (next ? " match--next" : "")}>
-      {next && <div className="nextbadge">⏰ {t("Prochain match")}</div>}
+    <div className={"card pad rise match" + (past ? " match--past" : "") + (next && !live ? " match--next" : "") + (live ? " match--live" : "")}>
       <div className="teamstripe" style={{ background: `linear-gradient(90deg, ${ch} 0 46%, ${ca} 54%)` }} />
+      {live && <div className="matchflag is-live"><span className="livedot" /> {t("En direct")}</div>}
+      {next && !live && <div className="matchflag is-next">⏰ {t("Prochain match")}</div>}
       <div className="meta" style={{ justifyContent: "space-between" }}>
         <span><b style={{ color: "var(--ink)" }}>{tPhase(m.phase)}</b> · {WC.fmtDate(m.date)} · {WC.fmtHeure(m.date)}</span>
         <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -198,13 +199,17 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
     return up.length ? up[0].id : null;
   }, [matches]);
 
+  // Un match est "en cours" : coup d'envoi passé, pas encore fini, dans la fenêtre ~2h30.
+  const now = new Date();
+  const isLive = (m) => m.status !== "fini" && m.date <= now && (now - m.date) < 2.5 * 3600e3;
+
   const row = (m) => <MatchRow key={m.id} m={m} pred={predictions[m.id]} setPred={setPred} go={go}
     conf={confidences[m.id]} setConf={setConf} pick={penPicks[m.id]} setPredPen={setPredPen}
-    cote={cotes[m.id]} next={m.id === nextId} />;
+    cote={cotes[m.id]} next={m.id === nextId} live={isLive(m)} />;
 
-  // Liste à plat : on sépare passés / à venir pour atterrir sur les prochains matchs.
-  const now = new Date();
-  const passes = list.filter((m) => m.date <= now);
+  // On atterrit sur : matchs en cours (en avant) + prochains. Les passés sont repliés.
+  const enCours = list.filter(isLive);
+  const passes = list.filter((m) => m.date <= now && !isLive(m));
   const aVenir = list.filter((m) => m.date > now);
 
   return (
@@ -243,8 +248,16 @@ export function MatchesScreen({ go, predictions, setPred, matches = WC.ALL_MATCH
           )}
           {filtre !== "termines" && showPast && <div className="grid g-2" style={{ marginBottom: 18 }}>{passes.map(row)}</div>}
 
+          {/* Matchs EN COURS, mis en avant tout en haut. */}
+          {filtre !== "termines" && enCours.length > 0 && (
+            <>
+              <div className="eyebrow" style={{ margin: "6px 0 12px" }}>🔴 {t("En direct")}</div>
+              <div className="grid g-2" style={{ marginBottom: 18 }}>{enCours.map(row)}</div>
+            </>
+          )}
+
           {/* Prochains matchs (mis en avant), ou la liste filtrée telle quelle pour "Terminés". */}
-          {filtre !== "termines" && passes.length > 0 && aVenir.length > 0 && (
+          {filtre !== "termines" && aVenir.length > 0 && (
             <div className="eyebrow" style={{ margin: "6px 0 12px" }}>⚽ {t("Prochains matchs")}</div>
           )}
           <div className="grid g-2">{(filtre === "termines" ? list : aVenir).map(row)}</div>
