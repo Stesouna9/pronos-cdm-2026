@@ -39,11 +39,17 @@ export async function fetchMatches() {
   return (data || []).map(mapMatch);
 }
 
-/* Pronos du joueur connecté -> { [matchId]: [home, away] } */
+/* Pronos du joueur connecté -> { [matchId]: [home, away] }
+   IMPORTANT : filtrer sur user_id. Après le coup d'envoi, la RLS autorise à
+   lire les pronos de TOUTE la ligue ("Les pronos de la ligue") ; sans ce filtre
+   on récupérerait aussi ceux des autres et "Ton prono" afficherait le mauvais. */
 export async function fetchMyPredictions() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { preds: {}, conf: {}, pens: {} };
   const { data, error } = await supabase
     .from("predictions")
-    .select("match_id, pred_home, pred_away, confidence, pred_pen_winner");
+    .select("match_id, pred_home, pred_away, confidence, pred_pen_winner")
+    .eq("user_id", user.id);
   if (error) throw error;
   const m = {}, conf = {}, pens = {};
   (data || []).forEach((p) => {
