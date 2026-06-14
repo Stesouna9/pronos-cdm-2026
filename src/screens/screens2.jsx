@@ -119,8 +119,6 @@ function MatchRow({ m, pred, setPred, go, conf, setConf, pick, setPredPen, cote,
       </div>
       {fini && m.pens && <div className="mono muted" style={{ fontSize: 11, textAlign: "center", marginTop: -4 }}>t.a.b. {m.pens[0]}–{m.pens[1]}</div>}
 
-      <CoteBar m={m} cote={cote} compact />
-
       <hr className="divider" style={{ margin: "6px 0" }} />
 
       {!fini && m.home && m.away && !locked && (
