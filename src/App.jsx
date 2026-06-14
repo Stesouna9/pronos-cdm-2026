@@ -57,6 +57,16 @@ export default function App() {
   const [penPicks, setPenPicks] = useState({});
   // Question notifications (s'affiche une fois par appareil tant que pas répondu)
   const [askNotif, setAskNotif] = useState(false);
+  // Annonce one-shot : l'arrivée de Super Claude IA (vue une seule fois par appareil)
+  const [showAnnonce, setShowAnnonce] = useState(false);
+  useEffect(() => {
+    if (!authed) return;
+    try { if (!localStorage.getItem("pronos2026:annonce:claude-ia")) setShowAnnonce(true); } catch (e) {}
+  }, [authed]);
+  function closeAnnonce() {
+    setShowAnnonce(false);
+    try { localStorage.setItem("pronos2026:annonce:claude-ia", "1"); } catch (e) {}
+  }
 
   // Si Supabase est branché, on suit la session réelle
   useEffect(() => {
@@ -255,6 +265,20 @@ export default function App() {
   return (
     <div className="app-root">
       {confetti && <Confetti onDone={() => setConfetti(false)} />}
+      {showAnnonce && !askNotif && (
+        <div className="modal-veil" onClick={closeAnnonce}>
+          <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 44, textAlign: "center", marginBottom: 8 }}>🤖</div>
+            <div className="poster" style={{ fontSize: 22, textAlign: "center", marginBottom: 8 }}>{t("Une nouvelle joueuse !")}</div>
+            <p className="muted" style={{ fontSize: 14, textAlign: "center", margin: "0 0 16px" }}>
+              {t("Super Claude IA 🤖 s'est inscrite dans la ligue — juste pour le fun, histoire de se marrer. Rassure-toi : elle ne gagnera AUCUN lot. À vous de battre l'intelligence artificielle ! 😏")}
+            </p>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Btn variant="accent" onClick={closeAnnonce}>{t("Défi accepté !")}</Btn>
+            </div>
+          </div>
+        </div>
+      )}
       {askNotif && (
         <div className="modal-veil" onClick={() => answerNotif(false)}>
           <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
