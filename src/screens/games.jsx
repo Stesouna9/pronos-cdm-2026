@@ -20,47 +20,77 @@ const GAMES = [
 /* =================== JEUX =================== */
 
 /* ---- 🥅 Tirs au but ----
-   Jeu d'ADRESSE (pas de hasard) : le gardien montre de quel côté il plonge,
-   tu tires de l'AUTRE côté pour marquer. Pas de chrono. 5 tirs, 4 = défi. */
+   ADRESSE (zéro hasard) : le gardien couvre un tiers (zone rouge) ET un viseur
+   balaie le but. Appuie TIRER quand le viseur est sur une zone LIBRE.
+   Bords = à côté. Plus tu marques, plus le viseur va vite. 5 tirs, 4 = défi. */
 function rndSide() { return ["g", "c", "d"][Math.floor(Math.random() * 3)]; }
 function Penalty({ onEnd }) {
-  const [hist, setHist] = useState([]);          // true = but, false = arrêt
-  const [keeper, setKeeper] = useState(rndSide); // côté que couvre le gardien (montré)
-  const [anim, setAnim] = useState(null);        // { side, goal }
+  const [hist, setHist] = useState([]);
+  const [keeper, setKeeper] = useState(rndSide);
+  const [anim, setAnim] = useState(null);     // { x, zone, goal }
+  const cursor = useRef(null);                 // élément viseur
+  const stx = useRef({ x: 50, dir: 1, raf: 0, dead: false });
   const busy = useRef(false);
+  const shotsRef = useRef(0);
 
-  function shoot(side) {
+  // viseur qui balaie (vitesse croît avec le nombre de buts)
+  useEffect(() => {
+    const goals = hist.filter(Boolean).length;
+    const speed = 0.9 + goals * 0.22;
+    let last = performance.now();
+    stx.current.dead = false;
+    const loop = (now) => {
+      const s = stx.current;
+      if (s.dead) return;
+      const dt = Math.min((now - last) / 16.7, 3); last = now;
+      if (!busy.current) {
+        s.x += s.dir * speed * dt;
+        if (s.x >= 100) { s.x = 100; s.dir = -1; }
+        if (s.x <= 0) { s.x = 0; s.dir = 1; }
+        if (cursor.current) cursor.current.style.left = s.x + "%";
+      }
+      s.raf = requestAnimationFrame(loop);
+    };
+    s_start();
+    function s_start() { stx.current.raf = requestAnimationFrame(loop); }
+    return () => { stx.current.dead = true; cancelAnimationFrame(stx.current.raf); };
+  }, [hist]);
+
+  function zoneOf(x) {
+    if (x < 8 || x > 92) return "out";       // à côté
+    return x < 37 ? "g" : x > 63 ? "d" : "c";
+  }
+
+  function shoot() {
     if (busy.current || hist.length >= 5) return;
     busy.current = true;
-    const goal = side !== keeper;                // tu marques si le gardien n'est pas là
-    setAnim({ side, goal });
+    const x = stx.current.x;
+    const zone = zoneOf(x);
+    const goal = zone !== "out" && zone !== keeper;
+    setAnim({ x, zone, goal });
     setTimeout(() => {
       const nh = [...hist, goal];
-      setHist(nh); setAnim(null); busy.current = false;
-      if (nh.length >= 5) { const b = nh.filter(Boolean).length; onEnd(b, b >= 4); }
-      else setKeeper(rndSide());
+      busy.current = false; setAnim(null);
+      if (nh.length >= 5) { const b = nh.filter(Boolean).length; setHist(nh); onEnd(b, b >= 4); }
+      else { setKeeper(rndSide()); setHist(nh); }
     }, 1050);
   }
 
-  const pos = { g: "16%", c: "50%", d: "84%" };
+  const kz = { g: "8%", c: "37%", d: "63%" };  // position zone gardien (gauche du tiers)
   return (
     <div style={{ textAlign: "center" }}>
       <div className="mono muted" style={{ marginBottom: 8, fontSize: 13 }}>
-        {t("Tir")} {Math.min(hist.length + 1, 5)}/5 — 🧤 {t("le gardien plonge du côté éclairé : tire de l'AUTRE côté !")}
+        {t("Tir")} {Math.min(hist.length + 1, 5)}/5 — 🧤 {t("vise une zone LIBRE (pas le rouge) et appuie au bon moment !")}
       </div>
       <div className="goalbox">
         <div className="goal-net" />
-        {/* zone éclairée = côté gardien */}
-        <div className="keeperzone" style={{ left: keeper === "g" ? "0" : keeper === "d" ? "66%" : "33%" }} />
-        <div className="keeper2" style={{ left: pos[keeper] }}>🧤</div>
-        {anim && <div className="shotball" style={{ left: pos[anim.side], top: "62%" }}>⚽</div>}
-        {anim && <div className={"verdict " + (anim.goal ? "v-goal" : "v-save")}>{anim.goal ? t("BUT !") : t("ARRÊT !")}</div>}
+        <div className="keeperzone" style={{ left: kz[keeper], width: "29%" }} />
+        <div className="aimline" ref={cursor} style={{ left: "50%" }} />
+        <div className="keeper2" style={{ left: { g: "22%", c: "50%", d: "78%" }[keeper] }}>🧤</div>
+        {anim && <div className="shotball" style={{ left: anim.x + "%", top: "60%" }}>⚽</div>}
+        {anim && <div className={"verdict " + (anim.goal ? "v-goal" : "v-save")}>{anim.goal ? t("BUT !") : anim.zone === "out" ? t("À CÔTÉ !") : t("ARRÊT !")}</div>}
       </div>
-      <div className="penzones">
-        {[["g", "◀ " + t("Gauche")], ["c", "⬆ " + t("Centre")], ["d", t("Droite") + " ▶"]].map(([s, l]) => (
-          <button key={s} className="penzone" disabled={!!anim || hist.length >= 5} onClick={() => shoot(s)}>{l}</button>
-        ))}
-      </div>
+      <button className="penzone" style={{ marginTop: 14, minWidth: 200 }} disabled={!!anim || hist.length >= 5} onClick={shoot}>⚽ {t("TIRER")}</button>
       <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 10, fontSize: 22 }}>
         {[0, 1, 2, 3, 4].map((i) => (
           <span key={i}>{i < hist.length ? (hist[i] ? "⚽" : "🧤") : i === hist.length ? "👟" : "·"}</span>
@@ -175,42 +205,61 @@ function Arbitre({ onEnd }) {
 }
 
 /* ---- 🧱 Casse-brique foot ----
-   Brique dorée = ballon plus rapide · brique bleue (gourde) = banc élargi 8 s. */
+   Mur GÉNÉRÉ CHAQUE JOUR (graine = date, le même pour toute la ligue).
+   Bonus 🧴 banc large · ❤️ vie · 🐢 balle lente. Malus 💣 banc rétréci · 🔥 balle rapide. */
+const BRICK = {
+  norm:  { ico: "👕", bg: null },
+  wide:  { ico: "🧴", bg: "#39b6d8" },  // bonus : banc large 8s
+  heart: { ico: "❤️", bg: "#1f8a4c" },  // bonus : +1 vie
+  slow:  { ico: "🐢", bg: "#0ea5b7" },  // bonus : balle lente 6s
+  bomb:  { ico: "💣", bg: "#7a1d16" },  // malus : banc rétréci 8s
+  fast:  { ico: "🔥", bg: "#e36414" },  // malus : balle rapide 6s
+};
 function CasseBrique({ onEnd }) {
   const cv = useRef(null);
-  const [info, setInfo] = useState({ broken: 0, lives: 3 });
+  const [info, setInfo] = useState({ broken: 0, lives: 3, fx: "" });
 
   useEffect(() => {
     const c = cv.current, ctx = c.getContext("2d");
     const W = 340, H = 440;
     const COLS = 8, ROWS = 5, BW = 38, BH = 18, TOP = 40, GAP = 4;
+    const TOTAL = COLS * ROWS;
+    // RNG du jour → mur identique pour tous, différent chaque jour
+    let seed = (daySeed(todayFR()) ^ 0x9e3b) >>> 0;
+    const rng = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 2 ** 32; };
+    const pickKind = () => {
+      const r = rng();
+      if (r < 0.06) return "heart";
+      if (r < 0.15) return "wide";
+      if (r < 0.22) return "slow";
+      if (r < 0.32) return "bomb";
+      if (r < 0.42) return "fast";
+      return "norm";
+    };
     const bricks = [];
-    for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++) {
-      const roll = Math.random();
-      bricks.push({ x: 3 + q * (BW + GAP), y: TOP + r * (BH + GAP), kind: roll < 0.08 ? "gold" : roll < 0.16 ? "gourde" : "norm", row: r, on: true });
-    }
-    let paddleX = W / 2, paddleW = 68, wideUntil = 0;
-    let ball = { x: W / 2, y: H - 34, vx: 0, vy: 0, stuck: true };
-    let lives = 3, broken = 0, dead = false;
-    const rowColors = ["#d52b1e", "#e36414", "#1f8a4c", "#2a5bd7", "#7a5ae0"];
+    for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++)
+      bricks.push({ x: 3 + q * (BW + GAP), y: TOP + r * (BH + GAP), kind: pickKind(), row: r, on: true });
 
-    function move(e) {
-      const r = c.getBoundingClientRect();
-      paddleX = ((e.clientX - r.left) / r.width) * W;
-    }
-    function launch() {
-      if (ball.stuck) { ball.stuck = false; ball.vx = (Math.random() - 0.5) * 3; ball.vy = -3.6; }
-    }
+    let paddleX = W / 2, wideUntil = 0, narrowUntil = 0, slowUntil = 0, fastUntil = 0;
+    let ball = { x: W / 2, y: H - 34, vx: 0, vy: 0, stuck: true };
+    let lives = 3, broken = 0, dead = false, fx = "", fxUntil = 0;
+    const rowColors = ["#d52b1e", "#e36414", "#1f8a4c", "#2a5bd7", "#7a5ae0"];
+    const flash = (txt, now) => { fx = txt; fxUntil = now + 1100; setInfo({ broken, lives, fx: txt }); };
+
+    function move(e) { const r = c.getBoundingClientRect(); paddleX = ((e.clientX - r.left) / r.width) * W; }
+    function launch() { if (ball.stuck) { ball.stuck = false; ball.vx = (rng() - 0.5) * 3; ball.vy = -3.6; } }
     c.addEventListener("pointermove", move);
     c.addEventListener("pointerdown", (e) => { move(e); launch(); });
 
     function loop(now) {
       if (dead) return;
+      const paddleW = now < narrowUntil ? 44 : now < wideUntil ? 104 : 68;  // malus prioritaire
+      const mul = now < fastUntil ? 1.45 : now < slowUntil ? 0.6 : 1;
       const px = Math.max(paddleW / 2, Math.min(W - paddleW / 2, paddleX));
-      paddleW = now < wideUntil ? 104 : 68;
+      if (now > fxUntil) fx = "";
       if (ball.stuck) { ball.x = px; ball.y = H - 34; }
       else {
-        ball.x += ball.vx; ball.y += ball.vy;
+        ball.x += ball.vx * mul; ball.y += ball.vy * mul;
         if (ball.x < 8 || ball.x > W - 8) ball.vx *= -1;
         if (ball.y < 8) ball.vy *= -1;
         if (ball.y > H - 26 && ball.y < H - 14 && Math.abs(ball.x - px) < paddleW / 2 + 4 && ball.vy > 0) {
@@ -218,36 +267,39 @@ function CasseBrique({ onEnd }) {
           ball.vx += (ball.x - px) * 0.07;
         }
         if (ball.y > H + 10) {
-          lives--; setInfo({ broken, lives });
-          if (lives <= 0) { dead = true; onEnd(broken, broken >= 40); return; }
+          lives--; setInfo({ broken, lives, fx });
+          if (lives <= 0) { dead = true; onEnd(broken, broken >= TOTAL); return; }
           ball = { x: px, y: H - 34, vx: 0, vy: 0, stuck: true };
         }
         for (const b of bricks) {
           if (!b.on) continue;
           if (ball.x > b.x - 6 && ball.x < b.x + BW + 6 && ball.y > b.y - 6 && ball.y < b.y + BH + 6) {
             b.on = false; broken++; ball.vy *= -1;
-            if (b.kind === "gold") { ball.vx = Math.max(-6.5, Math.min(6.5, ball.vx * 1.12)); ball.vy = Math.max(-6.5, Math.min(6.5, ball.vy * 1.12)); }
-            if (b.kind === "gourde") wideUntil = now + 8000;
-            setInfo({ broken, lives });
+            if (b.kind === "wide") { wideUntil = now + 8000; narrowUntil = 0; flash("🧴 " + t("Banc large !"), now); }
+            else if (b.kind === "bomb") { narrowUntil = now + 8000; wideUntil = 0; flash("💣 " + t("Banc rétréci !"), now); }
+            else if (b.kind === "slow") { slowUntil = now + 6000; fastUntil = 0; flash("🐢 " + t("Balle lente"), now); }
+            else if (b.kind === "fast") { fastUntil = now + 6000; slowUntil = 0; flash("🔥 " + t("Balle rapide !"), now); }
+            else if (b.kind === "heart") { lives = Math.min(5, lives + 1); flash("❤️ " + t("Vie +1 !"), now); }
+            else setInfo({ broken, lives, fx });
             break;
           }
         }
-        if (broken >= COLS * ROWS) { dead = true; onEnd(broken, true); return; }
+        if (broken >= TOTAL) { dead = true; onEnd(broken, true); return; }
       }
       // dessin
       ctx.fillStyle = "#10301c"; ctx.fillRect(0, 0, W, H);
       ctx.strokeStyle = "rgba(255,255,255,.15)"; ctx.strokeRect(4, 4, W - 8, H - 8);
       for (const b of bricks) {
         if (!b.on) continue;
-        ctx.fillStyle = b.kind === "gold" ? "#d4a533" : b.kind === "gourde" ? "#39b6d8" : rowColors[b.row];
+        ctx.fillStyle = BRICK[b.kind].bg || rowColors[b.row];
         ctx.fillRect(b.x, b.y, BW, BH);
-        ctx.font = "10px sans-serif";
-        ctx.fillText(b.kind === "gourde" ? "🧴" : b.kind === "gold" ? "⚡" : "👕", b.x + BW / 2 - 6, b.y + BH - 5);
+        ctx.font = "11px sans-serif"; ctx.fillText(BRICK[b.kind].ico, b.x + BW / 2 - 7, b.y + BH - 4);
       }
-      ctx.fillStyle = now < wideUntil ? "#39b6d8" : "#f3ede2";
+      ctx.fillStyle = now < narrowUntil ? "#e36414" : now < wideUntil ? "#39b6d8" : "#f3ede2";
       ctx.fillRect(px - paddleW / 2, H - 20, paddleW, 8);
       ctx.font = "16px sans-serif"; ctx.fillText("⚽", ball.x - 8, ball.y + 6);
-      if (ball.stuck) { ctx.fillStyle = "rgba(255,255,255,.8)"; ctx.font = "13px sans-serif"; ctx.fillText(t("Tape pour lancer !"), W / 2 - 44, H / 2); }
+      if (fx) { ctx.fillStyle = "#fff"; ctx.font = "bold 15px sans-serif"; ctx.textAlign = "center"; ctx.fillText(fx, W / 2, 26); ctx.textAlign = "left"; }
+      if (ball.stuck) { ctx.fillStyle = "rgba(255,255,255,.8)"; ctx.font = "13px sans-serif"; ctx.textAlign = "center"; ctx.fillText(t("Tape pour lancer !"), W / 2, H / 2); ctx.textAlign = "left"; }
       requestAnimationFrame(loop);
     }
     requestAnimationFrame(loop);
@@ -256,8 +308,11 @@ function CasseBrique({ onEnd }) {
 
   return (
     <div style={{ textAlign: "center" }}>
-      <div className="mono muted" style={{ fontSize: 13, marginBottom: 8 }}>
-        👕 {info.broken}/40 · {"❤️".repeat(Math.max(0, info.lives))} — ⚡ {t("= plus rapide")} · 🧴 {t("= banc élargi")}
+      <div className="mono muted" style={{ fontSize: 13, marginBottom: 6 }}>
+        👕 {info.broken}/40 · {"❤️".repeat(Math.max(0, info.lives))}
+      </div>
+      <div className="mono muted" style={{ fontSize: 10.5, marginBottom: 8 }}>
+        🧴 {t("banc large")} · ❤️ {t("vie")} · 🐢 {t("balle lente")} · 💣 {t("banc rétréci")} · 🔥 {t("balle rapide")}
       </div>
       <canvas ref={cv} width="340" height="440" className="brickcanvas" />
     </div>
