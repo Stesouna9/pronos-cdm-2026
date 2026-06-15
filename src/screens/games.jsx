@@ -20,48 +20,46 @@ const GAMES = [
 /* =================== JEUX =================== */
 
 /* ---- 🥅 Tirs au but ----
-   Le gardien apprend : plus tu marques, plus il lit tes tirs.
-   La lucarne reste payante (75 %) mais elle est toute petite. */
+   Jeu d'ADRESSE (pas de hasard) : le gardien montre de quel côté il plonge,
+   tu tires de l'AUTRE côté pour marquer. Pas de chrono. 5 tirs, 4 = défi. */
+function rndSide() { return ["g", "c", "d"][Math.floor(Math.random() * 3)]; }
 function Penalty({ onEnd }) {
-  const [hist, setHist] = useState([]);   // true = but, false = arrêt
-  const [anim, setAnim] = useState(null);
+  const [hist, setHist] = useState([]);          // true = but, false = arrêt
+  const [keeper, setKeeper] = useState(rndSide); // côté que couvre le gardien (montré)
+  const [anim, setAnim] = useState(null);        // { side, goal }
   const busy = useRef(false);
 
-  function shoot(e) {
+  function shoot(side) {
     if (busy.current || hist.length >= 5) return;
     busy.current = true;
-    const r = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-    const goals = hist.filter(Boolean).length;
-    const ballSide = x < 0.34 ? "g" : x > 0.66 ? "d" : "c";
-    // le gardien lit le tir : 33 % de base, +8 % par but déjà marqué
-    const reads = Math.random() < 0.33 + goals * 0.08;
-    const keeper = reads ? ballSide : ["g", "c", "d"].filter((s) => s !== ballSide)[Math.floor(Math.random() * 2)];
-    const lucarne = y < 0.28 && (x < 0.2 || x > 0.8);
-    const corner = x < 0.12 || x > 0.88;
-    let goal;
-    if (keeper !== ballSide) goal = true;
-    else goal = lucarne ? Math.random() < 0.75 : corner ? Math.random() < 0.45 : false;
-    setAnim({ x, y, keeper, goal, lucarne });
+    const goal = side !== keeper;                // tu marques si le gardien n'est pas là
+    setAnim({ side, goal });
     setTimeout(() => {
       const nh = [...hist, goal];
       setHist(nh); setAnim(null); busy.current = false;
       if (nh.length >= 5) { const b = nh.filter(Boolean).length; onEnd(b, b >= 4); }
-    }, 950);
+      else setKeeper(rndSide());
+    }, 1050);
   }
 
+  const pos = { g: "16%", c: "50%", d: "84%" };
   return (
     <div style={{ textAlign: "center" }}>
       <div className="mono muted" style={{ marginBottom: 8, fontSize: 13 }}>
-        {t("Tir")} {Math.min(hist.length + 1, 5)}/5 — {t("tape où tu veux tirer (la lucarne paie, mais elle est petite !)")}
+        {t("Tir")} {Math.min(hist.length + 1, 5)}/5 — 🧤 {t("le gardien plonge du côté éclairé : tire de l'AUTRE côté !")}
       </div>
-      <div className="goalbox" onPointerDown={shoot}>
+      <div className="goalbox">
         <div className="goal-net" />
-        <div className={"keeper" + (anim ? " dive-" + anim.keeper : "")}>🧤</div>
-        {anim && <div className="shotball" style={{ left: anim.x * 100 + "%", top: anim.y * 100 + "%" }}>⚽</div>}
-        {anim && <div className={"verdict " + (anim.goal ? "v-goal" : "v-save")}>
-          {anim.goal ? (anim.lucarne ? t("LUCARNE !") + " 🎯" : t("BUT !")) : t("ARRÊT !")}
-        </div>}
+        {/* zone éclairée = côté gardien */}
+        <div className="keeperzone" style={{ left: keeper === "g" ? "0" : keeper === "d" ? "66%" : "33%" }} />
+        <div className="keeper2" style={{ left: pos[keeper] }}>🧤</div>
+        {anim && <div className="shotball" style={{ left: pos[anim.side], top: "62%" }}>⚽</div>}
+        {anim && <div className={"verdict " + (anim.goal ? "v-goal" : "v-save")}>{anim.goal ? t("BUT !") : t("ARRÊT !")}</div>}
+      </div>
+      <div className="penzones">
+        {[["g", "◀ " + t("Gauche")], ["c", "⬆ " + t("Centre")], ["d", t("Droite") + " ▶"]].map(([s, l]) => (
+          <button key={s} className="penzone" disabled={!!anim || hist.length >= 5} onClick={() => shoot(s)}>{l}</button>
+        ))}
       </div>
       <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 10, fontSize: 22 }}>
         {[0, 1, 2, 3, 4].map((i) => (
@@ -81,19 +79,20 @@ function Jongles({ onEnd, record }) {
   function start() {
     setCount(0); setRunning(true);
     const W = box.current.clientWidth, H = box.current.clientHeight;
-    st.current = { x: W / 2, y: H * 0.35, vx: 0, vy: 0, W, H, n: 0, dead: false };
+    // départ haut + ballon qui MONTE d'abord → on a le temps avant le 1er contact
+    st.current = { x: W / 2, y: H * 0.30, vx: 0, vy: -3, W, H, n: 0, dead: false };
     let last = performance.now();
     const loop = (now) => {
       const s = st.current;
       if (!s || s.dead) return;
       const dt = Math.min((now - last) / 16.7, 3); last = now;
-      s.vy += 0.45 * dt * (1 + s.n * 0.015);   // gravité qui monte avec la série
+      s.vy += 0.26 * dt * (1 + s.n * 0.008);  // gravité douce, monte lentement avec la série
       s.x += s.vx * dt; s.y += s.vy * dt;
-      if (s.x < 22) { s.x = 22; s.vx = Math.abs(s.vx) * 0.85; }
-      if (s.x > s.W - 22) { s.x = s.W - 22; s.vx = -Math.abs(s.vx) * 0.85; }
-      if (s.y > s.H - 24) { s.dead = true; setRunning(false); onEnd(s.n, s.n >= 20); return; }
-      if (s.y < 24) { s.y = 24; s.vy = Math.abs(s.vy) * 0.5; }
-      if (ball.current) ball.current.style.transform = `translate(${s.x - 22}px, ${s.y - 22}px) rotate(${s.n * 40 + s.x}deg)`;
+      if (s.x < 26) { s.x = 26; s.vx = Math.abs(s.vx) * 0.85; }
+      if (s.x > s.W - 26) { s.x = s.W - 26; s.vx = -Math.abs(s.vx) * 0.85; }
+      if (s.y > s.H - 26) { s.dead = true; setRunning(false); onEnd(s.n, s.n >= 20); return; }
+      if (s.y < 26) { s.y = 26; s.vy = Math.abs(s.vy) * 0.5; }
+      if (ball.current) ball.current.style.transform = `translate(${s.x - 26}px, ${s.y - 26}px) rotate(${s.n * 40 + s.x}deg)`;
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
@@ -104,9 +103,10 @@ function Jongles({ onEnd, record }) {
     if (!s || s.dead || !running) return;
     const r = box.current.getBoundingClientRect();
     const cx = e.clientX - r.left, cy = e.clientY - r.top;
-    if (Math.hypot(cx - s.x, cy - s.y) < 52) {
-      s.vy = -(8.5 + Math.min(s.n * 0.08, 4));
-      s.vx += (s.x - cx) * 0.22;             // tape sur le côté → le ballon part
+    if (Math.hypot(cx - s.x, cy - s.y) < 78) {   // zone de frappe plus large
+      s.vy = -(7.5 + Math.min(s.n * 0.06, 3));   // rebond maîtrisé
+      s.vx += (s.x - cx) * 0.18;                 // tape sur le côté → le ballon part
+      s.x += (s.x - cx) * 0.02;
       s.n++; setCount(s.n);
     }
   }
@@ -136,7 +136,7 @@ function Arbitre({ onEnd }) {
   const [serie, setSerie] = useState(0);
   const [fb, setFb] = useState(null);      // 'good' | 'bad' : flash de feedback
   const timer = useRef(null);
-  const deadline = Math.max(1500 - serie * 55, 750);
+  const deadline = Math.max(3200 - serie * 110, 1400); // large au début, on a le temps de lire
 
   useEffect(() => {
     if (fb) return;

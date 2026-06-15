@@ -260,6 +260,8 @@ const JA = {
   "Défi accepté !": "受けて立つ！",
   "matchs passés": "終了した試合", "Masquer les matchs passés": "終了した試合を隠す",
   "Objectif": "目標",
+  "le gardien plonge du côté éclairé : tire de l'AUTRE côté !": "GKは光った側に飛ぶ：反対側に蹴れ！",
+  "Gauche": "左", "Centre": "中央", "Droite": "右",
   "Tester": "テスト",
   "Partie test (admin) — non comptée au classement.": "テストプレイ（管理者）— ランキングに反映されません。",
   "de plus en plus vite !": "どんどん速くなる！",
