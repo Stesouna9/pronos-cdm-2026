@@ -13,7 +13,7 @@ const GAMES = [
   { id: "penalty", icon: "🥅", name: "Tirs au but", goal: "4 buts sur 5" },
   { id: "jongles", icon: "⚽", name: "Jongles", goal: "20 jongles" },
   { id: "arbitre", icon: "⏱️", name: "Réflexe arbitre", goal: "série de 10" },
-  { id: "casse", icon: "🧱", name: "Casse-brique foot", goal: "40 maillots" },
+  { id: "casse", icon: "🧱", name: "Casse-brique foot", goal: "casse toute la forme" },
   { id: "drapeau", icon: "🚩", name: "Devine le drapeau", goal: "8 sur 10" },
 ];
 
@@ -215,15 +215,31 @@ const BRICK = {
   bomb:  { ico: "💣", bg: "#7a1d16" },  // malus : banc rétréci 8s
   fast:  { ico: "🔥", bg: "#e36414" },  // malus : balle rapide 6s
 };
+/* Pochoirs (9 colonnes × 7 lignes). '#' = brique. Une forme tirée chaque jour. */
+const SHAPES = [
+  { nom: "Rectangle", g: ["#########", "#########", "#########", "#########", "#########", "#########", "#########"] },
+  { nom: "Losange",   g: ["....#....", "...###...", "..#####..", "#########", "..#####..", "...###...", "....#...."] },
+  { nom: "Cœur",      g: [".##...##.", "#########", "#########", "#########", ".#######.", "..#####..", "...###..."] },
+  { nom: "Trophée",   g: ["#.#####.#", "#.#####.#", ".#######.", "..#####..", "...###...", "...###...", ".#######."] },
+  { nom: "Rond",      g: ["..#####..", ".#######.", "#########", "#########", "#########", ".#######.", "..#####.."] },
+  { nom: "Pyramide",  g: ["....#....", "...###...", "..#####..", ".#######.", "#########", "#########", "#########"] },
+  { nom: "Croix",     g: ["...###...", "...###...", "#########", "#########", "#########", "...###...", "...###..."] },
+  { nom: "Flèche",    g: ["....#....", "...###...", "..#####..", ".#######.", "#########", "...###...", "...###..."] },
+  { nom: "Ballon",    g: ["..#####..", ".##.#.##.", "##.###.##", "#########", "##.###.##", ".##.#.##.", "..#####.."] },
+  { nom: "Sourire",   g: ["#########", "#.#...#.#", "#.#...#.#", "#########", "#.#####.#", "##.....##", ".#######."] },
+];
 function CasseBrique({ onEnd }) {
   const cv = useRef(null);
   const [info, setInfo] = useState({ broken: 0, lives: 3, fx: "" });
+  const shape = SHAPES[daySeed(todayFR()) % SHAPES.length];   // forme du jour
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     const c = cv.current, ctx = c.getContext("2d");
     const W = 340, H = 440;
-    const COLS = 8, ROWS = 5, BW = 38, BH = 18, TOP = 40, GAP = 4;
-    const TOTAL = COLS * ROWS;
+    const COLS = 9, ROWS = 7, BW = 34, BH = 15, TOP = 34, GAP = 3;
+    const GW = COLS * BW + (COLS - 1) * GAP;          // largeur du mur
+    const OX = Math.round((W - GW) / 2);              // centrage horizontal
     // RNG du jour → mur identique pour tous, différent chaque jour
     let seed = (daySeed(todayFR()) ^ 0x9e3b) >>> 0;
     const rng = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 2 ** 32; };
@@ -236,9 +252,14 @@ function CasseBrique({ onEnd }) {
       if (r < 0.42) return "fast";
       return "norm";
     };
+    // ne pose des briques que sur les cases '#' du pochoir du jour
     const bricks = [];
-    for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++)
-      bricks.push({ x: 3 + q * (BW + GAP), y: TOP + r * (BH + GAP), kind: pickKind(), row: r, on: true });
+    for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++) {
+      if (shape.g[r] && shape.g[r][q] === "#")
+        bricks.push({ x: OX + q * (BW + GAP), y: TOP + r * (BH + GAP), kind: pickKind(), row: r, on: true });
+    }
+    const TOTAL = bricks.length;
+    setTotal(TOTAL);
 
     let paddleX = W / 2, wideUntil = 0, narrowUntil = 0, slowUntil = 0, fastUntil = 0;
     let ball = { x: W / 2, y: H - 34, vx: 0, vy: 0, stuck: true };
@@ -309,7 +330,7 @@ function CasseBrique({ onEnd }) {
   return (
     <div style={{ textAlign: "center" }}>
       <div className="mono muted" style={{ fontSize: 13, marginBottom: 6 }}>
-        👕 {info.broken}/40 · {"❤️".repeat(Math.max(0, info.lives))}
+        🧱 {t("Forme du jour")} : <b style={{ color: "var(--ink)" }}>{t(shape.nom)}</b> · 👕 {info.broken}/{total || "…"} · {"❤️".repeat(Math.max(0, info.lives))}
       </div>
       <div className="mono muted" style={{ fontSize: 10.5, marginBottom: 8 }}>
         🧴 {t("banc large")} · ❤️ {t("vie")} · 🐢 {t("balle lente")} · 💣 {t("banc rétréci")} · 🔥 {t("balle rapide")}
