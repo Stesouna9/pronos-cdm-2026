@@ -610,3 +610,8 @@ a { color: inherit; }
 
 /* viseur mobile du penalty */
 .aimline { position: absolute; top: 0; bottom: 0; width: 4px; transform: translateX(-50%); background: linear-gradient(var(--gold-soft), var(--gold)); box-shadow: 0 0 12px var(--gold); z-index: 3; }
+
+/* badge Joker dans "Les pronos de la ligue" */
+.jokertag { font-family: var(--f-mono); font-size: 10.5px; margin-top: 3px; color: var(--ink-soft); }
+.jokertag.on { color: var(--accent); font-weight: 800; }
+[data-theme="nuit"] .jokertag.on { color: var(--gold-soft); }

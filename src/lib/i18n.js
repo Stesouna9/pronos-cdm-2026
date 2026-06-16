@@ -269,6 +269,7 @@ const JA = {
   "banc large": "バー拡大", "vie": "ライフ", "balle lente": "ボール減速",
   "banc rétréci": "バー縮小", "balle rapide": "ボール加速",
   "Forme du jour": "今日の形", "casse toute la forme": "形を全部崩す",
+  "Joker ×2": "ジョーカー×2", "Pas de Joker": "ジョーカーなし",
   "Rectangle": "長方形", "Losange": "ひし形", "Cœur": "ハート", "Trophée": "トロフィー",
   "Rond": "丸", "Pyramide": "ピラミッド", "Croix": "十字", "Flèche": "矢印",
   "Ballon": "ボール", "Sourire": "スマイル",

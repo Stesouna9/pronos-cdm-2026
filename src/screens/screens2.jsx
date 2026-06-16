@@ -372,8 +372,9 @@ function LeaguePredictions({ m }) {
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 20 }}>{p.avatar}</span>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>{p.pseudo}{p.confidence ? " ⭐" : ""}</div>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{p.pseudo}</div>
                   <div className="poster" style={{ fontSize: 20 }}>{p.pred_home}–{p.pred_away}{p.pred_pen_winner ? <span className="mono muted" style={{ fontSize: 11, fontFamily: "var(--f-mono)" }}> 🥅{p.pred_pen_winner}</span> : null}</div>
+                  <div className={"jokertag" + (p.confidence ? " on" : "")}>{p.confidence ? "🃏 " + t("Joker ×2") : t("Pas de Joker")}</div>
                 </div>
                 {p.points != null && <span className={"pts " + (p.points >= 5 ? "pts--exact" : p.points > 0 ? "pts--good" : "pts--zero")}>+{p.points}</span>}
               </div>
