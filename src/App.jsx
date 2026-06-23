@@ -67,6 +67,16 @@ export default function App() {
     setShowAnnonce(false);
     try { localStorage.setItem("pronos2026:annonce:claude-ia", "1"); } catch (e) {}
   }
+  // Annonce one-shot : Super Claude IA passe HORS CLASSEMENT
+  const [showHors, setShowHors] = useState(false);
+  useEffect(() => {
+    if (!authed) return;
+    try { if (!localStorage.getItem("pronos2026:annonce:claude-hors")) setShowHors(true); } catch (e) {}
+  }, [authed]);
+  function closeHors() {
+    setShowHors(false);
+    try { localStorage.setItem("pronos2026:annonce:claude-hors", "1"); } catch (e) {}
+  }
 
   // Si Supabase est branché, on suit la session réelle
   useEffect(() => {
@@ -265,6 +275,20 @@ export default function App() {
   return (
     <div className="app-root">
       {confetti && <Confetti onDone={() => setConfetti(false)} />}
+      {showHors && !askNotif && !showAnnonce && (
+        <div className="modal-veil" onClick={closeHors}>
+          <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 44, textAlign: "center", marginBottom: 8 }}>🤖</div>
+            <div className="poster" style={{ fontSize: 22, textAlign: "center", marginBottom: 8 }}>{t("Super Claude IA passe hors classement")}</div>
+            <p className="muted" style={{ fontSize: 14, textAlign: "center", margin: "0 0 16px" }}>
+              {t("Elle continue de faire ses pronos (tu les vois dans « Les pronos de la ligue »), mais elle n'est plus comptée au classement — pas de rang, juste pour comparer. Le classement reste 100 % entre vous !")}
+            </p>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Btn variant="accent" onClick={closeHors}>{t("Compris !")}</Btn>
+            </div>
+          </div>
+        </div>
+      )}
       {showAnnonce && !askNotif && (
         <div className="modal-veil" onClick={closeAnnonce}>
           <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>

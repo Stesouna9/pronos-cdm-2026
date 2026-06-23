@@ -140,7 +140,7 @@ export async function fetchLeaderboard() {
     .order("exacts", { ascending: false })
     .order("created_at", { ascending: true });
   if (error) throw error;
-  const list = (data || []).map((u, i) => ({
+  const rows = (data || []).map((u) => ({
     id: u.user_id,
     pseudo: u.pseudo,
     avatar: u.avatar,
@@ -149,8 +149,12 @@ export async function fetchLeaderboard() {
     bons: u.bons || 0,
     joues: u.joues || 0,
     serie: 0,
-    position: i + 1,
   }));
+  // Super Claude IA = HORS CLASSEMENT : ses pronos restent visibles, mais elle
+  // n'est ni comptée ni numérotée dans le classement.
+  const isClaude = (u) => OUT_OF_RANKING.test(u.pseudo || "");
+  const list = rows.filter((u) => !isClaude(u)).map((u, i) => ({ ...u, position: i + 1 }));
+  const hors = rows.filter(isClaude).map((u) => ({ ...u, position: null, horsClassement: true }));
   // Ex æquo PENDANT le tournoi : mêmes points = même rang affiché (1,2,2,4…).
   // Le départage (exacts, puis ancienneté d'inscription) ne sert qu'aux lots à la fin.
   for (let i = 1; i < list.length; i++) {
@@ -159,8 +163,10 @@ export async function fetchLeaderboard() {
       list[i].tie = true; list[i - 1].tie = true;
     }
   }
+  list.hors = hors;   // attaché à la liste (lu par l'écran Classement)
   return list;
 }
+const OUT_OF_RANKING = /Super Claude IA/i;
 
 /* Profil + identité du joueur connecté. */
 export async function fetchMe() {
