@@ -371,27 +371,26 @@ export function Leaderboard({ go, profile, users: realUsers, me, matches: lbMatc
                 <td className="mono" style={{ textAlign: "right", fontWeight: 800, fontSize: 15 }}>{u.pts}</td>
               </tr>
             ))}
-            {/* Hors classement (Super Claude IA) : visible mais non comptée, sans rang */}
-            {(users.hors || []).map((u) => (
-              <tr key={u.id} style={{ opacity: .7 }}>
-                <td className="rank-n" title={t("Hors classement")}>—</td>
-                <td>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--bg-2)", display: "grid", placeItems: "center", fontSize: 16 }}>{u.avatar}</div>
-                    <b>{u.pseudo}</b><span className="pill" style={{ fontSize: 10 }}>{t("hors classement")}</span>
-                  </div>
-                </td>
-                <td className="mono">{u.exacts}</td>
-                <td className="mono">{u.bons}</td>
-                <td className="mono">—</td>
-                <td className="mono" style={{ textAlign: "right", fontWeight: 800, fontSize: 15 }}>{u.pts}</td>
-              </tr>
-            ))}
           </tbody>
         </table></div>
         <hr className="divider" />
         <div className="mono muted" style={{ fontSize: 12, textAlign: "center" }}>🥄 <b style={{ color: "var(--ink)" }}>{last.pseudo}</b> — {t("pour l'instant, le McDo de Gabriel est pour toi !")}</div>
       </div>
+
+      {/* Hors classement : score visible pour comparer, mais non compté */}
+      {(users.hors || []).map((u) => (
+        <div key={u.id} className="card pad rise" style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--bg-2)", display: "grid", placeItems: "center", fontSize: 24 }}>{u.avatar}</div>
+          <div style={{ flex: 1, minWidth: 140 }}>
+            <div style={{ fontWeight: 800 }}>{u.pseudo} <span className="pill" style={{ fontSize: 10 }}>{t("hors classement")}</span></div>
+            <div className="mono muted" style={{ fontSize: 11.5 }}>{u.exacts} {t("exacts")} · {u.bons} {t("bons")} — {t("ses pronos sont visibles mais ne comptent pas")}</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div className="poster" style={{ fontSize: 30, lineHeight: 1 }}>{u.pts}</div>
+            <div className="mono muted" style={{ fontSize: 11 }}>{t("pts")}</div>
+          </div>
+        </div>
+      ))}
       </>}
     </div>
   );
