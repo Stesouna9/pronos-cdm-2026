@@ -275,6 +275,7 @@ const JA = {
   "Elle continue de faire ses pronos (tu les vois dans « Les pronos de la ligue »), mais elle n'est plus comptée au classement — pas de rang, juste pour comparer. Le classement reste 100 % entre vous !": "予想は続けます（「リーグみんなの予想」で見られます）が、ランキングには集計されません（順位なし、比較用）。ランキングは100％みんなのもの！",
   "Compris !": "了解！",
   "bons": "結果", "ses pronos sont visibles mais ne comptent pas": "予想は見られますが集計されません",
+  "scores exacts d'affilée": "完全的中の連続", "bons pronos d'affilée": "的中の連続",
   "Rectangle": "長方形", "Losange": "ひし形", "Cœur": "ハート", "Trophée": "トロフィー",
   "Rond": "丸", "Pyramide": "ピラミッド", "Croix": "十字", "Flèche": "矢印",
   "Ballon": "ボール", "Sourire": "スマイル",

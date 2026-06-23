@@ -1,5 +1,5 @@
 /* screens3.jsx — Tableau (groupes + bracket), Classement, Profil, Règles */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WC } from "../lib/wc.js";
 import { Btn, Roundel, SectionTitle, teamName } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
@@ -78,7 +78,6 @@ function EvolutionChart({ matches }) {
     </div>
   );
 }
-import { useEffect } from "react";
 
 /* Stats fun de la ligue, calculées sur les pronos verrouillés (visibles). */
 function FunStats() {
@@ -310,6 +309,40 @@ export function Leaderboard({ go, profile, users: realUsers, me, matches: lbMatc
     ? { ...u, isMe: true, pseudo: profile.pseudo, avatar: profile.avatar } : u);
   users.hors = src.hors || [];   // conserve les joueurs hors classement (Super Claude IA)
   const [scope, setScope] = useState("general");
+
+  // Séries EN COURS par joueur, sur les matchs finis dans l'ordre :
+  // 🎯 = scores exacts d'affilée · 🔥 = bons pronos (≥1 pt) d'affilée.
+  const [streaks, setStreaks] = useState({});
+  useEffect(() => {
+    let alive = true;
+    fetchAllLockedPredictions().then((preds) => {
+      if (!alive) return;
+      const finis = (lbMatches || []).filter((m) => m.status === "fini" && m.score).sort((a, b) => a.date - b.date);
+      const byU = {};
+      (preds || []).forEach((p) => { (byU[p.user_id] = byU[p.user_id] || {})[p.match_id] = p; });
+      const out = {};
+      for (const uid in byU) {
+        let good = 0, exact = 0, gOn = true, eOn = true;
+        for (let i = finis.length - 1; i >= 0; i--) {
+          const m = finis[i], p = byU[uid][m.id];
+          const has = p && p.pred_home != null;
+          const isExact = has && p.pred_home === m.score[0] && p.pred_away === m.score[1];
+          const isGood = has && p.points > 0;
+          if (eOn) { if (isExact) exact++; else eOn = false; }
+          if (gOn) { if (isGood) good++; else gOn = false; }
+          if (!eOn && !gOn) break;
+        }
+        out[uid] = { good, exact };
+      }
+      setStreaks(out);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [lbMatches]);
+  const serieCell = (u) => {
+    const s = streaks[u.id] || { good: 0, exact: 0 };
+    if (!s.good && !s.exact) return "—";
+    return [s.exact ? "🎯" + s.exact : "", s.good ? "🔥" + s.good : ""].filter(Boolean).join(" ");
+  };
   const last = users[users.length - 1] || { pseudo: "—" };
   // Marches du podium par GROUPES de rang (les ex æquo partagent la marche).
   const rankGroups = [];
@@ -367,12 +400,13 @@ export function Leaderboard({ go, profile, users: realUsers, me, matches: lbMatc
                 </td>
                 <td className="mono">{u.exacts}</td>
                 <td className="mono">{u.bons}</td>
-                <td className="mono">{u.serie ? "🔥" + u.serie : "—"}</td>
+                <td className="mono">{serieCell(u)}</td>
                 <td className="mono" style={{ textAlign: "right", fontWeight: 800, fontSize: 15 }}>{u.pts}</td>
               </tr>
             ))}
           </tbody>
         </table></div>
+        <div className="mono muted" style={{ fontSize: 10.5, marginTop: 8 }}>🎯 {t("scores exacts d'affilée")} · 🔥 {t("bons pronos d'affilée")}</div>
         <hr className="divider" />
         <div className="mono muted" style={{ fontSize: 12, textAlign: "center" }}>🥄 <b style={{ color: "var(--ink)" }}>{last.pseudo}</b> — {t("pour l'instant, le McDo de Gabriel est pour toi !")}</div>
       </div>
@@ -383,7 +417,7 @@ export function Leaderboard({ go, profile, users: realUsers, me, matches: lbMatc
           <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--bg-2)", display: "grid", placeItems: "center", fontSize: 24 }}>{u.avatar}</div>
           <div style={{ flex: 1, minWidth: 140 }}>
             <div style={{ fontWeight: 800 }}>{u.pseudo} <span className="pill" style={{ fontSize: 10 }}>{t("hors classement")}</span></div>
-            <div className="mono muted" style={{ fontSize: 11.5 }}>{u.exacts} {t("exacts")} · {u.bons} {t("bons")} — {t("ses pronos sont visibles mais ne comptent pas")}</div>
+            <div className="mono muted" style={{ fontSize: 11.5 }}>{u.exacts} {t("exacts")} · {u.bons} {t("bons")} · {serieCell(u)} — {t("ses pronos sont visibles mais ne comptent pas")}</div>
           </div>
           <div style={{ textAlign: "right" }}>
             <div className="poster" style={{ fontSize: 30, lineHeight: 1 }}>{u.pts}</div>
