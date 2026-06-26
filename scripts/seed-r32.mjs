@@ -20,7 +20,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE, { auth: { persistSe
 // slot = ["W"|"R", "Groupe"] (vainqueur/2e) · ["3", null] = meilleur 3e (à déterminer).
 const R32 = {
   WC073: { h: ["R", "A"], a: ["R", "B"], hf: "2e Groupe A", af: "2e Groupe B" },
-  WC074: { h: ["W", "C"], a: ["3", null], hf: "1er Groupe C", af: "3e (à déterminer)" },
+  WC074: { h: ["W", "C"], a: ["R", "F"], hf: "1er Groupe C", af: "2e Groupe F" },
   WC075: { h: ["W", "E"], a: ["3", null], hf: "1er Groupe E", af: "3e (à déterminer)" },
   WC076: { h: ["W", "F"], a: ["R", "C"], hf: "1er Groupe F", af: "2e Groupe C" },
   WC077: { h: ["R", "E"], a: ["R", "I"], hf: "2e Groupe E", af: "2e Groupe I" },
