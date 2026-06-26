@@ -1,0 +1,20 @@
+# Remplit les 16es de finale (créneaux + équipes des groupes terminés).
+# Manuel uniquement : Actions → "16es de finale" → Run workflow.
+# Relançable à chaque fin de groupe (idempotent).
+name: 16es de finale
+on:
+  workflow_dispatch:
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/seed-r32.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
