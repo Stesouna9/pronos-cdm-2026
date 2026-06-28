@@ -77,6 +77,16 @@ export default function App() {
     setShowHors(false);
     try { localStorage.setItem("pronos2026:annonce:claude-hors", "1"); } catch (e) {}
   }
+  // Annonce one-shot : les 16es de finale sont ouverts + règle tirs au but
+  const [show16, setShow16] = useState(false);
+  useEffect(() => {
+    if (!authed) return;
+    try { if (!localStorage.getItem("pronos2026:annonce:16es")) setShow16(true); } catch (e) {}
+  }, [authed]);
+  function close16() {
+    setShow16(false);
+    try { localStorage.setItem("pronos2026:annonce:16es", "1"); } catch (e) {}
+  }
 
   // Si Supabase est branché, on suit la session réelle
   useEffect(() => {
@@ -275,6 +285,24 @@ export default function App() {
   return (
     <div className="app-root">
       {confetti && <Confetti onDone={() => setConfetti(false)} />}
+      {show16 && !askNotif && !showAnnonce && !showHors && (
+        <div className="modal-veil" onClick={close16}>
+          <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 44, textAlign: "center", marginBottom: 8 }}>🏆</div>
+            <div className="poster" style={{ fontSize: 22, textAlign: "center", marginBottom: 8 }}>{t("Les 16es de finale sont là !")}</div>
+            <p className="muted" style={{ fontSize: 14, textAlign: "center", margin: "0 0 14px" }}>
+              {t("La phase à élimination directe commence : tu peux maintenant pronostiquer les 16 matchs des 16es de finale !")}
+            </p>
+            <div className="card pad" style={{ background: "var(--surface-2)", marginBottom: 16 }}>
+              <div style={{ fontWeight: 800, marginBottom: 4 }}>🥅 {t("Nouveau : les tirs au but")}</div>
+              <div className="muted" style={{ fontSize: 13.5 }}>{t("En phase finale, si tu pronostiques un match nul, choisis aussi QUI gagne aux tirs au but : +2 points bonus si tu vois juste ! (le score se juge à la fin du temps réglementaire, comme d'habitude)")}</div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Btn variant="accent" onClick={close16}>{t("Go, je pronostique !")}</Btn>
+            </div>
+          </div>
+        </div>
+      )}
       {showHors && !askNotif && !showAnnonce && (
         <div className="modal-veil" onClick={closeHors}>
           <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
