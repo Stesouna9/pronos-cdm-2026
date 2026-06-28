@@ -4,6 +4,10 @@
 name: 16es de finale
 on:
   workflow_dispatch:
+  # Déclenchable aussi en poussant un tag "run-r32*" (accès push SSH).
+  push:
+    tags:
+      - "run-r32*"
 jobs:
   seed:
     runs-on: ubuntu-latest
