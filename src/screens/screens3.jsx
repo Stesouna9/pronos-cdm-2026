@@ -586,7 +586,7 @@ export function Rules() {
           </div>
           <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>🎮 {t("Mini-jeux")}</div>
-            <div className="muted" style={{ fontSize: 13.5 }}>{t("Onglet Jeux : un essai par jour et par jeu, défi réussi = +1 au classement Jeux (séparé). Juste avant les quarts de finale, le 1er du classement Jeux gagne +10 points au classement général.")}</div>
+            <div className="muted" style={{ fontSize: 13.5 }}>{t("Onglet Jeux : 5 mini-jeux juste pour le fun (pas de points au classement). Essaie de battre le record de la ligue ! La compétition des +10 points est terminée — bravo StarKane 🏆")}</div>
           </div>
           <div className="card pad" style={{ marginTop: 14, background: "var(--surface-2)" }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>⚖️ {t("En cas d'égalité")}</div>

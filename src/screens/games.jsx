@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { WC } from "../lib/wc.js";
 import { hasSupabase } from "../lib/supabase.js";
-import { fetchMyGamesToday, saveGameScore, fetchGamesLeaderboard, fetchGameRecords, todayFR } from "../lib/league.js";
+import { fetchMyGamesToday, saveGameScore, fetchGameRecords, todayFR } from "../lib/league.js";
 import { Btn, SectionTitle, teamName, Confetti } from "../components/ui.jsx";
 import { t } from "../lib/i18n.js";
 import { daySeed, seededShuffle, flagEmoji, FLAG_POOL, ARBITRE } from "../lib/gamesData.js";
@@ -404,13 +404,14 @@ function GameCard({ g, today, record, onPlay, isAdmin }) {
         <span style={{ fontSize: 34 }}>{g.icon}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 800 }}>{t(g.name)}</div>
-          <div className="mono muted" style={{ fontSize: 11 }}>{t("Défi")} : {t(g.goal)} = +1</div>
-          {record && <div className="mono muted" style={{ fontSize: 11 }}>🏅 {t("Record")} : {record.pseudo} ({record.score})</div>}
+          {record
+            ? <div className="mono muted" style={{ fontSize: 11 }}>🏅 {t("Record")} : {record.pseudo} ({record.score})</div>
+            : <div className="mono muted" style={{ fontSize: 11 }}>{t("Pas encore de record — bats-le !")}</div>}
         </div>
         {played
           ? <span style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
-              <span className={"pill " + (played.won ? "pill--accent" : "")} style={{ fontSize: 12 }}>{played.won ? "✓ +1" : "✗"} · {played.score}</span>
-              {isAdmin && <Btn variant="ghost" onClick={() => onPlay(g, true)} style={{ padding: "5px 10px", fontSize: 11.5 }}>🧪 {t("Tester")}</Btn>}
+              <span className="pill" style={{ fontSize: 12 }}>{t("ton score")} : {played.score}</span>
+              <Btn variant="ghost" onClick={() => onPlay(g, true)} style={{ padding: "5px 10px", fontSize: 11.5 }}>🔁 {t("Rejouer")}</Btn>
             </span>
           : <Btn variant="accent" onClick={() => onPlay(g, false)} style={{ padding: "8px 16px", whiteSpace: "nowrap" }}>{t("Jouer")}</Btn>}
       </div>
@@ -422,27 +423,27 @@ export function GamesScreen({ profile }) {
   const [section, setSection] = useState("jeux"); // jeux | classement
   const [today, setToday] = useState({});
   const [records, setRecords] = useState({});
-  const [board, setBoard] = useState(null);
   const [active, setActive] = useState(null);     // { g, test } : jeu en cours
-  const [result, setResult] = useState(null);     // { g, score, won, saveErr, test }
+  const [result, setResult] = useState(null);     // { g, score, isRecord, saveErr, test }
 
   async function load() {
     if (!hasSupabase) return;
     try {
-      const [td, rec, lb] = await Promise.all([fetchMyGamesToday(), fetchGameRecords(), fetchGamesLeaderboard()]);
-      setToday(td); setRecords(rec); setBoard(lb);
+      const [td, rec] = await Promise.all([fetchMyGamesToday(), fetchGameRecords()]);
+      setToday(td); setRecords(rec);
     } catch (e) { console.error("jeux:", e); }
   }
   useEffect(() => { load(); }, []);
 
   async function finish(g, score, won, test) {
-    let saveErr = null;
-    if (hasSupabase && !test) {
-      const r = await saveGameScore(g.id, score, won);
-      saveErr = r.error;
+    let saveErr = null, isRecord = false;
+    const prev = records[g.id];
+    if (!test) {
+      isRecord = !prev || score > prev.score;       // nouveau record de la ligue ?
+      if (hasSupabase) { const r = await saveGameScore(g.id, score, false); saveErr = r.error; }
     }
     setActive(null);
-    setResult({ g, score, won, saveErr, test });
+    setResult({ g, score, isRecord, saveErr, test });
     if (!test) load();
   }
 
@@ -456,7 +457,7 @@ export function GamesScreen({ profile }) {
           <h2 className="poster" style={{ margin: 0, fontSize: 24 }}>{g.icon} {t(g.name)}{active.test ? " 🧪" : ""}</h2>
           <Btn variant="ghost" onClick={() => setActive(null)} style={{ padding: "7px 12px", fontSize: 12.5 }}>{t("Abandonner")}</Btn>
         </div>
-        {active.test && <div className="mono muted" style={{ fontSize: 11.5, marginBottom: 10 }}>🧪 {t("Partie test (admin) — non comptée au classement.")}</div>}
+        {active.test && <div className="mono muted" style={{ fontSize: 11.5, marginBottom: 10 }}>🔁 {t("Entraînement — score non enregistré.")}</div>}
         <div className="card pad-lg">
           <Comp onEnd={(score, won) => finish(g, score, won, active.test)} record={records[g.id]} />
         </div>
@@ -466,23 +467,23 @@ export function GamesScreen({ profile }) {
 
   return (
     <div className="content">
-      {result && result.won && <Confetti onDone={() => {}} />}
-      <SectionTitle kicker={t("Un essai par jour et par jeu")} title={t("Mini-jeux") + " 🎮"}
+      {result && result.isRecord && <Confetti onDone={() => {}} />}
+      <SectionTitle kicker={t("Joue pour le fun · bats les records")} title={t("Mini-jeux") + " 🎮"}
         right={<div className="seg">
           <button className={section === "jeux" ? "on" : ""} onClick={() => setSection("jeux")}>{t("Jeux")}</button>
-          <button className={section === "classement" ? "on" : ""} onClick={() => setSection("classement")}>🏅 {t("Classement Jeux")}</button>
+          <button className={section === "records" ? "on" : ""} onClick={() => setSection("records")}>🏅 {t("Records")}</button>
         </div>} />
 
       {result && (
-        <div className={"card pad-lg rise"} style={{ marginBottom: 16, textAlign: "center", borderColor: result.won ? "var(--win)" : "var(--line)" }}>
-          <div style={{ fontSize: 40 }}>{result.test ? "🧪" : result.won ? "🎉" : "😅"}</div>
+        <div className={"card pad-lg rise"} style={{ marginBottom: 16, textAlign: "center", borderColor: result.isRecord ? "var(--gold)" : "var(--line)" }}>
+          <div style={{ fontSize: 40 }}>{result.test ? "🧪" : result.isRecord ? "🏅" : "👏"}</div>
           <div className="poster" style={{ fontSize: 22 }}>
             {result.g.icon} {t(result.g.name)} — {t("score")} {result.score}
           </div>
-          <div style={{ fontWeight: 700, color: result.won ? "var(--win)" : "var(--ink-soft)", margin: "4px 0 10px" }}>
+          <div style={{ fontWeight: 700, color: result.isRecord ? "var(--gold)" : "var(--ink-soft)", margin: "4px 0 10px" }}>
             {result.test
-              ? t("Partie test (admin) — non comptée au classement.")
-              : result.won ? t("Défi réussi : +1 au classement Jeux !") : t("Raté pour aujourd'hui… retente demain !")}
+              ? t("Partie d'entraînement — non enregistrée.")
+              : result.isRecord ? t("🏅 Nouveau record de la ligue !") : t("Bien joué ! Rejoue pour battre le record.")}
           </div>
           {result.saveErr && <div className="mono" style={{ fontSize: 11.5, color: "var(--lose)" }}>⚠️ {result.saveErr}</div>}
           <Btn variant="ghost" onClick={() => setResult(null)} style={{ padding: "7px 14px", fontSize: 12.5 }}>OK</Btn>
@@ -493,38 +494,31 @@ export function GamesScreen({ profile }) {
         <>
           <div className="card pad rise" style={{ marginBottom: 16 }}>
             <span className="muted" style={{ fontSize: 13.5 }}>
-              🏅 {t("Chaque défi réussi = +1 au classement Jeux. Juste avant les quarts de finale, le 1er du classement Jeux gagne +10 points au classement général !")}
+              🎮 {t("Les mini-jeux sont là juste pour le fun : pas de points au classement, mais essaie de battre le record de la ligue !")}
             </span>
           </div>
           <div className="grid g-2">
-            {GAMES.map((g) => <GameCard key={g.id} g={g} today={today} record={records[g.id]} isAdmin={!!profile.is_admin}
+            {GAMES.map((g) => <GameCard key={g.id} g={g} today={today} record={records[g.id]}
               onPlay={(game, test) => setActive({ g: game, test })} />)}
           </div>
         </>
       )}
 
-      {section === "classement" && (
+      {section === "records" && (
         <div className="card pad">
-          <div className="eyebrow" style={{ marginBottom: 10 }}>🏅 {t("Classement Jeux")} — {t("le 1er avant les quarts gagne +10 au général")}</div>
-          {!board && <p className="muted">…</p>}
-          {board && <div className="tblwrap"><table className="tbl">
-            <thead><tr><th>#</th><th>{t("Joueur")}</th><th>{t("Parties")}</th><th>{t("Points")}</th></tr></thead>
-            <tbody>
-              {board.map((u, i, arr) => {
-                // Ex æquo : mêmes points = même rang (1, 2, 2, 4…). Le "=" signale l'égalité.
-                const rank = arr.findIndex((x) => x.pts === u.pts) + 1;
-                const tie = arr.filter((x) => x.pts === u.pts).length > 1;
-                return (
-                  <tr key={u.user_id} style={u.user_id === profile.id ? { fontWeight: 800 } : null}>
-                    <td className="mono">{rank}{tie ? "=" : ""}</td>
-                    <td><span style={{ marginRight: 8 }}>{u.avatar}</span>{u.pseudo}</td>
-                    <td className="mono">{u.parties}</td>
-                    <td className="mono" style={{ fontWeight: 800 }}>{u.pts}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table></div>}
+          <div className="eyebrow" style={{ marginBottom: 12 }}>🏅 {t("Records de la ligue")}</div>
+          {GAMES.map((g) => {
+            const r = records[g.id];
+            return (
+              <div key={g.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderTop: "1px solid var(--line)" }}>
+                <span style={{ fontSize: 24 }}>{g.icon}</span>
+                <b style={{ flex: 1 }}>{t(g.name)}</b>
+                {r
+                  ? <span className="mono"><span style={{ marginRight: 6 }}>{r.avatar}</span>{r.pseudo} · <b>{r.score}</b></span>
+                  : <span className="mono muted">{t("aucun record")}</span>}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
