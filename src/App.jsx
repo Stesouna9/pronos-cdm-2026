@@ -87,6 +87,16 @@ export default function App() {
     setShow16(false);
     try { localStorage.setItem("pronos2026:annonce:16es", "1"); } catch (e) {}
   }
+  // Annonce one-shot : StarKane gagne les mini-jeux (+10 au général)
+  const [showSk, setShowSk] = useState(false);
+  useEffect(() => {
+    if (!authed) return;
+    try { if (!localStorage.getItem("pronos2026:annonce:starkane10")) setShowSk(true); } catch (e) {}
+  }, [authed]);
+  function closeSk() {
+    setShowSk(false);
+    try { localStorage.setItem("pronos2026:annonce:starkane10", "1"); } catch (e) {}
+  }
 
   // Si Supabase est branché, on suit la session réelle
   useEffect(() => {
@@ -285,6 +295,20 @@ export default function App() {
   return (
     <div className="app-root">
       {confetti && <Confetti onDone={() => setConfetti(false)} />}
+      {showSk && !askNotif && !showAnnonce && !showHors && !show16 && (
+        <div className="modal-veil" onClick={closeSk}>
+          <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 44, textAlign: "center", marginBottom: 8 }}>🏆</div>
+            <div className="poster" style={{ fontSize: 22, textAlign: "center", marginBottom: 8 }}>{t("StarKane remporte les mini-jeux !")}</div>
+            <p className="muted" style={{ fontSize: 14, textAlign: "center", margin: "0 0 16px" }}>
+              {t("La compétition des mini-jeux est terminée : StarKane finit 1er et empoche +10 points au classement général. Les jeux restent dispo juste pour le fun et pour battre les records 🎮")}
+            </p>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Btn variant="accent" onClick={closeSk}>{t("OK, bien joué StarKane !")}</Btn>
+            </div>
+          </div>
+        </div>
+      )}
       {show16 && !askNotif && !showAnnonce && !showHors && (
         <div className="modal-veil" onClick={close16}>
           <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
