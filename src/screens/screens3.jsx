@@ -222,7 +222,7 @@ export function TableauScreen({ go, matches = WC.ALL_MATCHES }) {
                 {t("Les tableaux se mettent à jour automatiquement dans l'heure qui suit chaque fin de match.")}
               </span>
             </div>
-            <Bracket go={go} />
+            <Bracket go={go} matches={matches} />
           </>
         ) : (
           <div className="card pad-lg" style={{ textAlign: "center" }}>
@@ -255,7 +255,7 @@ function BTie({ m, go }) {
     const code = side === "home" ? m.home : m.away;
     const win = m.status === "fini" && m.winner === code;
     const out = m.status === "fini" && m.winner && m.winner !== code;
-    if (!code) return <div className="t tbd"><span style={{ fontSize: 12 }}>Vainqueur {side === "home" ? m.fromA : m.fromB}</span></div>;
+    if (!code) return <div className="t tbd"><span style={{ fontSize: 12 }}>{(side === "home" ? m.fromA : m.fromB) || t("À déterminer")}</span></div>;
     return (
       <div className={"t" + (win ? " win" : "") + (out ? " out" : "")}>
         <Roundel code={code} size={18} />
@@ -273,14 +273,17 @@ function BTie({ m, go }) {
   );
 }
 
-export function Bracket({ go }) {
+export function Bracket({ go, matches = WC.ALL_MATCHES }) {
+  // Bracket construit à partir des VRAIS matchs (base), pas d'une démo statique.
+  const by = (phase) => matches.filter((m) => m.phase === phase).sort((a, b) => a.date - b.date);
   const cols = [
-    ["32es de finale", WC.KO.r32],
-    ["8es de finale", WC.KO.r16],
-    ["Quarts", WC.KO.qf],
-    ["Demies", WC.KO.sf],
-    ["Finale", [WC.KO.final]],
+    [t("16es"), by("16es de finale")],
+    [t("8es"), by("8es de finale")],
+    [t("Quarts"), by("Quarts de finale")],
+    [t("Demies"), by("Demi-finales")],
+    [t("Finale"), by("Finale")],
   ];
+  const petite = by("Petite finale")[0];
   return (
     <div className="bracket-scroll">
       <div className="bracket">
@@ -288,10 +291,10 @@ export function Bracket({ go }) {
           <div className="bcol" key={ci} style={ci === 4 ? { justifyContent: "center" } : null}>
             <h4>{title}</h4>
             {ms.map((m) => <BTie key={m.id} m={m} go={go} />)}
-            {ci === 4 && (
+            {ci === 4 && petite && (
               <div style={{ marginTop: 14, textAlign: "center" }}>
-                <div className="poster" style={{ fontSize: 13, color: "var(--ink-soft)" }}>🥉 3e place</div>
-                <div style={{ marginTop: 6 }}><BTie m={WC.KO.third} go={go} /></div>
+                <div className="poster" style={{ fontSize: 13, color: "var(--ink-soft)" }}>🥉 {t("3e place")}</div>
+                <div style={{ marginTop: 6 }}><BTie m={petite} go={go} /></div>
               </div>
             )}
           </div>
