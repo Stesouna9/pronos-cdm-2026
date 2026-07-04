@@ -1,7 +1,7 @@
 /* admin.jsx — écran réservé à l'admin (Gabriel) : scores + gestion des joueurs. */
 import { useState, useEffect } from "react";
 import { WC } from "../lib/wc.js";
-import { saveScore, clearScore, fetchAllUsers, setBanned, fetchPredProgress } from "../lib/league.js";
+import { saveScore, clearScore, fetchAllUsers, setBanned, fetchPredProgress, setMatchTeams } from "../lib/league.js";
 import { Roundel, Btn, SectionTitle } from "../components/ui.jsx";
 import { t, tPhase } from "../lib/i18n.js";
 
@@ -182,6 +182,65 @@ function AdminMonitor({ matches }) {
   );
 }
 
+/* --- Équipes : définir soi-même les équipes des matchs (phase finale) --- */
+const TEAMS = Object.entries(WC.T).map(([code, tm]) => ({ code, name: tm.name })).sort((a, b) => a.name.localeCompare(b.name));
+
+function TeamsRow({ m, onSaved }) {
+  const [h, setH] = useState(m.home || "");
+  const [a, setA] = useState(m.away || "");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const dirty = h !== (m.home || "") || a !== (m.away || "");
+
+  async function save() {
+    setBusy(true); setMsg("");
+    const nameOf = (c) => (WC.T[c] ? WC.T[c].name : "");
+    const r = await setMatchTeams(m.id, h, nameOf(h), a, nameOf(a));
+    setBusy(false);
+    if (r.error) setMsg("Erreur : " + r.error);
+    else { setMsg("✓ " + t("Équipes enregistrées")); onSaved && onSaved(); }
+  }
+  const sel = (val, set) => (
+    <select className="input" value={val} onChange={(e) => set(e.target.value)} style={{ minWidth: 130, padding: "8px 6px" }}>
+      <option value="">— {t("à déterminer")} —</option>
+      {TEAMS.map((tm) => <option key={tm.code} value={tm.code}>{tm.name}</option>)}
+    </select>
+  );
+  return (
+    <div className="card pad admin-row" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+      <div style={{ minWidth: 150, fontSize: 12 }} className="mono muted">
+        <b style={{ color: "var(--ink)" }}>{tPhase(m.phase)}</b><br />{WC.fmtDate(m.date)} · {WC.fmtHeure(m.date)}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, justifyContent: "center", flexWrap: "wrap" }}>
+        {h ? <Roundel code={h} size={20} /> : null}{sel(h, setH)}
+        <span className="poster">vs</span>
+        {sel(a, setA)}{a ? <Roundel code={a} size={20} /> : null}
+      </div>
+      <div style={{ minWidth: 110, textAlign: "right" }}>
+        <Btn variant="accent" onClick={save} disabled={busy || !dirty} style={{ padding: "8px 14px", fontSize: 13 }}>{t("Enregistrer")}</Btn>
+      </div>
+      {msg && <div className="mono" style={{ fontSize: 11, width: "100%", textAlign: "right", color: msg.startsWith("Erreur") ? "var(--lose)" : "var(--win)" }}>{msg}</div>}
+    </div>
+  );
+}
+
+function TeamsAdmin({ matches, reload }) {
+  const ko = matches.filter((m) => m.round === "ko").sort((a, b) => a.date - b.date);
+  return (
+    <>
+      <div className="card pad rise" style={{ marginBottom: 16 }}>
+        <span className="muted" style={{ fontSize: 13.5 }}>
+          {t("Choisis les deux équipes de chaque match de phase finale, puis Enregistrer. ⚠️ Changer les équipes remet le score à zéro.")}
+        </span>
+      </div>
+      <div className="grid" style={{ gap: 12 }}>
+        {ko.map((m) => <TeamsRow key={m.id} m={m} onSaved={reload} />)}
+      </div>
+      {ko.length === 0 && <div className="card pad-lg" style={{ textAlign: "center" }}><p className="muted">{t("Aucun match de phase finale.")}</p></div>}
+    </>
+  );
+}
+
 export function AdminScreen({ matches = [], reload }) {
   const [section, setSection] = useState("scores"); // scores | joueurs
   const [filtre, setFiltre] = useState("jouables"); // jouables | tous | finis
@@ -192,13 +251,15 @@ export function AdminScreen({ matches = [], reload }) {
 
   return (
     <div className="content">
-      <SectionTitle kicker={t("Réservé à toi (admin)")} title={section === "scores" ? t("Saisie des scores") : section === "joueurs" ? t("Joueurs") : t("Suivi")}
+      <SectionTitle kicker={t("Réservé à toi (admin)")} title={section === "scores" ? t("Saisie des scores") : section === "equipes" ? t("Équipes") : section === "joueurs" ? t("Joueurs") : t("Suivi")}
         right={<div className="seg">
           <button className={section === "scores" ? "on" : ""} onClick={() => setSection("scores")}>{t("Scores")}</button>
+          <button className={section === "equipes" ? "on" : ""} onClick={() => setSection("equipes")}>{t("Équipes")}</button>
           <button className={section === "joueurs" ? "on" : ""} onClick={() => setSection("joueurs")}>{t("Joueurs")}</button>
           <button className={section === "suivi" ? "on" : ""} onClick={() => setSection("suivi")}>{t("Suivi")}</button>
         </div>} />
 
+      {section === "equipes" && <TeamsAdmin matches={matches} reload={reload} />}
       {section === "joueurs" && <PlayersAdmin reload={reload} />}
       {section === "suivi" && <AdminMonitor matches={matches} />}
 

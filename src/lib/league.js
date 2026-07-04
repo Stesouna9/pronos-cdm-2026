@@ -220,6 +220,19 @@ export async function saveScore(matchId, sh, sa, winnerCode, pens) {
   return { error: error ? error.message : null };
 }
 
+/* ADMIN : définit/replace les équipes d'un match (phase finale surtout).
+   Vide les scores/statut si on change les équipes. RLS : réservé aux admins. */
+export async function setMatchTeams(matchId, home, homeName, away, awayName) {
+  const { error } = await supabase.from("matches").update({
+    home: home || null, home_name: homeName || null,
+    away: away || null, away_name: awayName || null,
+    score_home: null, score_away: null, pens_home: null, pens_away: null,
+    status: "a_venir", winner: null,
+    updated_at: new Date().toISOString(),
+  }).eq("id", matchId);
+  return { error: error ? error.message : null };
+}
+
 /* ADMIN : rouvre un match (annule le score). */
 export async function clearScore(matchId) {
   const { error } = await supabase
