@@ -97,6 +97,16 @@ export default function App() {
     setShowSk(false);
     try { localStorage.setItem("pronos2026:annonce:starkane10", "1"); } catch (e) {}
   }
+  // Hommage : Bernard, le papa de Gabriel (vu une fois par joueur)
+  const [showHommage, setShowHommage] = useState(false);
+  useEffect(() => {
+    if (!authed) return;
+    try { if (!localStorage.getItem("pronos2026:hommage:bernard")) setShowHommage(true); } catch (e) {}
+  }, [authed]);
+  function closeHommage() {
+    setShowHommage(false);
+    try { localStorage.setItem("pronos2026:hommage:bernard", "1"); } catch (e) {}
+  }
 
   // Si Supabase est branché, on suit la session réelle
   useEffect(() => {
@@ -295,7 +305,21 @@ export default function App() {
   return (
     <div className="app-root">
       {confetti && <Confetti onDone={() => setConfetti(false)} />}
-      {showSk && !askNotif && !showAnnonce && !showHors && !show16 && (
+      {showHommage && (
+        <div className="modal-veil" onClick={closeHommage}>
+          <div className="card pad-lg modal-box hommage-box" onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 46, textAlign: "center", marginBottom: 10 }}>🕯️</div>
+            <div className="poster" style={{ fontSize: 26, textAlign: "center", marginBottom: 12, letterSpacing: ".02em" }}>{t("En mémoire de Bernard")}</div>
+            <p style={{ fontSize: 15, textAlign: "center", lineHeight: 1.6, margin: "0 0 18px", opacity: .92 }}>
+              {t("Le papa de Gabriel nous a quittés. Nos matchs, nos pronos, nos chambrages… on les partage un peu pour lui aussi. Une pensée pour Bernard, et pour toute sa famille. ❤️")}
+            </p>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Btn variant="ghost" onClick={closeHommage} style={{ borderColor: "var(--gold)" }}>{t("Une pensée pour lui 🕯️")}</Btn>
+            </div>
+          </div>
+        </div>
+      )}
+      {showSk && !askNotif && !showAnnonce && !showHors && !show16 && !showHommage && (
         <div className="modal-veil" onClick={closeSk}>
           <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
             <div style={{ fontSize: 44, textAlign: "center", marginBottom: 8 }}>🏆</div>
@@ -309,7 +333,7 @@ export default function App() {
           </div>
         </div>
       )}
-      {show16 && !askNotif && !showAnnonce && !showHors && (
+      {show16 && !askNotif && !showAnnonce && !showHors && !showHommage && (
         <div className="modal-veil" onClick={close16}>
           <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
             <div style={{ fontSize: 44, textAlign: "center", marginBottom: 8 }}>🏆</div>
@@ -327,7 +351,7 @@ export default function App() {
           </div>
         </div>
       )}
-      {showHors && !askNotif && !showAnnonce && (
+      {showHors && !askNotif && !showAnnonce && !showHommage && (
         <div className="modal-veil" onClick={closeHors}>
           <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
             <div style={{ fontSize: 44, textAlign: "center", marginBottom: 8 }}>🤖</div>
@@ -341,7 +365,7 @@ export default function App() {
           </div>
         </div>
       )}
-      {showAnnonce && !askNotif && (
+      {showAnnonce && !askNotif && !showHommage && (
         <div className="modal-veil" onClick={closeAnnonce}>
           <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
             <div style={{ fontSize: 44, textAlign: "center", marginBottom: 8 }}>🤖</div>
@@ -355,7 +379,7 @@ export default function App() {
           </div>
         </div>
       )}
-      {askNotif && (
+      {askNotif && !showHommage && (
         <div className="modal-veil" onClick={() => answerNotif(false)}>
           <div className="card pad-lg modal-box" onClick={(e) => e.stopPropagation()}>
             <div style={{ fontSize: 40, textAlign: "center", marginBottom: 8 }}>🔔</div>

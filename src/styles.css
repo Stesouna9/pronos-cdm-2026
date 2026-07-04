@@ -615,3 +615,11 @@ a { color: inherit; }
 .jokertag { font-family: var(--f-mono); font-size: 10.5px; margin-top: 3px; color: var(--ink-soft); }
 .jokertag.on { color: var(--accent); font-weight: 800; }
 [data-theme="nuit"] .jokertag.on { color: var(--gold-soft); }
+
+/* ---------- Hommage à Bernard ---------- */
+.hommage-box { background: linear-gradient(160deg, #171310, #201a12); color: #f4ecd8; border: 1px solid color-mix(in oklab, var(--gold) 40%, transparent); box-shadow: 0 0 0 1px rgba(212,165,51,.15), 0 24px 60px rgba(0,0,0,.5); }
+.hommage-box .poster { color: var(--gold-soft); }
+.hommage-band { margin-top: 22px; text-align: center; padding: 14px 18px; border-radius: var(--r-md);
+  background: color-mix(in oklab, var(--gold) 8%, var(--surface)); border: 1px solid color-mix(in oklab, var(--gold) 28%, var(--line));
+  color: var(--ink-soft); font-size: 13px; font-style: italic; }
+[data-theme="nuit"] .hommage-band { background: color-mix(in oklab, var(--gold) 10%, var(--surface)); }

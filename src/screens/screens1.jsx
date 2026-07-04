@@ -280,6 +280,11 @@ export function Dashboard({ go, predictions, profile, matches = WC.ALL_MATCHES, 
           </button>
         ))}
       </div>
+
+      {/* Dédicace permanente : hommage à Bernard, le papa de Gabriel */}
+      <div className="hommage-band">
+        🕯️ {t("Cette ligue est dédiée à la mémoire de Bernard, le papa de Gabriel.")} ❤️
+      </div>
     </div>
   );
 }
