@@ -9,10 +9,14 @@ const { SUPABASE_URL, SUPABASE_SERVICE_ROLE } = process.env;
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) { console.error("❌ env manquantes"); process.exit(1); }
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE, { auth: { persistSession: false } });
 
+// Recalage complet des 8es sur le calendrier officiel FIFA 2026 (heure Paris = UTC+2).
+// On ne touche QUE les horaires (jamais les scores).
 const FIXES = [
-  // Portugal-Espagne : a débuté à 21h (dim 5 juil), déjà en cours.
-  // 21h Paris (CEST, UTC+2) = 19:00 UTC. Ferme les pronos immédiatement.
-  { id: "WC092", kickoff: "2026-07-05T19:00:00+00:00" }, // dim 5 juil 21h Paris
+  { id: "WC091", kickoff: "2026-07-07T00:00:00+00:00" }, // USA-Belgique   -> mar 7 juil 02h
+  { id: "WC092", kickoff: "2026-07-06T19:00:00+00:00" }, // Portugal-Espagne -> lun 6 juil 21h
+  { id: "WC093", kickoff: "2026-07-05T20:00:00+00:00" }, // Brésil-Norvège -> dim 5 juil 22h (fini)
+  { id: "WC095", kickoff: "2026-07-07T20:00:00+00:00" }, // Suisse-Colombie -> mar 7 juil 22h
+  { id: "WC096", kickoff: "2026-07-07T16:00:00+00:00" }, // Argentine-Égypte -> mar 7 juil 18h
 ];
 
 async function main() {
