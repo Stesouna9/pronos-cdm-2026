@@ -24,7 +24,9 @@ async function main() {
   if (error) throw error;
   const byId = {}; src.forEach((m) => (byId[m.id] = m));
 
-  const label = (m) => `Vainqueur ${m.home_name || m.home || "?"}–${m.away_name || m.away || "?"}`;
+  // Paire seule (ex "États-Unis–Belgique") : l'UI ajoute "Vainqueur" devant.
+  // Éviter de le mettre ici sinon double "Vainqueur Vainqueur".
+  const label = (m) => `${m.home_name || m.home || "?"}–${m.away_name || m.away || "?"}`;
   const winnerOf = (m) => {
     if (m.status !== "fini" || !m.winner) return null;
     const name = m.winner === m.home ? m.home_name : m.winner === m.away ? m.away_name : m.winner;
