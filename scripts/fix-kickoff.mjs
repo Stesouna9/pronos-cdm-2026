@@ -10,9 +10,9 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) { console.error("❌ env manquantes
 const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE, { auth: { persistSession: false } });
 
 const FIXES = [
-  // USA-Belgique : pas commencé, coup d'envoi 02h du matin (lun 6 juil).
-  // 02h Paris (CEST, UTC+2) = 00:00 UTC.
-  { id: "WC091", kickoff: "2026-07-06T00:00:00+00:00" }, // lun 6 juil 02h Paris
+  // Portugal-Espagne : a débuté à 21h (dim 5 juil), déjà en cours.
+  // 21h Paris (CEST, UTC+2) = 19:00 UTC. Ferme les pronos immédiatement.
+  { id: "WC092", kickoff: "2026-07-05T19:00:00+00:00" }, // dim 5 juil 21h Paris
 ];
 
 async function main() {
