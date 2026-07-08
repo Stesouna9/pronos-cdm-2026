@@ -225,7 +225,9 @@ function TeamsRow({ m, onSaved }) {
 }
 
 function TeamsAdmin({ matches, reload }) {
-  const ko = matches.filter((m) => m.round === "ko").sort((a, b) => a.date - b.date);
+  // Seulement les matchs à élimination directe PAS ENCORE finis : ceux qu'il
+  // reste à définir (quarts en attente, demies, petite finale, finale).
+  const ko = matches.filter((m) => m.round === "ko" && m.status !== "fini").sort((a, b) => a.date - b.date);
   return (
     <>
       <div className="card pad rise" style={{ marginBottom: 16 }}>
